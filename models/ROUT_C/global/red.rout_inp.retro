@@ -1,0 +1,17 @@
+### INPUT FILE FOR (C) ROUTING PROGRAM -- order important ###
+FLOW_DIREC_FILE  /raid8/forecast/proj/fcst/ESP/inputs/routing/arkred_125.flowd
+VELOCITY_FILE    1.5
+DIFF_FILE        800
+XMASK_FILE       12500
+FRACTION_FILE    /raid8/forecast/proj/fcst/ESP/inputs/routing/arkred_125.fract
+STATION_FILE     /raid8/forecast/proj/fcst/ESP/inputs/routing/red.stnloc
+INPUT_FILE_PREC  4
+SPINUP_FILE_PATH /state/partition1/forecast/output/arkred/RETRO_1505/fluxes_
+SPINUP_DATES     1979 1 1990 12
+INPUT_FILE_PATH  /state/partition1/forecast/output/arkred/RETRO_1505/fluxes_      
+INPUT_DATES      1991 1 1991 1
+OUT_FILE_PATH    /state/partition1/forecast/output/arkred/route_new/
+OUTPUT_DATES     1980 1 1990 12
+UNIT_HYD_FILE    /raid8/forecast/proj/fcst/ESP/inputs/routing/UH_ALL  
+
+OUT_FILE_PATH    /state/partition1/forecast/output/arkred/route_RETRO1505/

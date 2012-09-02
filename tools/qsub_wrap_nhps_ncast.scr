@@ -1,0 +1,21 @@
+#!/bin/csh
+#
+#$ -cwd
+#$ -j y
+#$ -S /bin/csh
+#$ -q forecast.q
+#$ -M shrad@hydro.washington.edu
+#$ -N NHPS_NOWCAST
+
+set BASIN = $1
+set NHPS_DIR = "/raid8/forecast/proj/uswide"
+
+echo "NHPS nowcast run for $BASIN started" > $NHPS_DIR/tools/done_$BASIN
+mail shrad  < /raid8/forecast/proj/uswide/tools/done_$BASIN
+
+$NHPS_DIR/tools/wrap_sw_mon_nowcast.pl $BASIN >& $NHPS_DIR/tools/log.wrap_nhps_ncast.$BASIN.txt
+
+echo "NHPS nowcast run for $BASIN Ended" > $NHPS_DIR/tools/done_$BASIN
+mail shrad  < $NHPS_DIR/tools/done_$BASIN
+
+\rm -rf $NHPS_DIR/tools/done_$BASIN

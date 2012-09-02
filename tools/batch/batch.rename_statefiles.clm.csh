@@ -1,0 +1,14 @@
+rename_statefiles.pl ../data/conus.new/state/spinup.retro/clm clm conus nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.01/clm clm conus nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.02/clm clm conus nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.03/clm clm conus nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.04/clm clm conus nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.05/clm clm conus nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.06/clm clm conus nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.07/clm clm conus nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.08/clm clm conus nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.09/clm clm conus nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.10/clm clm conus nc state nc
+rename_statefiles.pl ../data/conus.new/state/retro/clm clm conus nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup_nearRT/clm clm conus nc state nc
+rename_statefiles.pl ../data/conus.new/state/curr_spinup/clm clm conus nc state nc

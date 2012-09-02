@@ -1,0 +1,17 @@
+#!/bin/csh
+## This script runs forcing generation script for any given time period of less than 2 months
+#$ -cwd
+#$ -j y
+#$ -S /bin/tcsh
+#$ -q forecast.q
+
+set basin = $1
+set SPINUP_FORC_DIR = /raid8/forecast/proj/uswide/data/"$basin"/forcing/spinup_nearRT/asc_vicinp 
+set CURR_FORC_DIR = /raid8/forecast/proj/uswide/data/"$basin"/forcing/curr_spinup/asc_vicinp
+set FLIST = /raid8/forecast/proj/uswide/data/"$basin"/forcing/grid/grid_info/"$basin".125.datafiles.maskorder
+
+foreach file (`cat $FLIST`)
+awk '{print}' $CURR_FORC_DIR/$file >> $SPINUP_FORC_DIR/$file 
+end
+
+

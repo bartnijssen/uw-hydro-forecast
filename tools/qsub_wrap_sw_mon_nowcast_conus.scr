@@ -1,0 +1,11 @@
+#!/bin/bash
+#
+#$ -cwd
+#$ -j y
+#$ -S /bin/bash
+#$ -q forecast.q
+
+
+/raid8/forecast/proj/uswide/tools/wrap_sw_mon_nowcast.pl pnw >& /raid8/forecast/proj/uswide/tools/log.wrap_sw_mon_nowcast.conus.txt
+
+

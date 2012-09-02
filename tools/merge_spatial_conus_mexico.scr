@@ -1,0 +1,41 @@
+#!/bin/csh
+# This script merges the soil moisture statstics files of PROJECT conus and mexico into conus.mexico
+
+set ROOT_DIR = $1
+set MODEL = $2
+set FYR = $3
+set FMON = $4
+set FDAY = $5
+set DATE = $FYR$FMON$FDAY
+set OUTDIR = "$ROOT_DIR/data/conus.mexico/spatial/xyzz.all/$DATE"
+
+mkdir $OUTDIR
+
+foreach varname (sm swe stot)
+
+set DATAFILE1 = "$ROOT_DIR/data/conus/spatial/xyzz.all/$DATE/$varname.CONUS.$MODEL.f-c_mean.a-m_anom.qnt.xyzz"
+
+set DATAFILE2 = "$ROOT_DIR/data/mexico/spatial/xyzz.all/$DATE/$varname.MEXICO.$MODEL.f-c_mean.a-m_anom.qnt.xyzz"
+
+set DATAFILE3 = "$OUTDIR/$varname.CONUS.MEXICO.$MODEL.f-c_mean.a-m_anom.qnt.xyzz"
+
+awk '{print}' $DATAFILE1 > $DATAFILE3
+awk '{print}' $DATAFILE2 >> $DATAFILE3
+
+end
+
+### Merging RO since the file name
+
+set varname = "ro"
+
+set DATAFILE1 = "$ROOT_DIR/data/conus/spatial/xyzz.all/$DATE/$varname.CONUS.$MODEL.qnt.xyzz"
+
+set DATAFILE2 = "$ROOT_DIR/data/mexico/spatial/xyzz.all/$DATE/$varname.MEXICO.$MODEL.qnt.xyzz"
+
+set DATAFILE3 = "$OUTDIR/$varname.CONUS.MEXICO.$MODEL.qnt.xyzz"
+
+awk '{print}' $DATAFILE1 > $DATAFILE3
+awk '{print}' $DATAFILE2 >> $DATAFILE3
+
+
+exit

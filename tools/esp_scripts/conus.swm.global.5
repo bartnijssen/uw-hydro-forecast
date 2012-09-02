@@ -1,0 +1,90 @@
+#######################################################################
+# This text file contains information used by the vicNl model to define
+# needed global variables and model parameters, as well as allowing the
+# user to control the features of the model to be used in the current 
+# model run.
+#
+# Lines proceeded by # are comments and are not processed by the model
+#
+# Modified:     Sep 2007 by AWW for VIC ver.4.0.5
+# Comments:     Global Parameter file for the Continental US
+#               Set up for daily water balance
+#               Uses snowbands
+#               Set to run on Sere
+#######################################################################
+
+#######################################################################
+# Define Global Parameters
+#######################################################################
+NLAYER          3       # number of layers
+TIME_STEP       24      # model time step: hours (24 for water balance)
+STARTYEAR       2002      # year model simulation starts
+STARTMONTH      08      # month model simulation starts
+STARTDAY        23      # day model simulation starts
+STARTHOUR       0       # hour model simulation starts
+NRECS 190 #
+#ENDYEAR        YYY2      # year model simulation ends
+#ENDMONTH       MM2      # month model simulation ends (if no NRECS)
+#ENDDAY         23      # day model simulation ends
+SKIPYEAR        0       # number of startup years to skip before output
+INIT_STATE /raid/forecast/sw_monitor/state/CONUS.5.dly_wb_state_20080823
+WIND_H          10.0    # height of wind speed measurement
+MEASURE_H       2.0     # height of humidity measurement
+NODES           5       # number of soil thermal nodes
+MAX_SNOW_TEMP   0.5     # maximum temperature at which snow can fall
+MIN_RAIN_TEMP   -0.5    # minimum temperature at which rain can fall
+
+#######################################################################
+# Define Global Parameters
+#######################################################################
+FULL_ENERGY	FALSE	# calculate full energy balance
+FROZEN_SOIL	FALSE	# calculate frozen soils
+DIST_PRCP	FALSE	# use distributed precipitation
+COMPRESS	FALSE	# compress input and output files when done
+CORRPREC	FALSE	# correct precipitation for gauge undercatch
+GRID_DECIMAL	4	# number of decimals to use in gridded files
+PRT_SNOW_BAND   FALSE   # print snow variables
+ARC_SOIL        FALSE   # read soil parameter from ARC/INFO ASCII grids
+SNOW_STEP	1       # timestep to solve snowbands (not 3 for dly)
+ROOT_ZONES	3	# number of root zones in veg parameter file
+BINARY_OUTPUT   FALSE   # default is ASCII, unless LDAS format
+BINARY_STATE_FILE FALSE # default is binary
+MIN_WIND_SPEED  0.1     # minimum allowable wind speed
+PREC_EXPT	0.6	# fraction of grid cell receiving precip
+GRND_FLUX       FALSE   # true for full energy, false for water balance
+QUICK_FLUX      FALSE   # true uses Liang ('99), false uses finite diff
+NOFLUX          FALSE   # false uses const. T at damping depth
+COMPUTE_TREELINE 10     # false disables, otherwise give default type
+JULY_TAVG_SUPPLIED TRUE # July Tavg was added in last col of soil file
+
+#######################################################################
+# Snow Band Description File
+#
+# SNOW_BAND defines both the number of snow bands available for each
+# grid cell, and the name of the snow band description file.
+#######################################################################
+SNOW_BAND     9   /raid/forecast/sw_monitor/params/snowbands.CONUS.5.9bands
+#######################################################################
+# Define (Meteorological) Forcing Files
+#######################################################################
+FORCING1        /nfs/sere/raid/forecast/sw_monitor/forc/asc_vicinp.CONUS.5.1915-curr/data_
+N_TYPES         4
+FORCE_TYPE      PREC
+FORCE_TYPE      TMAX
+FORCE_TYPE      TMIN
+FORCE_TYPE      WIND
+FORCE_FORMAT    ASCII
+FORCE_DT	24      # time step of input met files
+FORCEYEAR	1915	# year meteorological forcing files start
+FORCEMONTH 	1	# month meteorological forcing files start
+FORCEDAY   	1	# day meteorological forcing files start
+FORCEHOUR  	0	# hour meteorological forcing files start
+
+#######################################################################
+# Define Input and Output Data Files
+#######################################################################
+SOIL            /raid/forecast/sw_monitor/params/soil.conus.5
+VEGPARAM        /raid/forecast/sw_monitor/params/veg.2.new
+GLOBAL_LAI      TRUE      # true if veg param file has monthly LAI
+VEGLIB          /raid/forecast/sw_monitor/params/LDAS_veg_lib
+RESULT_DIR      /raid/forecast/sw_monitor/output/ESP/flux/

@@ -1,0 +1,25 @@
+#!/bin/csh
+#$ -cwd
+#$ -j y
+#$ -S /bin/csh
+#$ -q forecast.q
+
+set SCRIPT = "/raid8/forecast/proj/uswide/tools/get_mon_stats_OR.pl" 
+set YR = "1950"
+set NUM = "$1"
+set SYR = `echo $YR | awk '{print $1+(10*'$NUM')+1}'` 
+set EYR = `echo $SYR | awk '{print $1+9}'`
+if ($EYR >2004) then
+set EYR = 2004
+endif
+echo "$SYR $EYR"
+set STAT_YR = "$SYR"
+set DAYS_IN_MON = (31 28 31 30 31 30 31 31 30 31 30 31)
+while ($STAT_YR <= $EYR)
+foreach MON (1 2 3 4 5 6 7 8 9 10 11 12)
+set DAY = "$DAYS_IN_MON[$MON]"
+$SCRIPT $STAT_YR $MON $DAY
+end
+@ STAT_YR++
+end
+

@@ -1,0 +1,13 @@
+# object or archive files
+*.[oa]
+# emacs temporary files
+*~
+# a local temp directory
+tmp/
+# any files or directories labeled junk
+*junk*/
+*junk*
+# ignore data directories (may want to change this later)
+data/
+# Mac .DS_Store files
+.DS_Store

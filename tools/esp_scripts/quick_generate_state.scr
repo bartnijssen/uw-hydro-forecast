@@ -1,0 +1,45 @@
+#!/bin/csh
+# AWW-sep2006
+## Shrad - Nov 2007 Using this script to generate state file for the ensemble runs to estimate the recovery day from a moisture deficiency
+# update global files to write new spinup & state
+
+set GLOB = global.v406.staterun.TEMPLATE
+
+#goto SKIP
+
+# do first 10 year spinup run from cold start (1949/10/01 without state) and get the first initial state for 1950/01/01
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# now loop through and generate subsequent state files
+# one for the first day of jan, feb, mar, apr, may, jun  for each year 1995-2005
+# runs go through september 
+
+set SMON = ("01" "02" "03" "04" "05" "06" "07" "08" "09" "10" "11" "12")
+set EMON = ("02" "03" "04" "05" "06" "07" "08" "09" "10" "11" "12" "01")
+set SDY = 01
+set EDY = 01
+set my_model = $1
+set PROJECT = $2
+# clear out working directories, make necessary ones
+set TOOLS_DIR = /raid8/forecast/sw_monitor/tools
+set SYR = 2007
+while ($SYR < 2008)
+  set EYR = $SYR
+  foreach M (1 2 3 4 5 6 7 8 9 10 11 12)
+   #foreach M (9 10 11 12)
+   set SM = $SMON[$M]
+    set EM = $EMON[$M]
+    if($M == 12) then
+      @ EYR ++
+    endif
+set FORC_START_DATE = "$SYR"-"$SM"-"01"
+set FORC_UPD_END_DATE =  "$EYR"-"$EM"-"01"
+set statefile = "state_"$SYR$SM"01"   
+
+echo "simulations from $FORC_START_DATE to $FORC_UPD_END_DATE"
+$TOOLS_DIR/esp_scripts/temp_run_model_esp.pl -m $my_model -p $PROJECT -f spinup_nearRT -pf data -r esp -s $FORC_START_DATE -e $FORC_UPD_END_DATE -st retro.2005 -i $statefile
+end
+@ SYR ++
+
+end  # end startyear loop

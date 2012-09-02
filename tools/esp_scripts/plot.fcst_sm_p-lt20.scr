@@ -1,0 +1,76 @@
+#!/bin/csh
+# A. Wood, dec 2007
+# plot SM percentile for CONUS region
+# input:  row loop is for(var: sm, swe, ro6, ro3){for(lead: 1,2,3mo){for(quantile category:-)
+#   quantile categories start with 2nd range, go to top.  first range is 1-(sum of all)
+#   e.g., if terciles, lowest tercile prob is 1-2nd-3rd
+gmtset ANOT_FONT_SIZE 12 LABEL_FONT_SIZE 12 HEADER_FONT_SIZE 16
+gmtset TICK_LENGTH 0.025 D_FORMAT %g PLOT_DEGREE_FORMAT -ddd:mm:ss
+
+set datestr = $1  # e.g. 20070716
+set lead = $2 # in months
+set title = "Predicted probability of soil moisture below 20th percentile"
+set title2 = "(fraction of climatological ESP traces in lowest quintile)"
+set outfil = /raid/forecast/sw_monitor/output/ESP/plots/sm.prob-lt20.fut_lm$lead.$datestr.ps
+set coord = -126/-66/24/50
+set proj = -JM7.5
+set blue = 150/150/150
+set thresh = 0
+set pixel = 0.135
+#set FUTXYZ = /raid/forecast/sw_monitor/spatial/xyzz.all/$datestr/wb_terc_prob.ENS.$datestr.xyzz
+set FUTXYZ = /raid/forecast/sw_monitor/output/ESP/xyzz.all/wb_prob.ENS.20-33.$datestr.xyzz
+set BAS = CONUS
+set YY = 4
+set blue = 200
+set QNTS = 2 # number of probabilities given per forecast lead time
+set LDS = 3  # number of leads
+set VAR = 1 # SM, out of sm, swe, ro-6, ro-3
+
+set COMMON = /raid/forecast/common
+#set cptfile = $COMMON/cpt/CPC_smplot.cpt
+set cptfile = $COMMON/cpt/prob_of_lt20.midwhite.cpt
+#makecpt - T0/100/10 -C$COMMON/cpt/CPC_smplot.cpt >! junk.cpt
+#makecpt -T0/100/20 -Cwysiwyg  >! $cptfile 
+
+#titles, etc.
+pstext -JX7.5/9 -R0/1/0/1 -V -P -K -N <<END>! $outfil
+0.42 1.01 16 0 1 6 $title 
+0.42 .98 16 0 0 6 $title2
+END
+pstext -JX7.5/9 -R0/1/0/1 -V -O -K -N -G0/0/255 <<END>> $outfil
+0.42 .95 16 0 0 6 Initialized $datestr -- $lead month lead
+END
+
+# plot data -----------------------
+
+# next statement tailored for lowest range formed by 2 quantile boundaries
+awk '{print $1,$2,100-($(2+'$lead'*'$QNTS'-1+'$QNTS'*'$LDS'*('$VAR'-1))+$(2+'$lead'*'$QNTS'+'$QNTS'*'$LDS'*('$VAR'-1)))}' $FUTXYZ > test.xyzz
+#    psxy -O -K -X-0.5 -Y$YY -C$cptfile $proj -R$coord -V -Ss$pixel >> $outfil
+
+xyz2grd test.xyzz -Gsm.ncdf -R$coord -V -I0.5 -F
+grdsample sm.ncdf -Gsm_smooth.ncdf -I3m -R$coord -Q0.25 -F
+grdimage -O -K -X-0.5 sm_smooth.ncdf $proj -R$coord -Y$YY -C$cptfile >> $outfil
+
+# add land, basin outlines
+pscoast -O $proj -R$coord -A2000 -Di -S$blue -N1/7 -K -V -N2/2 -B8/4:.:WEsN -W1>> $outfil       }
+#psxy $COMMON/basdln/w_reg.coarse.poly -O -K -R$coord $proj -W5/150/0/0 -M  >> $outfil
+
+# misc labels
+#pstext $proj -R$coord -V -K -O  << END  >> $outfil
+#-111.5 49.5 12 0 5 6 CANADA
+#-111.5 48.5 12 0 5 6 USA
+#-124 35 12 0 7 5 Pacific
+#-124 34 12 0 7 5 Ocean
+#END
+
+# --------- wrap up --------------------------------------
+psscale -C$cptfile -D3.75/-0.2/5/0.1h -O -V -N -B:"% chance of below 20th percentile":  >> $outfil
+
+#pstogif $outfil
+\rm test.xyzz
+\rm *.ncdf
+gs $outfil
+
+
+
+

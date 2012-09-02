@@ -1,0 +1,83 @@
+#!/bin/csh
+# AWW-2004
+## Shrad 20110520 Edited this so it gets all the input from a master script
+# script to take the ensemble averages of the xtr_vars/ spatial summaries from each
+# ensemble member.  outputs are .xyz files that can be plotted, or used as
+# precursors to making the comparison of forecast and climatology
+#
+#     VARS: SWE, 1st day of month, from forecasts; and mon. avg. wb vars
+#
+# XDZ-2007
+# (1) change to work for both ESP and CPC
+# (2) work for 1 basin each time, so it can be called from ESP forecast main script
+# (3) if forecast starting day > 1, do the monthly ens averaged vars since the second month, 
+#     because the average for the first month is not correct
+#
+
+### Usage <FCST BAS> <DATE> <LONLAT> <XYZZDIR> <S_AVGPER> <E_AVGPER> 
+
+set FCST = "$1"    # ESP or CPC
+
+set BAS  = "$2"
+set DATE  = "$3"
+set LONLAT = "$4"
+set XYZZDIR = "$5"
+set S_AVGPER = "$6"
+set E_AVGPER = "$7"
+set NFCST_MON = "12"  
+
+# now get ensemble averages of each SWE day 1 (inefficient; do better in perl)
+  echo -n >! $XYZZDIR/all_mon.dy1_swe_avgs.$BAS
+  set FM = 0
+  while ($FM < $NFCST_MON)
+    @ FM ++ 
+    echo $BAS - getting average: mon $FM
+
+    # make file w/ cols from each run, then take average at end
+    echo -n >! $XYZZDIR/junk.$BAS
+    set Y = $S_AVGPER
+    while ($Y <= $E_AVGPER)
+      awk '{print $('$FM')}' $XYZZDIR/$BAS.dy1_swe.$Y > $XYZZDIR/t.$BAS
+      paste -d" " $XYZZDIR/junk.$BAS $XYZZDIR/t.$BAS > $XYZZDIR/t2.$BAS
+      mv $XYZZDIR/t2.$BAS $XYZZDIR/junk.$BAS
+      @ Y ++ 
+    end
+    awk '{for(i=1;i<NF+1;i++)c+=$i;print c/NF;c=0}' $XYZZDIR/junk.$BAS > $XYZZDIR/z.$BAS
+    paste -d" " $XYZZDIR/all_mon.dy1_swe_avgs.$BAS $XYZZDIR/z.$BAS > $XYZZDIR/t2.$BAS
+    mv $XYZZDIR/t2.$BAS $XYZZDIR/all_mon.dy1_swe_avgs.$BAS   # all variables, averages
+  end
+
+  paste $LONLAT $XYZZDIR/all_mon.dy1_swe_avgs.$BAS > $XYZZDIR/$BAS.dy1_swe_avgs.xyzz
+  \rm $XYZZDIR/t.$BAS $XYZZDIR/z.$BAS $XYZZDIR/junk.$BAS $XYZZDIR/all_mon.dy1_swe_avgs.$BAS
+
+  # %%%%%% now do the monthly averaged vars - get ensemble averages %%%%%%
+
+  echo -n >! $XYZZDIR/monvars.avgs.$BAS
+  set FM = 0
+  if ($DATE > 1) then     # do the monthly averaged vars from the 2nd month
+    set FM = 1
+    set NFCST_MON = 13
+  endif
+  while ($FM < $NFCST_MON)
+    foreach V (1 2 3 4 5)
+      echo $BAS - getting average: mon $FM var $V
+      # make file w/ cols from each run, then take average at end
+      echo -n >! $XYZZDIR/junk.$BAS
+      set Y = $S_AVGPER
+      while ($Y < $E_AVGPER)
+        awk '{print $('$FM'*5+'$V')}' $XYZZDIR/$BAS.all_monvars.$Y > $XYZZDIR/t.$BAS
+        paste -d" " $XYZZDIR/junk.$BAS $XYZZDIR/t.$BAS > $XYZZDIR/t2.$BAS
+        mv $XYZZDIR/t2.$BAS $XYZZDIR/junk.$BAS
+        @ Y ++ 
+      end
+      awk '{for(i=1;i<NF+1;i++)c+=$i;print c/NF;c=0}' $XYZZDIR/junk.$BAS > $XYZZDIR/z.$BAS
+      paste -d" " $XYZZDIR/monvars.avgs.$BAS $XYZZDIR/z.$BAS > $XYZZDIR/t2.$BAS
+      mv $XYZZDIR/t2.$BAS $XYZZDIR/monvars.avgs.$BAS   # all variables, averages
+    end
+    @ FM ++  # NO spinup when starting on day 1 of month
+  end
+
+  paste $LONLAT $XYZZDIR/monvars.avgs.$BAS > $XYZZDIR/$BAS.monvars_avgs.xyzz
+  \rm $XYZZDIR/monvars.avgs.$BAS $XYZZDIR/junk.$BAS $XYZZDIR/t.$BAS $XYZZDIR/z.$BAS
+
+

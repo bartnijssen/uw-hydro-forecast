@@ -1,0 +1,37 @@
+#!/bin/csh
+# X.D.Z-2007
+# processes ESP/CPC forecast result for the specific basin
+# this script will calculate the statics, make forecast streamflow plots for stations in the basin,
+# and write the BAS.htm and BAS_diff.htm under ./w_reg/summ_stats.
+# it will not copy the plots and htms to website
+# use up1bas.scr to do the copy
+
+set BAS  = $1
+set YEAR = $2
+set MON  = $3
+set DAY  = $4
+set FCST = $5
+
+set DATE = $2$3$4
+
+##cd /raid8/forecast/proj/fcst/ESP/sflow
+
+fcst_sflow $FCST $BAS $YEAR $MON $DAY > sflow.$BAS.log
+##cd $BAS/$DATE.$FCST
+###tar -czf sflow.all.tar.gz sflow.*.all
+###rm -f sflow.*.all
+##cd ../../
+
+###echo "removing tmp data from ./sflow/$BAS"
+###rm -f ./sflow/$BAS/*.*
+
+###plot_q.boxwh.$FCST.scr $BAS $YEAR $MON $DAY > log/plot_q.$BAS.log
+
+###set HTML = ./w_reg/summ_stats/$BAS
+###set STAT = ./$BAS/$DATE.$FCST/$BAS.$FCST"stats"
+
+###update_stats.pl $HTML.htm $STAT $FCST
+###update_stats.pl $HTML"_diff.htm" $STAT"_DIFF" $FCST
+
+###cd /raid8/forecast/proj/fcst/ESP/spatial/fcst/
+###proc.xtr_vars.fcst.scr $FCST $BAS $DAY > log/proc.$BAS.log

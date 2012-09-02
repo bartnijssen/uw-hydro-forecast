@@ -1,0 +1,27 @@
+#!/bin/csh
+## This script runs forcing generation script for any given time period of less than 2 months
+#$ -cwd
+#$ -j y
+#$ -S /bin/tcsh
+#$ -q forecast.q
+#$ -N FORCING_BASIN
+#$ -M shrad@hydro.washington.edu
+#$ -m abe
+set Script = "/raid8/forecast/proj/uswide/tools/update_forcings_asc.pl"
+
+set basin = $1
+
+### Year 2012
+
+set FORC_DIR = /raid8/forecast/proj/uswide/data/"$basin"/forcing/curr_spinup/asc_vicinp
+set FLIST = /raid8/forecast/proj/uswide/data/"$basin"/forcing/grid/grid_info/"$basin".125.datafiles.maskorder
+
+foreach file (`cat $FLIST`)
+\rm -rf $FORC_DIR/$file
+touch $FORC_DIR/$file
+end
+
+###$Script $basin 2012-01-01 2011-12-31 2012-01-31
+
+###$Script $basin 2012-03-01 2012-02-29 2012-03-31
+

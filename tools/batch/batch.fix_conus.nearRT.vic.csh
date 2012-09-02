@@ -1,0 +1,9 @@
+run_model.pl -m vic -p conus -f spinup_nearRT -pf data -r spinup_nearRT.2005 -s 2005-01-01 -e 2005-12-31 -i /raid8/forecast/sw_monitor/data/conus/state/retro/vic/state_20041231
+run_model.pl -m vic -p conus -f spinup_nearRT -pf data -r spinup_nearRT.2006 -s 2006-01-01 -e 2006-12-31 -i /raid8/forecast/sw_monitor/data/conus/state/spinup_nearRT.2005/vic/state_20051231
+run_model.pl -m vic -p conus -f spinup_nearRT -pf data -r spinup_nearRT.2007 -s 2007-01-01 -e 2007-12-31 -i /raid8/forecast/sw_monitor/data/conus/state/spinup_nearRT.2006/vic/state_20061231
+run_model.pl -m vic -p conus -f spinup_nearRT -pf data -r spinup_nearRT.2008.01 -s 2008-01-01 -e 2008-01-31 -i /raid8/forecast/sw_monitor/data/conus/state/spinup_nearRT.2007/vic/state_20071231
+run_model.pl -m vic -p conus -f spinup_nearRT -pf data -r spinup_nearRT.2008.02 -s 2008-01-01 -e 2008-02-29 -i /raid8/forecast/sw_monitor/data/conus/state/spinup_nearRT.2007/vic/state_20071231
+run_model.pl -m vic -p conus -f spinup_nearRT -pf data -r spinup_nearRT.2008.03 -s 2008-01-01 -e 2008-03-31 -i /raid8/forecast/sw_monitor/data/conus/state/spinup_nearRT.2007/vic/state_20071231
+run_model.pl -m vic -p conus -f spinup_nearRT -pf data -r spinup_nearRT.2008.04 -s 2008-01-01 -e 2008-04-30 -i /raid8/forecast/sw_monitor/data/conus/state/spinup_nearRT.2007/vic/state_20071231
+run_model.pl -m vic -p conus -f spinup_nearRT -pf data -r spinup_nearRT.2008.05 -s 2008-01-01 -e 2008-05-31 -i /raid8/forecast/sw_monitor/data/conus/state/spinup_nearRT.2007/vic/state_20071231
+run_model.pl -m vic -p conus -f spinup_nearRT -pf data -r spinup_nearRT.2008.06 -s 2008-01-01 -e 2008-06-30 -i /raid8/forecast/sw_monitor/data/conus/state/spinup_nearRT.2007/vic/state_20071231

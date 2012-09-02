@@ -1,0 +1,2 @@
+/raid8/forecast/sw_monitor/tools/run_model.pl -m vic -p conus -f spinup_nearRT -pf full_data -s 2005-01-01 -e 2008-03-31 -i /raid8/forecast/sw_monitor/data/conus/state/retro/vic/state_20041231 >& vic_tmp.log.txt
+kickoff_sw_nowcast_multimodel_serial.no_qsub.pl.tmp conus vic,noah_sac,clm >& kickoff.log.txt

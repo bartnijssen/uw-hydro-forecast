@@ -1,0 +1,7 @@
+#!/bin/csh
+#
+#$ -cwd
+#$ -j y
+#$ -S /bin/csh
+#$ -q forecast.q
+/raid8/forecast/proj/uswide/tools/run_VIC_and_rout_ESP.pl feather vic 1 1 2012 07 25 1976 1979

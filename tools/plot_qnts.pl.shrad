@@ -1,0 +1,416 @@
+#!/usr/bin/perl -w
+# plot_qnts.pl: Script to plot model results
+
+# Ali Akanda, 041805, 050505
+# A.Wood, jul07, modified to make runoff plots too
+# 2008-05-22 Generalized for multimodel sw monitor.	TJB
+# $Id: $
+#-------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------------
+# Determine tools, root, and config directories - assume this script lives in TOOLS_DIR/
+#----------------------------------------------------------------------------------------------
+if ($0 =~ /^(.+)\/[^\/]+$/) {
+  $TOOLS_DIR = $1;
+}
+elsif ($0 =~ /^[^\/]+$/) {
+  $TOOLS_DIR = ".";
+}
+else {
+  die "$0: ERROR: cannot determine tools directory\n";
+}
+if ($TOOLS_DIR =~ /^(.+)\/tools/i) {
+  $ROOT_DIR = $1;
+}
+else {
+  $ROOT_DIR = "$TOOLS_DIR/..";
+}
+$CONFIG_DIR = "$ROOT_DIR/config";
+$COMMON_DIR = "$ROOT_DIR/../common";
+
+#----------------------------------------------------------------------------------------------
+# Include external modules
+#----------------------------------------------------------------------------------------------
+# Subroutine for reading config files
+require "$TOOLS_DIR/simma_util.pl";
+
+# Date arithmetic
+use Date::Calc qw(Add_Delta_YM Add_Delta_Days Days_in_Month Delta_Days);
+
+# Other
+use LWP::Simple;
+
+#-------------------------------------------------------------------------------
+# Parse the command line
+#-------------------------------------------------------------------------------
+
+$PROJECT = shift; # project name, e.g. conus mexico
+$MODEL = shift; # model name, e.g. vic noah sac clm multimodel
+$yr = shift;
+$mon = shift;
+$day = shift;
+
+#----------------------------------------------------------------------------------------------
+# Set up constants
+#----------------------------------------------------------------------------------------------
+
+# Derived variables
+$MODEL_UC = $MODEL;
+$MODEL_UC =~ tr/a-z/A-Z/;
+$PROJECT_UC = $PROJECT;
+$PROJECT =~ tr/A-Z/a-z/;
+$PROJECT_UC =~ tr/a-z/A-Z/;
+$datenow = sprintf("%04d%02d%02d", $yr, $mon, $day);
+
+# Unique identifier for this job
+$JOB_ID = `date +%y%m%d-%H%M%S`;
+if ($JOB_ID =~ /(\S+)/) {
+  $JOB_ID = $1;
+}
+
+# Miscellaneous
+@month_days = (31,28,31,30,31,30,31,31,30,31,30,31);
+@ndxes = (1,2,3,6,9,12,18,24,36,48);
+
+# Read project configuration info
+$ConfigProject = "$CONFIG_DIR/config.project.$PROJECT";
+$var_info_project_ref = &read_config($ConfigProject);
+%var_info_project = %{$var_info_project_ref};
+
+# Read model configuration info
+$ConfigModel = "$CONFIG_DIR/config.model.$MODEL";
+$var_info_model_ref = &read_config($ConfigModel);
+%var_info_model = %{$var_info_model_ref};
+
+# Substitute model-specific information into project variables
+foreach $key_proj (keys(%var_info_project)) {
+  foreach $key_model (keys(%var_info_model)) {
+    $var_info_project{$key_proj} =~ s/<$key_model>/$var_info_model{$key_model}/g;
+  }
+}
+
+# Save relevant project info in variables
+$XYZZ_DIR           = $var_info_project{"XYZZ_DIR"};
+$PLOT_DIR           = $var_info_project{"PLOT_DIR"};
+$CLIM_START_YR      = $var_info_project{"CLIM_START_YR"}; # Climatology start year
+$CLIM_END_YR        = $var_info_project{"CLIM_END_YR"}; # Climatology end year
+$swe_thresh         = $var_info_project{"SWE_THRESH"};
+$PROJ               = $var_info_project{"MAP_PROJ"};
+$COORD              = $var_info_project{"MAP_COORD"};
+$ANNOT              = $var_info_project{"MAP_ANNOT"};
+$XX                 = $var_info_project{"MAP_XX"};
+$YY                 = $var_info_project{"MAP_YY"};
+$SCALE_X            = $var_info_project{"MAP_SCALE_X"};
+$NDXESDIR            = $var_info_project{"NDXES_DIR"};
+# Save relevant model info in variables
+$PlotVarList = $var_info_model{"PLOT_VARS"};
+@varnames = split /,/, $PlotVarList;
+@varnames = (spi,sri);
+#----------------------------------------------------------------------------------------------
+# END settings
+#----------------------------------------------------------------------------------------------
+
+# Check for directories; create if necessary & possible
+foreach $dir ("$XYZZ_DIR/$datenow") {
+  if (!-d $dir) {
+    die "$0: ERROR: directory $dir not found\n";
+  }
+}
+foreach $dir ("$PLOT_DIR/$datenow") {
+  $status = &make_dir($dir);
+}
+
+if ($MODEL =~ /vic/i && $PROJECT =~ /conus/i) {
+  push @varnames, ("smDM","smw","smc","sme");
+}
+
+# Loop over variables
+foreach $varname (@varnames) {
+
+  # Set up map parameters
+  if ($varname eq "smw") {
+    $current_PROJ = "-JM6.5";
+    $current_COORD = "-126/-100/28/50";
+    $current_ANNOT = "-B4/4:.:WEsN";
+    $current_XX = 0;
+    $current_YY = 1;
+    $current_SCALE_X = 3.25;
+  }
+  elsif ($varname eq "smc") {
+    $current_PROJ = "-JM6";
+    $current_COORD = "-110/-86/24/50";
+    $current_ANNOT = "-B4/4:.:WEsN";
+    $current_XX = 0;
+    $current_YY = 0.25;
+    $current_SCALE_X = 3.00;
+  }
+  elsif ($varname eq "sme") {
+    $current_PROJ = "-JM7";
+    $current_COORD = "-94/-66/24/50";
+    $current_ANNOT = "-B4/4:.:WEsN";
+    $current_XX = -0.25;
+    $current_YY = 0.25;
+    $current_SCALE_X = 3.5;
+  }
+  else {
+    $current_PROJ = $PROJ;
+    $current_COORD = $COORD;
+    $current_ANNOT = $ANNOT;
+    $current_XX = $XX;
+    $current_YY = $YY;
+    $current_SCALE_X = $SCALE_X;
+  }
+
+  # Set up periods to loop over
+  if ($varname eq "sm" || $varname eq "swe") {
+    @periods = ("","1day","1wk","2wk","1mo");
+  }
+  elsif ($varname eq "ro") {
+    @periods = ("1mo","2mo","3mo","6mo","9mo","12mo","18mo","24mo","36mo","48mo","60mo","WY");
+    @periodlbls = ("1-Month","2-Month","3-Month","6-Month","9-Month","1-Year","18-Month","2-Year","3-Year","4-Year","5-Year","Water Year");
+  }
+  elsif (($varname eq "spi") || ($varname eq "sri")) {
+      @periods = ("1mo","2mo","3mo","6mo","9mo","12mo","18mo","24mo","36mo","48mo");
+          @periodlbls = ("1-Month","2-Month","3-Month","6-Month","9-Month","12-Month","18-Month","24-Month","36-Month","48-Month");
+}
+ else {
+    @periods = ("");
+  }
+
+  # Loop over periods
+  for ($pidx=0; $pidx<@periods; $pidx++) {
+
+    # First (and/or only) data file
+    if ($varname eq "ro") {
+      $srcfile1 = "$XYZZ_DIR/$datenow/$varname.$PROJECT_UC.$MODEL.qnt.xyzz";
+    }
+   elsif (($varname eq "spi") || ($varname eq "sri")) {
+   $srcfile1 = "$NDXESDIR/xyzz/spi_sri.$datenow.xyzz";
+   }
+    elsif ($varname =~ /^sm(DM|w|c|e)$/) {
+      $srcfile1 = "$XYZZ_DIR/$datenow/sm.$PROJECT_UC.$MODEL.f-c_mean.a-m_anom.qnt.xyzz";
+    }
+    else {
+      $srcfile1 = "$XYZZ_DIR/$datenow/$varname.$PROJECT_UC.$MODEL.f-c_mean.a-m_anom.qnt.xyzz";
+    }
+
+    # (optional) second data file
+    $srcfile2 = "NODATA";
+    if ( ($varname eq "sm" || $varname eq "swe") & $periods[$pidx] ne "" ) {
+      if ($periods[$pidx] eq "1day") {
+        ($yr2,$mon2,$day2) = Add_Delta_Days($yr, $mon, $day,-1);
+        $otherdate = sprintf("%04d%02d%02d", $yr2, $mon2, $day2);
+      }
+      elsif ($periods[$pidx] eq "1wk") {
+        ($yr2,$mon2,$day2) = Add_Delta_Days($yr, $mon, $day,-7);
+        $otherdate = sprintf("%04d%02d%02d", $yr2, $mon2, $day2);
+      }
+      elsif ($periods[$pidx] eq "2wk") {
+        ($yr2,$mon2,$day2) = Add_Delta_Days($yr, $mon, $day,-14);
+        $otherdate = sprintf("%04d%02d%02d", $yr2, $mon2, $day2);
+      }
+      elsif ($periods[$pidx] eq "1mo") {
+        $day2 = $day;
+        $mon2 = $mon-1;
+        $yr2 = $yr;
+        if ($mon2 < 1) {
+          $mon2 = 12;
+          $yr2--;
+        }
+        $days_in_month = $month_days[$mon2-1];
+        if ( ($yr2 % 4) == 0 && $mon2 == 2) {
+          $days_in_month++;
+        }
+        if ($day2 > $days_in_month) {
+          $day2 = $days_in_month;
+        }
+        $otherdate = sprintf("%04d%02d%02d", $yr2, $mon2, $day2);
+      }
+      else {
+        die "$0: ERROR: unsupported period: $periods[$pidx]\n";
+      }
+      if (-e "$XYZZ_DIR/$otherdate") {
+        $srcfile2 = "$XYZZ_DIR/$otherdate/$varname.$PROJECT_UC.$MODEL.f-c_mean.a-m_anom.qnt.xyzz";
+	if (! -e $srcfile2) {
+          print "$0: WARNING: $srcfile2 not found\n";
+	  next;
+	}
+      }
+      else {
+        print "$0: WARNING: $XYZZ_DIR/$otherdate not found\n";
+	next;
+      }
+    }
+
+    #  Output filename
+    if ($periods[$pidx] eq "") {
+      $periodstr = "";
+    }
+    else {
+      $periodstr = "." . $periods[$pidx];
+    }
+    $outfile = "$PLOT_DIR/$datenow/$PROJECT_UC.$MODEL." . $varname . "_qnt" . $periodstr . ".ps";
+    if ($varname eq "smw") {
+      $outfile = "$PLOT_DIR/$datenow/west.$MODEL.sm_qnt.ps";
+    }
+    elsif ($varname eq "smc") {
+      $outfile = "$PLOT_DIR/$datenow/cent.$MODEL.sm_qnt.ps";
+    }
+    elsif ($varname eq "sme") {
+      $outfile = "$PLOT_DIR/$datenow/east.$MODEL.sm_qnt.ps";
+    }
+    elsif ($varname eq "smDM") {
+      $outfile = "$PLOT_DIR/$datenow/$PROJECT_UC.$MODEL.sm_qnt.DM.ps";
+    }
+    elsif ($varname eq "spi") {
+      $outfile = "$PLOT_DIR/$datenow/$PROJECT_UC.$MODEL.spi." . $periods[$pidx] . ".ps";
+    }
+     elsif ($varname eq "sri") {
+      $outfile = "$PLOT_DIR/$datenow/$PROJECT_UC.$MODEL.sri." . $periods[$pidx] . ".ps";
+    }
+
+   
+
+    # First title line
+    if ($varname =~ /^sm(DM|w|c|e)?$/) {
+      $longname = "Soil Moisture";
+    }
+    elsif ($varname eq "swe") {
+      $longname = "Snow Water Equivalent";
+    }
+    elsif ($varname eq "ro") {
+      $longname = "Cumulative $periodlbls[$pidx] Runoff";
+    }
+     elsif ($varname eq "spi") {
+      $longname = "Standardized Precipitation Index $periodlbls[$pidx]";
+    }
+    elsif ($varname eq "sri") {
+      $longname = "Standardized Runoff Index $periodlbls[$pidx]";
+    }
+ 
+    $title1 = "$MODEL_UC $longname Percentiles (wrt/ $CLIM_START_YR-$CLIM_END_YR)";
+
+    # Second title line
+    if ( ($varname eq "sm" || $varname eq "swe") && $periods[$pidx] ne "" ) {
+      $title2 = "for the period:   $otherdate  to  $datenow";
+    }
+    elsif ($varname eq "smw") {
+      $title2 = "Western United States - $datenow";
+    }
+    elsif ($varname eq "smc") {
+      $title2 = "Central United States - $datenow";
+    }
+    elsif ($varname eq "sme") {
+      $title2 = "Eastern United States - $datenow";
+    }
+    elsif (($varname eq "spi") || ($varname eq "sri")) {
+    $title2 = "based on rolling monthly climatology ending on $datenow ";
+  }
+    else {
+      $title2 = $datenow;
+      if ($varname eq "swe") {
+        $title2 = "$title2   threshold = $swe_thresh mm";
+      }
+    }
+
+    # Color scale
+    if ( ($varname eq "sm" || $varname eq "swe") && $periods[$pidx] ne "" ) {
+      $cptlabel1 = "change in percentile";
+      $cptlabel2 = "NODATA";
+      $cptfile = "$COMMON_DIR/cpt/BR_YWG_BL.mod.cpt";
+    }
+    else {
+      $cptlabel1 = "percentile";
+      if ($varname eq "swe") {
+        $cptfile = "$COMMON_DIR/cpt/sw_mon.SWE.cpt";
+        $cptlabel2 = "NODATA";
+      }
+      elsif ($varname eq "smDM") {
+        $cptfile = "$COMMON_DIR/cpt/DM_sm_scale.cpt";
+        $cptlabel2 = "0.4 -0.022 12 0 5 6 \\t           D4               D3               D2               D1               D0";
+      }
+      elsif ($varname eq "spi"){
+       $cptfile = "$COMMON_DIR/cpt/SRI_midwhite.cpt";
+       $cptlabel1 = "SPI";
+      }
+      elsif ($varname eq "sri"){
+       $cptfile = "$COMMON_DIR/cpt/SRI_midwhite.cpt";
+       $cptlabel1 = "SRI";
+      }
+      else {
+        $cptfile = "$COMMON_DIR/cpt/CPC_smplot.cpt";
+        $cptlabel2 = "NODATA";
+      }
+    }
+
+    # Temporary data file for plotting purposes
+    $datafile = "$XYZZ_DIR/$datenow/$varname.$PROJECT_UC.$MODEL.tmp.xyzz";
+    if ($varname =~ /^sm(DM|w|c|e)?$/) {
+      if ($periods[$pidx] eq "" ) {
+        $cmd = "awk \'{print \$1,\$2,\$7*100}\' $srcfile1 > $datafile";
+        (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
+      }
+      else {
+        $cmd = "paste $srcfile1 $srcfile2 > $datafile.tmp";
+        (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
+        $cmd = "awk \'{print \$1,\$2,(\$7-\$14)*100}\' $datafile.tmp > $datafile";
+        (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
+      }
+    }
+    elsif ($varname eq "swe") {
+      if ($MODEL =~ /multimodel/i) {
+        $swe_thresh = 0;
+      }
+      if ($periods[$pidx] eq "" ) {
+        $cmd = "awk \'{if (\$3 > $swe_thresh || \$4 > $swe_thresh) print \$1,\$2,\$7*100}\' $srcfile1 > $datafile";
+        (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
+      }
+      else {
+        $cmd = "paste $srcfile1 $srcfile2 > $datafile.tmp";
+        (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
+        $cmd = "awk \'{if (\$3 > $swe_thresh || \$4 > $swe_thresh) print \$1,\$2,(\$7-\$14)*100}\' $datafile.tmp > $datafile";
+        (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
+      }
+    }
+    elsif ($varname eq "ro") { 
+      $col = $pidx+1;
+      $cmd = "awk \'{print \$1,\$2,\$(\'$col\'+2)*100}\' $srcfile1 > $datafile";
+      (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
+    }
+   
+   elsif ($varname eq "spi") { 
+      $col = $pidx+1;
+      $cmd = "awk \'{if(\$($col+12)>-5 && \$($col+12)<5) print \$1,\$2,\$(\'$col\'+2)}' $srcfile1 > $datafile";
+      (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
+    }
+     elsif ($varname eq "sri") { 
+      $col = $pidx+1;
+      $cmd = "awk \'{if(\$($col+12)>-5 && \$($col+12)<5) print \$1,\$2,\$(\'$col\'+12)}' $srcfile1 > $datafile";
+      (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
+    }
+
+    # Plot-specific layers
+    if ($varname =~ /^sm(w|c|e)$/) {
+      $polyfile1 = "$COMMON_DIR/basdln/us_county.poly";
+      $polyfile2 = "$COMMON_DIR/basdln/lower48.poly";
+    }
+    else {
+      $polyfile1 = "NODATA";
+      $polyfile2 = "NODATA";
+    }
+
+    # Call the generic plotting script
+    $plot_scr = "$TOOLS_DIR/plot.var_qnt.scr";
+    $cmd = "$plot_scr $datafile $outfile $current_COORD $current_PROJ $current_ANNOT $current_XX $current_YY $current_SCALE_X \"$title1\" \"$title2\" $cptfile \"$cptlabel1\" \"$cptlabel2\" $polyfile1 $polyfile2";
+    print "$cmd\n";
+    (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
+
+    # Clean up temp data file
+    $cmd = "rm -f $datafile $datafile.tmp";
+    (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
+
+  }
+
+}
+
+print "Done with all plots!\n";

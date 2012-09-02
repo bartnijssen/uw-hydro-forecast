@@ -1,0 +1,111 @@
+#!/bin/csh 
+# AWW-010504
+### Shrad 20110519 Edited this so it can get all the inputs from a master script
+# plot month average 3-component (amt, anom, percentile) forecasts for 3 months
+# domain west
+# input var files have: 1var (m1-12);
+
+# ------------------ settings -------------
+gmtset ANOT_FONT_SIZE 12 LABEL_FONT_SIZE 12 HEADER_FONT_SIZE 16
+
+## USAGE <OUTF> <SMON> <N_FMON> <MSTR> <DATESTR> <BASIN> <poly> <TYPE> <COMMON> <XYZPATH>
+
+set OUTF  = "$1"     # 1st argument, outfile: e.g., w_reg.sm_fcst.m1-3.ps
+set SMON  = "$2"     # 2nd arg, the start month of the forecast 
+set N_FMON = ($3)  # 3rd arg, 3 mons in the forecast sequences (leads, NOT real mon): e.g., "1 2 3"
+set MSTR = ($4)    # 4th arg, list of month names 
+set DATESTR = "$5" # 5th arg, init. condition date: e.g. "Dec. 25, 2003"
+set BASIN = "$6"    # 6th arg, Basin name lists
+set poly = "$7"       # 7th arg, name of poly file
+set TYPE = "$8"       # 8th arg, forecast type, i.e., ESP or CPC
+set COMMON = "$9"     # 9th arg, address of COMMON Direcrtory where basin boundaries are
+set XYZPATH = "$10"   # 10th arg addres of FCST xyzz diretory $FCST_DATE/spatial
+
+
+set V = 3  # e.g. in array below
+set VAR = (p t ro sm swe)
+
+set PROJ = -JX2.5d/2.3d
+set COORD = -125/-85/14/53
+set CPT1 = "$COMMON/junk1.cpt"
+set CPT2 = "$COMMON/junk2.cpt"
+set CPT3 = "$COMMON/junk3.cpt"
+set BLUE = 180/180/255
+set THRESH = 50 # in mm
+set PIXEL = 0.04
+
+set XSH = ( -X-0.6 -X-5.4 -X-5.4)
+set XSH2 = -X2.7
+set YSH = ( -Y6.3 -Y-2.5 -Y-2.5)
+
+#make all-west datafiles (all files must be present)
+\rm amts anoms qnts
+touch amts anoms qnts
+
+foreach BAS ($BASIN)
+  cat amts $XYZPATH/$BAS.monvars_avgs.xyzz > t  # value
+  mv t amts
+  cat anoms $XYZPATH/$BAS.a-anom.$VAR[$V].xyzz > t # add. anom
+  mv t anoms
+  cat qnts $XYZPATH/$BAS.qnt.$VAR[$V].xyzz > t  # percentile
+  mv t qnts
+end
+
+# color bar, titles, etc.  --------------------------------------------------
+#makecpt -T0/400/50 -C$COMMON/cpt/sw_mon.RO.cpt >! $CPT1       # for total
+cp $COMMON/cpt/sw_mon.RO2.cpt $CPT1
+makecpt -T-50/50/20 -C$COMMON/cpt/sw_mon.SWE.cpt >! $CPT2         # for anomaly
+cp $COMMON/cpt/sw_mon.SWE.cpt $CPT3          # for percentile
+#makecpt -T0/100/10 -C$COMMON/cpt/sw_mon.SWE.cpt >! $CPT3          # for percentile
+
+psscale -P -K -D0.65/0.6/2.5/0.10h -C$CPT1 -B:"mm": -E -L >! $OUTF
+psscale -O -K -D3.35/1.1/2.5/0.10h -C$CPT2 -B:"anomaly (mm)": -E >> $OUTF
+psscale -O -K -D6.05/0.6/2.5/0.10h -C$CPT3 -B:"percentile (wrt 1971-2000)": -E >> $OUTF
+
+set T1 = `expr $SMON + $N_FMON[1] - 1`
+set T2 = `expr $SMON + $N_FMON[2] - 1`
+set T3 = `expr $SMON + $N_FMON[3] - 1`
+
+pstext -O -K -R0/1/0/1 -JX7.0/9.5 -N << END >> $OUTF
+.5 0.98 16 0 5 6 Runoff (RO) Forecasts ($DATESTR)
+.09 0.93 14 0 5 6 RO (mm)
+.48 0.93 14 0 5 6 RO anomaly (mm)
+.87 0.93 14 0 5 6 RO percentile
+-0.12 .78 16 90 5 6 $MSTR[$T1]
+-0.12 .53 16 90 5 6 $MSTR[$T2]
+-0.12 .28 16 90 5 6 $MSTR[$T3]
+END
+ 
+foreach N (1 2 3) # only do 3 forecast months
+  set FM = $N_FMON[$N]
+
+  #--------- amt average (in mm) --------------------------------------------------
+  pscoast -O -K $YSH[$N] $XSH[$N] -Dl $PROJ -R$COORD -Ggray -V -A2000 >> $OUTF
+  awk '{print $1,$2,$(2+(('$FM'-1)*5)+'$V')}' amts | \
+    psxy -O -K -C$CPT1 -R -J -Ss$PIXEL -V >> $OUTF
+  pscoast -O -K -J -R -Dl -S$BLUE -N1/7 -N2/2/100 -W1 -A2000 -V >> $OUTF
+  psxy $poly -O -K -R -J -W5/150/0/0 -M -B4/4:.:wesn >> $OUTF
+
+  # -------- % anom (in %) --------------------------------------------------
+  pscoast -O -K $XSH2 -Dl $PROJ -R$COORD -Ggray -V -A2000 >> $OUTF
+  awk '{print $1,$2,$('$FM'+2)}' anoms | \
+    psxy -O -K -C$CPT2 -R -J -Ss$PIXEL -V >> $OUTF
+  pscoast -O -K -J -R -Dl -S$BLUE -N1/7 -N2/2/100 -W1 -A2000 -V >> $OUTF
+  psxy $poly -O -K -R -J -W5/150/0/0 -M -B4/4:.:wesn >> $OUTF
+
+  # ---------- percentile --------------------------------------------
+  pscoast -O -K $XSH2 -Dl $PROJ -R$COORD -Ggray -V -A2000 >> $OUTF
+  awk '{print $1,$2,$('$FM'+2)*100}' qnts | \
+    psxy -O -K -C$CPT3 -R -J -Ss$PIXEL -V >> $OUTF
+  pscoast -O -K -J -R -Dl -S$BLUE -N1/7 -N2/2/100 -W1 -A2000 -V >> $OUTF
+  psxy $poly -O -K -R -J -W5/150/0/0 -M -B4/4:.:wesn >> $OUTF
+
+end    # ------ end loop through forecast months
+
+pstext -O -R0/1/0/1 -JX6.5/9.5 << END >> $OUTF
+0 0 10 0 4 6 .
+END
+
+\rm amts anoms qnts $COMMON/junk* junk*
+
+exit

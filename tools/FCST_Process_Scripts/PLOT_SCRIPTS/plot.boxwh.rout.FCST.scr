@@ -1,0 +1,110 @@
+#!/bin/csh
+# AWW-20060301 updated to use GMT4.0 timeseries axis
+## Shrad May 2011 - Updated the script to get all the path address from a master script
+gmtset INPUT_DATE_FORMAT yyyy-mm-dd TIME_LANGUAGE US
+gmtset PLOT_DATE_FORMAT o TIME_FORMAT_PRIMARY Character
+gmtset TICK_LENGTH 0.025
+gmtset MEASURE_UNIT inch ANNOT_FONT_SIZE 12p LABEL_FONT_SIZE 14p
+gmtset HEADER_FONT_SIZE 16 LABEL_FONT_SIZE 14
+
+# plot streamflow current conditions vs. distribution of climatology years
+#expects arguments:  LOC TITLE MAX (in kcfs) TIC
+#               e.g., DALLE "Columbia River at Dalles, OR" 1000 100
+
+# Argument to the script
+## Usage <BAS> <INPUT> <SYR> <SMO> <SDY> <DATAPATH> <OBS_CLIM> <PLOTDIR>
+set BAS = "$1"
+set INPUT = "$2"
+set SYR = "$3"
+set SMO = "$4"
+set SDY = "$5"
+set DATAPATH = "$6"
+set OBS_CLIM = "$7"
+set PLOTDIR = "$8"
+
+set STN  = "$INPUT/$BAS.stn" 
+set RSC  = "$INPUT/$BAS.plot.rsc"
+
+set DAY = $3$4$5
+set DATE = `date -d $DAY "+%B %e, %Y"`
+set FCSTDATE = "FORECAST DATE: $DATE"
+
+set NYR = `echo $SYR"+1" | bc`
+set XCOORD = $SYR-$SMO-1T/$NYR-$SMO-1T
+
+# -------- hopefully nothing beyond here needs to change
+set OFF1 = "-9" # in days
+set OFF2 = "-3"
+set OFF3 = "3"
+set OFF4 = "9"
+set WDTH = "0.07" # in inches
+
+# these things don't change
+set PROJ = "-JX6T/4"
+
+echo bas:  $BAS
+echo path: $DATAPATH
+echo date: $DATE
+
+foreach LOC (`awk '{print $2}' $STN`)
+echo "Plotting $LOC"
+set CINFL = "$OBS_CLIM/$LOC.allmon.quart"
+set FINFL = "$DATAPATH/sflow.$LOC.quart"
+set ENSO = "$DATAPATH/sflow.$LOC.Ecold.quart"
+set ENSOPDO = "$DATAPATH/sflow.$LOC.Ecold_Ppos.quart"
+set OUTFL = "$PLOTDIR/qfcst.$LOC.ps"
+set TITLE = `awk '{if ( $2 =="'$LOC'" ) {$1="";$2="";print}}' $STN`
+set TXT = `grep $LOC $RSC`
+set MAX = `echo $TXT | awk '{print $2}'`
+set TIC = `echo $TXT | awk '{print $3}'`
+
+set COORD = $XCOORD/0/$MAX
+set AXES = `echo "-Bpa1O/$TIC"":mean flow (kcfs):WeSn"`
+
+##echo plotting $N $LOC
+
+# plot page title, etc.
+pstext -P -K -R0/1/0/1 -JX6.5/9.5 -N  << EOF >! $OUTFL
+.45 .9 16 0 5 BC Streamflow Forecast vs. Climatology (1960-99)
+EOF
+pstext -O -K -R0/1/0/1 -JX6.5/9.5 -N -G200/0/0 << EOF >> $OUTFL
+.45 .87 16 0 5 BC $FCSTDATE
+EOF
+pstext -O -K -R0/1/0/1 -JX6.5/9.5 -N -G0/0/200 << EOF >> $OUTFL
+.45 .84 16 0 4 BC $TITLE
+EOF
+
+# plot climatology
+awk '{print '$SYR'"-"$1"-"15+'$OFF1', $2/1000,$3/1000,$4/1000,$5/1000,$6/1000}' $CINFL | \
+  psxy -O -K -EY$WDTH -Y3.7 $PROJ -R$COORD -M -V "$AXES" -W1 -G180/180/180 >> $OUTFL
+awk '{print '$SYR'+1"-"$1"-"15+'$OFF1', $2/1000,$3/1000,$4/1000,$5/1000,$6/1000}' $CINFL | \
+  psxy -O -K -EY$WDTH $PROJ -R$COORD -M -V "$AXES" -W1 -G180/180/180 >> $OUTFL
+
+
+# plot ESP forecasts
+awk '{print '$SYR'+rollover"-"$1"-"15+'$OFF2', $2/1000,$3/1000,$4/1000,$5/1000,$6/1000;if($1==12)rollover++}' $FINFL | \
+  psxy -O -K -EY$WDTH $PROJ -R$COORD -M -V -W1/255/0/0 -G255/100/100 >> $OUTFL
+
+# plot conditional forecsts: enso [enso/pdo]
+awk '{print '$SYR'+rollover"-"$1"-"15+'$OFF3', $2/1000,$3/1000,$4/1000,$5/1000,$6/1000;if($1==12)rollover++}' $ENSO | \
+  psxy -O -K -EY$WDTH $PROJ -R$COORD -M -V -W1/255/0/0 -G200/200/0  >> $OUTFL
+awk '{print '$SYR'+rollover"-"$1"-"15+'$OFF4', $2/1000,$3/1000,$4/1000,$5/1000,$6/1000;if($1==12)rollover++}' $ENSOPDO |\
+  psxy -O -K -EY$WDTH $PROJ -R$COORD -M -V -W1/255/0/0 -G100/100/200  >> $OUTFL
+
+set PROJ2 = -JX6/2
+# legend
+pstext -R0/1/0/1 $PROJ2 -N -O -K -Y-1 << END >> $OUTFL
+0.05 0.20 14 0 5 5 climatology
+0.30 0.20 14 0 5 5 forecast
+0.55 0.20 14 0 5 5 enso\=Cold
+0.80 0.20 14 0 5 5 enso\=C, pdo\=\+ 
+END
+#0.8 0.20 14 0 5 5 observations
+
+echo .02 .2 | psxy -O -K -R0/1/0/1 $PROJ2 -Ss0.15 -W1 -G180/180/180 >> $OUTFL
+echo .27 .2 | psxy -K -O -R0/1/0/1 $PROJ2 -Ss0.15 -W1 -G255/0/0 >> $OUTFL
+echo .52 .2 | psxy -K -O -R0/1/0/1 $PROJ2 -Ss0.15 -W1 -G200/200/0 >> $OUTFL
+echo .77 .2 | psxy -O -R0/1/0/1 $PROJ2 -Ss0.15 -W1 -G100/100/200 >> $OUTFL
+convert -trim +repage +antialias $OUTFL $OUTFL:r.gif
+rm -f $PLOTDIR/*.ps
+end ## foreach

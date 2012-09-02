@@ -1,0 +1,92 @@
+#!/bin/csh
+# plot SM percentile for CONUS region
+# AWW
+
+gmtset ANOT_FONT_SIZE 12 LABEL_FONT_SIZE 12 HEADER_FONT_SIZE 16
+gmtset TICK_LENGTH 0.025 D_FORMAT %.0f PLOT_DEGREE_FORMAT -ddd:mm:ss
+
+set EBASINS = (east glakes ohio)
+set WBASINS = (cali colo gbas pnw riog arkred gulf low mo up)
+set MEXICO = (mexn mexs)
+set datestr = $1
+set indir = $2
+set outfil = "$3/$datestr/all.sm_qnt.$datestr.ps"
+set title = "Soil Moisture Percentiles (wrt/ 1960-1999)"
+set coord = -126/-66/15/54
+set proj = -JM5.8
+set blue = 200          
+set thresh = 0
+set pixel = 0.035
+# input file set in basin loop below
+set XX = (-0.5 0)
+set YY = (4 0)
+
+set COMMON = /raid8/forecast/common
+set cptfile = $COMMON/cpt/CPC_smplot.cpt
+
+#titles, etc.
+pstext -JX7.0/9.7 -R0/1/0/1 -V -P -K -N <<END>! $outfil
+0.42 1.0 16 0 21 6 $title
+0.42 .97 16 0 21 6 $datestr
+END
+
+# plot data (loop through basins) ---------------------------------------
+
+\rm delme.xyzz
+set B = 1
+####### Western Basins
+foreach BAS ( $WBASINS )
+echo "Adding basin $BAS"
+set XYZDIR = $indir/$BAS/spatial/xyzz.all/$datestr
+echo "XYZDIR = $XYZDIR"
+set INFILE = ${XYZDIR}/sm.*.vic.f-c_mean.a-m_anom.qnt.xyzz
+echo "INFILE is $INFILE"
+echo "YY is $YY[$B]"
+awk '{print $1,$2,$7*100}' $INFILE >> delme.xyzz
+end
+####### Eastern Basins
+
+foreach BAS ( $EBASINS )
+echo "Adding basin $BAS"
+set XYZDIR = $indir/$BAS/spatial/xyzz.all/$datestr
+echo "XYZDIR = $XYZDIR"
+set INFILE = ${XYZDIR}/sm.*.vic.f-c_mean.a-m_anom.qnt.xyzz
+echo "INFILE is $INFILE"
+echo "YY is $YY[$B]"
+awk '{print $1,$2,$7*100}' $INFILE >> delme.xyzz
+end
+####### Mexican Basins
+foreach BAS ( $MEXICO )
+echo "Adding basin $BAS"
+set XYZDIR = $indir/$BAS/spatial/xyzz.all/$datestr
+echo "XYZDIR = $XYZDIR"
+set INFILE = ${XYZDIR}/sm.*.vic.f-c_mean.a-m_anom.qnt.xyzz
+echo "INFILE is $INFILE"
+echo "YY is $YY[$B]"
+awk '{print $1,$2,$7*100}' $INFILE >> delme.xyzz 
+end
+								  
+xyz2grd delme.xyzz -Gsm.ncdf -R$coord -V -I0.125 -F
+grdsample sm.ncdf -Gsm_smooth.ncdf -I3m -R$coord -Q0.25 -F
+grdimage -O -K sm_smooth.ncdf $proj -R$coord -Y$YY[$B] -C$cptfile >> $outfil
+
+# add land, basin outlines
+pscoast -O $proj -R$coord -A2000 -Di -S$blue -N1/7 -K -V -N2/2 -B8/6:.:WEsN -W1 >> $outfil       
+
+psxy $COMMON/basdln/w_reg.all.coarse.poly -O -K -R$coord $proj -W7/150/0/0 -M  >> $outfil
+psxy $COMMON/basdln/ohio.poly -O -K -R$coord $proj -W7/150/0/0 -M  >> $outfil
+psxy $COMMON/basdln/glakes.poly -O -K -R$coord $proj -W7/150/0/0 -M  >> $outfil
+psxy $COMMON/basdln/east.poly -O -K -R$coord $proj -W7/150/0/0 -M  >> $outfil
+
+
+
+# --------- wrap up --------------------------------------
+psscale -C$cptfile -D3.0/-0.2/5/0.1h -O -V -N -B:"percentile": -L >> $outfil
+
+
+set OUTGIF = `echo $outfil | sed 's/ps/gif/g'`
+convert -trim +repage $outfil $OUTGIF
+
+
+
+

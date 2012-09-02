@@ -1,0 +1,42 @@
+#!/bin/csh
+# run primary spatial plot scripts for W_REG nowcast
+# AWW-2006
+## Shrad 20110519 Edited this so that it gets all its input from a master script
+
+# note, SWE assimilation plots are only run  Nov 1. - Jun 1. 
+
+## Usage <CURRFCST> <LASTFCST> <BAS> <COMMON> <XYZZDIR> <PLOTDIR> <PLOT_SCRIPT> 
+set CURRFCST = "$1"    # curr fcst initail statefile date
+set LASTFCST = "$2"    # last fcst initail statefile date
+set BAS = "$3"         ## Basin name
+set COMMON = "$4"     ## Common directory where basin boundaries and cpt files are located.
+set XYZZDIR = "$5"    ### Directory where current SM and SWE percentile are saved (estimated using nowcast of SM and SWE)
+set XYZZFILE = "$6"   ##### Prefix for percentile files
+set PLOTDIR = "$7"    ## Directory where output plots go to
+set PLOT_SCRIPT = "$8" ## Directory where this script is located
+
+#### 
+set DATE = "$CURRFCST"    # `echo $CURRFCST"+1" | bc`
+set CURRDATE  = `date -d $DATE "+%B %e, %Y"`
+set DATE = $LASTFCST   # `echo $LASTFCST"+1" | bc`
+set LASTDATE  = `date -d $DATE "+%B %e, %Y"`
+set THRESH   = "10"
+set poly     = "$COMMON/basdln/w_reg.all.coarse.poly"
+set PLOT_LABEL = "$PLOT_SCRIPT/plot_label.txt"
+### Usage <BAS> <COMMON> <XYZDIR> <XYZZFILE> <poly> <CURR_DATE> <CURR_FCST> <LAST_DATE> <LAST_FCST> <PLOTDIR> <PLOT_LABEL>
+set SM_XYZZFILE = sm."$XYZZFILE"
+$PLOT_SCRIPT/plot.sm_all.scr "$BAS" "$COMMON" "$XYZZDIR" $SM_XYZZFILE "$poly" "$CURRDATE" "$CURRFCST" "$LASTDATE" "$LASTFCST" "$PLOTDIR" "$PLOT_LABEL"
+
+### Usage <BAS> <COMMON> <XYZDIR> <XYZFFILE> <poly> <CURR_DATE> <CURR_FCST> <LAST_DATE> <LAST_FCST> <PLOTDIR> <THRESH> <PLOT_LABEL>
+set SWE_XYZZFILE = swe."$XYZZFILE"
+$PLOT_SCRIPT/plot.swe_all.scr "$BAS" "$COMMON" "$XYZZDIR" $SWE_XYZZFILE "$poly" "$CURRDATE" "$CURRFCST" "$LASTDATE" "$LASTFCST" "$PLOTDIR" "$THRESH" "$PLOT_LABEL"
+###plot.sweADJ_all.scr "$BAS" "$poly" "$CURRDATE" "$CURRFCST" "$LASTDATE" "$LASTFCST" $THRESH
+###plot.swe_assim_diff.ARGS.scr "$BAS" "$poly" "$CURRDATE" "$CURRFCST" $THRESH
+
+echo "converting ps to gif"
+foreach F ($PLOTDIR/*ps)
+  convert -trim +repage $F $F:r.gif
+end
+\rm $PLOTDIR/*ps
+
+cp -p --reply=yes $PLOTDIR/*.gif /home/www-forecast/westwide/spatial/curr_cond/images/.

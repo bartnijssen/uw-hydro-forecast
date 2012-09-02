@@ -1,0 +1,54 @@
+#!/bin/csh -x 
+# Map of percentiles of a variable for a given region and model on a given date
+gmtset ANOT_FONT_SIZE 12 LABEL_FONT_SIZE 12 HEADER_FONT_SIZE 16
+gmtset TICK_LENGTH 0.025 D_FORMAT %.0f PLOT_DEGREE_FORMAT -ddd:mm:ss
+
+# Command-line arguments
+set DATAFILE = $1
+set OUTFILE = $2
+set COORD = $3
+set PROJ = $4
+set ANNOT = $5
+set XX = $6
+set YY = $7
+set SCALE_X = $8
+set TITLE1 = "$9"
+set TITLE2 = "$10"
+set TITLE3 = "$11"
+set CPTFILE = "$12"
+set CPTLBL1 = "$13"
+set CPTLBL2 = "$14"
+# Specifics for the plot
+set blue = 200
+
+# Titles, etc.
+pstext -JX7.5/9.5 -R0/1/0/1 -V -P -K -N <<END>! $OUTFILE
+0.35 1.0 16 0 5 6 $TITLE1
+0.35 .97 14 0 4 6 $TITLE2
+0.35 0.94 16 0 5 6 $TITLE3 
+END
+
+# Plot data
+xyz2grd $DATAFILE -Gtest.ncdf -R$COORD -V -I0.125 -F
+grdsample test.ncdf -Gtest_smooth.ncdf -I3m -R$COORD -Q0.25 -F
+grdimage -O -K test_smooth.ncdf $PROJ -R$COORD -X$XX -Y$YY -C$CPTFILE >> $OUTFILE
+
+# Add land, basin outlines
+pscoast -O $PROJ -R$COORD -A2000 -Di -S$blue -N1/7 -K -V -N2/2 $ANNOT -W1>> $OUTFILE
+# Add color scale
+if ("$CPTLBL2" != "NODATA") then
+  psscale -C$CPTFILE -D$SCALE_X/-0.35/5/0.1h -O -K -V -N -B:"$CPTLBL1": -L >> $OUTFILE
+pstext -JX7.5/9.5 -R0/1/0/1 -O -P -V -N <<END>> $OUTFILE
+$CPTLBL2
+END
+else
+  psscale -C$CPTFILE -D$SCALE_X/-0.2/5/0.1h -O -V -N -B:"$CPTLBL1": -L >> $OUTFILE
+endif
+
+# Convert to gif
+set OUTGIF = `echo $OUTFILE | sed 's/ps/gif/g'`
+convert -trim +repage $OUTFILE $OUTGIF
+
+# Clean up
+\rm *.ncdf
+

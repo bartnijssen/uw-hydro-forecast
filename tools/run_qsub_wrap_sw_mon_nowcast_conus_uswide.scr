@@ -1,0 +1,11 @@
+#!/bin/csh 
+
+set DATE = `date`
+set BASIN = pnw
+echo "Nowcast run for $BASIN started at $DATE " > /raid8/forecast/proj/uswide/tools/done
+echo $HOST >> /raid8/forecast/proj/uswide/tools/done
+mail vmishra  < /raid8/forecast/proj/uswide/tools/done
+
+set script = "/raid8/forecast/proj/uswide/tools/qsub_wrap_sw_mon_nowcast_conus.scr"
+
+qsub $script

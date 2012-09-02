@@ -1,0 +1,7 @@
+#!/bin/csh
+#
+#$ -cwd
+#$ -j y
+#$ -S /bin/csh
+#$ -q queue
+/raid8/forecast/proj/uswide/tools/run_VIC_and_rout_ESP.pl PROJECT MODEL RUN_ESP RUN_ROUT CYR CMON CDAY SYR EYR

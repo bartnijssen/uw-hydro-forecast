@@ -1,0 +1,8 @@
+#!/bin/csh 
+### This script runs NHPS Advance State each month for all basins
+set DATE = `date`
+foreach BASIN (pnw ohio glakes arkred mo gbas riog gulf low up east colo cali)
+set script = "/raid8/forecast/proj/uswide/tools/qsub_advance_state.scr"
+qsub $script $BASIN
+end 
+

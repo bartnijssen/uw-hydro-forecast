@@ -1,0 +1,34 @@
+#!/bin/csh
+# A. Wood Dec 2007
+# run processing scripts and plot results
+# paths for sere
+
+set Y = $1
+set M = $2
+set D = $3
+
+# don't need to change below here
+set DATE = $Y$M$D
+set PLOTDIR = /raid/forecast/sw_monitor/analysis/ESP/curr_figs/$DATE
+set WEBDIR = /nfs/dynamo/www/data/forecast/monitor/curr
+set PATH = /raid/forecast/sw_monitor/esp_scripts
+
+echo "copying plots now"
+  #foreach F (/raid/forecast/sw_monitor/output/ESP/plots/*ps)
+   # pstogif $F
+  #end
+  gzip /raid/forecast/sw_monitor/output/ESP/plots/*ps
+  mv /raid/forecast/sw_monitor/output/ESP/plots/*ps.gz /raid/forecast/sw_monitor/output/ESP/plots/*gif $PLOTDIR
+
+echo "copying plots now"
+# move results for transfer to webdir
+echo "Copying plot $PLOTDIR to webdir"
+foreach F ($PLOTDIR/*gif)
+echo "$F $WEBDIR/$F:r:r:t.gif"  
+
+cp $F $WEBDIR/$F:r:r:t.gif
+end
+
+cd -
+
+

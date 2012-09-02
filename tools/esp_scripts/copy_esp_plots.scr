@@ -1,0 +1,30 @@
+#!/bin/csh
+# A. Wood Dec 2007
+# run processing scripts and plot results
+# paths for sere
+
+set Y = $1
+set M = $2
+set D = $3
+
+# don't need to change below here
+set DATE = $Y$M$D
+set PLOTDIR = /raid/forecast/sw_monitor/analysis/ESP/curr_figs/$DATE/
+set WEBDIR = /nfs/dynamo/www/data/forecast/monitor/curr
+# move results for transfer to webdir
+echo "Copying plots to webdir"
+foreach F ($PLOTDIR/*gif)
+  cp $F $WEBDIR/$F:r:r:t.gif
+end
+
+
+# -------- not used -------------
+#  plot.fcst_sm_p-normal.scr $DATE $LD
+#  plot.fcst_ro_p-normal.3mo.scr $DATE $LD
+#  plot.fcst_ro_p-normal.6mo.scr $DATE $LD
+#  plot.fcst_sm_p-NA.scr  $DATE $LD
+#  plot.fcst_ro_p-NA.3mo.scr  $DATE $LD
+#  plot.fcst_ro_p-NA.6mo.scr  $DATE $LD
+#  plot.fcst_ro_qnt.6mo.scr $DATE $LD
+#  plot.fcst_ro_p-lt20.6mo.scr  $DATE $LD
+

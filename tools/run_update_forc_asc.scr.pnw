@@ -1,0 +1,16 @@
+#!/bin/csh
+## This script runs forcing generation script for any given time period of less than 2 months
+#$ -cwd
+#$ -j y
+#$ -S /bin/csh
+#$ -q forecast.q
+
+set Script = "/raid8/forecast/proj/uswide/tools/update_forcings_asc.pl.spinup_no_append"
+
+set basin = $1
+
+$Script $basin 2006-01-01 2005-12-31 2006-02-28
+#set Script = "/raid8/forecast/proj/uswide/tools/update_forcings_asc.pl.spinup_append"
+#$Script $basin 2006-03-01 2006-02-28 2006-04-30
+
+

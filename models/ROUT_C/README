@@ -1,0 +1,107 @@
+%%%%% AWW-note:  as of 8/22/05, new routing still had a bug in leap year calc (as noted below)
+%   also, useful modifications that could be added: 
+%     input file: - either add #s to rows to help keep them in order, or
+%                 - make them flag/string dependent, so order doesn't matter
+%     station info functionality:  
+%       - right now usage favors one fract, direc, uh, etc file for all stns
+%          (using the station location file as is)
+%       - could have OPTION:  if for stnloc file "FILE" is entered, the stnloc
+%         file is read with all input options (except for date) for each different 
+%         location; else location info is supplied in input file 
+%           (i.e., routing is just for one location). 
+% 
+%     lastly, functionality needed for forecasting:  specify prefluxes directory
+%             and dates needed for prefluxes
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+###########################
+rout_similar_to_f_version:
+Should be the 'same' model as the f-version.
+(At leas I get the similar results).
+Bug: Does not handle leapyears satisfactory
+########################################
+
+The rest of this file is a 
+README file for rout_new.c (see further down for a comparison to the 
+f version of the routing model):
+##################################
+Station file:
+1 0 45064  27 27 -999 1
+NONE
+
+First line:
+Will be routed or not (1/0) 
+Routed file exist or not (1/0) 
+Station name (5 characters) 
+col (from left) 
+row (from bottom) 
+Area (not used)
+Type (1: Regular, 2: Dam, 3: Irrigated part of cell)
+############################################################
+Example, Routing input file:
+
+FLOW_DIREC_FILE dirh40
+VELOCITY_FILE	1.5
+DIFF_FILE       800
+XMASK_FILE      25000
+FRACTION_FILE   input/frac40
+IRRIGATION      1
+ROUTED_FILE     test.txt
+RESERVOIR_FILE  input/res40
+RES_LOC_FILE    input/resloc40
+STATION_FILE    sta40
+INPUT_FILE_PATH /mn/hox/d1/ingjerd/global/run/work/fluxes_
+INPUT_FILE_PREC 2
+OUT_FILE_PATH   output_new/irrigation/
+WORK_PATH       output/40.work/   # Reads previously routed streamflow from this location
+INPUT_DATES     1979 1 1999 12
+OUTPUT_DATES    1979 1 1999 12 
+UNIT_HYD_FILE   input/uh.file
+############################################################
+Example, res-file: 
+row col name  type max_storage min_storage max_head min_head max_prod 
+power_demand[1:12] (numbers should be in MW)
+water_demand[1:12] (numbers should be in MCM/day)
+min_sto_use[1:12] (minimum storage in percent of total storage)
+  22 34 powel   1     33300    0      0       0       1021  
+	  0   0   0   0   0   0   0   0   0   0   0   0     
+	  27.8 27.8 27.8 27.8 27.8 27.8 27.8 27.8 27.8 27.8 27.8 27.8
+	  35  35  35  35  35  35  35  35  35  35  35  35     
+  15 33 lmead   1     35200    0      179.8   128     2074
+	  0   0   0   0   0   0   0   0   0   0   0   0
+	  25.3 25.3 25.3 25.3 25.3 25.3 25.3 25.3 25.3 25.3 25.3 25.3
+	  15  15  15  15  15  15  15  15  15  15  15  15
+############################################################
+Comparison to the fortran-version of the code:
+Changes 1: The master routing file has to be similar to the one in 
+  this directory. I.e. list the input files in the same order, and keep 
+  the structure as is.
+Changes 2: A column is added to the station information file. The second
+  number on the line gives information on whether the station 
+  is already routed (1). If so, it won't be routed again. 
+  If you set the number to 0, the routing
+  program assumes you want to rout the area again. 
+  NB! NB! NB!
+	You should list the stations from upstream to downstream locations!
+  NB! NB! NB!   
+        Be aware that this causes changes to the .uh_s file!!!!!
+Changes 3: For each routed station, a file called 'fluxes_lat_lon_routed' is made.
+  It will be located in the 'Output_files' directory. Units m3/s.
+Changes 4: The output is written to m3/s instead of ft3/s. :). 
+
+New feature 1: Skips days in VIC simulation files that won't be routed.
+  i.e. ndays is number of days to be routed, not number of days to 
+  be routed + number of simulation days before routing starts, which it used to be.
+  NB! This may result in less runoff at the beginning of the routing period!!!!
+New feature 2: Areas already routed won't be routed again. I.e. if an upstream 
+  station location has been routed during this run, or previously (see 'changes 2').
+
+Stupid 1: If you want to do the routing at a location upstream other gauges, 
+ you have to make sure the 'Already routed' column is set to 0 at the downstream 
+ location........ 
+Stupid 2: The VIC simulation flux files have to be ascii files with the 
+ following columns:
+ Year Month Day Dummy Dummy Runoff Baseflow
+Improvements will be implemented in the future some time!   

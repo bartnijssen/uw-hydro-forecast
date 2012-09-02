@@ -1,0 +1,7 @@
+#!/bin/csh 
+### This script runs NHPS nowcast for all basins but PNW
+set DATE = `date`
+foreach BASIN (ohio glakes arkred mo gbas riog gulf low up east colo cali)
+set script = "/raid8/forecast/proj/uswide/tools/qsub_wrap_nhps_ncast.scr"
+qsub $script $BASIN
+end 

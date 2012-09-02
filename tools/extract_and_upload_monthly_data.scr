@@ -1,0 +1,62 @@
+#!/bin/csh -x
+## This script runs forcing generation script for any given time period of less than 2 months
+#$ -cwd
+#$ -j y
+#$ -S /bin/tcsh
+#$ -q forecast.q
+#$ -N FORCING_BASIN
+#$ -M shrad@hydro.washington.edu
+#$ -m e
+
+
+set basin = $1
+
+set DAYS = (31 29 31 30)
+set MON_NAME = (Jan Feb March April)
+set SDAY = (2192 2223 2252 1)
+set EDAY = (2222 2251 2282 30)
+foreach NUM (1 2 3 4)
+
+if ($NUM < 4) then
+set results_dir = "spinup_nearRT"
+else
+set results_dir = "curr_spinup"
+endif
+
+set FORC_DIR = /raid8/forecast/proj/uswide/data/"$basin"/forcing/"$results_dir"/asc_vicinp
+
+set FLIST = /raid8/forecast/proj/uswide/data/"$basin"/forcing/grid/grid_info/"$basin".125.datafiles.maskorder
+
+set FLIST2 = /raid8/forecast/proj/uswide/data/"$basin"/forcing/grid/grid_info/"$basin".125.fluxfiles.maskorder
+
+echo "$FLIST2"
+set FLUX_DIR = /raid8/forecast/proj/uswide/data/"$basin"/results/"$results_dir"/vic/daily/asc
+
+set FTP_DIR = "/home/ftp/pub/fmunoz/forecast/UCMERCED_DATA/$MON_NAME[$NUM]" 
+
+\rm -rf $FTP_DIR/$basin
+
+mkdir -p $FTP_DIR/$basin/forcings
+mkdir -p $FTP_DIR/$basin/fluxes
+
+
+set DAY1 = "$SDAY[$NUM]"
+set DAY2 = "$EDAY[$NUM]"
+
+foreach file (`cat $FLIST`)
+awk '{if ((NR>='$DAY1') && (NR<='$DAY2')) print}' $FORC_DIR/$file > $FTP_DIR/$basin/forcings/$file 
+end
+
+foreach file (`cat $FLIST2`)
+awk '{if ((NR>='$DAY1') && (NR<='$DAY2')) print}' $FLUX_DIR/$file > $FTP_DIR/$basin/fluxes/$file 
+end
+
+cd $FTP_DIR
+
+tar -czf $FTP_DIR/$basin.forc.tar.gz $basin/forcings
+
+tar -czf $FTP_DIR/$basin.fluxes.tar.gz $basin/fluxes
+
+\rm -rf $FTP_DIR/$basin
+end
+

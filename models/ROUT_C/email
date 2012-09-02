@@ -1,0 +1,19 @@
+Date: Sat, 20 Aug 2005 03:48:50 +0200 (CEST)
+From: Ingjerd Haddeland <ingjerd.haddeland@geo.uio.no>
+To: Andrew W. Wood <aww@hydro.washington.edu>
+Cc: Bart Nijssen <nijssen@u.arizona.edu>,
+     Ingjerd Haddeland <ingjerd.haddeland@geo.uio.no>,
+     Chunmei Zhu <chunmei@hydro.washington.edu>
+Subject: Re: routing (fwd)
+
+
+Hi there!
+
+The routing models (one which should be similar to the f version and one 
+which gives similar results but is slighlty different) can be found in
+~ingjerd/models/rout/rout_c_2004/  (i am ssuming you still have access to 
+the hydro computers, Bart). I actually wrote a readme file about two years 
+ago, but who knows how useful it is.
+
+rout_new.c is out of date - but the version i am working on at the moment 
+I don't trust yet (the way it handles reservoirs).

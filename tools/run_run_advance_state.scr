@@ -1,0 +1,8 @@
+#!/bin/csh
+#
+#$ -cwd
+#$ -j y
+#$ -S /bin/csh
+#$ -q forecast.q
+
+/home/raid8/forecast/proj/uswide/tools/advance_state.pl colo >&! /home/raid8/forecast/proj/uswide/tools/log.advance.colo

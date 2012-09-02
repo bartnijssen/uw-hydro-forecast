@@ -1,0 +1,25 @@
+#!/bin/csh
+#
+#$ -cwd
+#$ -j y
+#$ -S /bin/tcsh
+#$ -q forecast.q
+#$ -N FEATHER_BASIN
+#$ -M shrad@hydro.washington.edu
+#$ -m abe
+
+set MODEL = "vic"
+set BASIN = "$1"
+####/raid8/forecast/proj/uswide/tools/run_model.pl -m $MODEL -p $BASIN -f spinup_nearRT -s 2006-01-01 -e 2008-12-31 -r temp -st spinup_nearRT -i /raid8/forecast/proj/uswide/data/$BASIN/state/retro/vic/state_20051231
+
+
+foreach year (2012)
+foreach mon (05)
+set day = "31"
+set E_DATE = "$year-$mon-$day"
+
+echo "Generating state file for $E_DATE"
+/raid8/forecast/proj/uswide/tools/run_model.pl -m $MODEL -p $BASIN -f spinup_nearRT -s 2006-01-01 -e $E_DATE -st spinup_nearRT -i /raid8/forecast/proj/uswide/data/$BASIN/state/retro/vic/state_20051231
+end
+end
+

@@ -1,0 +1,8 @@
+#!/bin/csh 
+
+set DATE = `date`
+set BASIN = mo
+
+set script = "/raid8/forecast/proj/uswide/tools/qsub_advance_state_mo.scr"
+
+qsub $script

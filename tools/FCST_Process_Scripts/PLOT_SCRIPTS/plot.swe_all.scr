@@ -1,0 +1,262 @@
+#!/bin/csh
+# XDZ-2007 modified from
+## Shrad 20110519 edited it so it can get all the input from a master script
+# plot.swe_val.ARGS.scr, plot.swe_anom.ARGS.scr, plot.swe_qnt.ARGS.scr,  
+# plot.swe_anom.DELTA.ARGS.scr, plot.swe_val.DELTA.ARGS.scr, plot.swe_qnt.small.ARGS.scr (AWW-2005)
+gmtset ANOT_FONT_SIZE 12 LABEL_FONT_SIZE 12 HEADER_FONT_SIZE 16
+gmtset D_FORMAT %.0f
+
+### Usage <BAS> <COMMON> <XYZZFILE> <XYZDIR> <poly> <CURR_DATE> <CURR_FCST> <LAST_DATE> <LAST_FCST> <PLOTDIR> <THRESH> <PLOT_LABEL>
+
+set BASIN = "$1"   ## Basin Name
+set COMMON = "$2" ## Common Directory where all the basin boundaries etc are located
+set XYZDIR = "$3" ## Directory where DAILY SM and SWE percentile estimated from the nowcast are located
+set XYZZFILE = "$4" ### The name of SWE percentile file
+set poly = "$5"    ### Basin boundaries
+set CURR_DATE = "$6"  # e.g., "January 1, 2007"
+set CURR_FCST = "$7"  # e.g., "20050701"
+set LAST_DATE = "$8"  # e.g., "January 1, 2007"
+set LAST_FCST = "$9"  # e.g., "20050701"
+set PLOTDIR = "$10"    
+set thresh = "$11"    ###in mm
+set PLOT_LABEL = "$12"
+# set the number to 0 to turn off the corresponding plot
+set plot1 = 1             # swe_val
+set plot2 = 1             # swe_anom
+set plot3 = 1             # swe_qnt
+set plot4 = 1             # swe_anom.DELTA
+set plot5 = 1             # swe_val.DELTA
+set plot6 = 1             # swe_qnt.small
+
+set coord = -125/-85/14/53
+set proj = -JM5.6
+set pagesize = -JX7.6/7.8
+set blue = 180/180/255
+set pixel = 0.05
+set YY = 0.1
+
+set cpt_linear = "$COMMON/cpt/sw_mon.SWE.cpt"
+set cpt_nonlin = "$COMMON/cpt/sw_mon.SWE.mm.cpt"   # non-linear spacing cpt file for SWE
+set cpt_anom   = "$COMMON/cpt/sw_mon.SWE.cpt"      # anom_even.rev.cpt
+set cptfile = "$COMMON/junk.cpt" 
+
+if ($plot1 == 0) goto PLOT2
+# =================================== plot 1 ===================================
+echo "plot SWE value for western region .........................."
+
+set title = "Snow Water Equivalent"
+set outf = "$PLOTDIR/w_reg.swe_val.ps"
+#makecpt -T50/600/50 -C$cpt_linear >! $cptfile
+cp $cpt_nonlin $cptfile
+
+#titles, etc.
+pstext $pagesize -R0/1/0/1 -V -P -K -N <<END>! $outf
+0.38 1.0 16 0 5 6 $title
+0.38 .95 16 0 5 6 $CURR_DATE       threshold = $thresh mm
+END
+
+# plot data (loop through basins) ---------------------------------------
+pscoast -O -K -Y$YY -Di $proj -R$coord -Ggray -V -A2000 >> $outf
+
+foreach BAS ($BASIN)
+  awk '{if($3>'$thresh' || $4>'$thresh')print $1,$2,$3}' $XYZDIR/$CURR_FCST/$XYZZFILE |\
+    psxy -O -K -C$cptfile -G150/150/150 -R -J -V -Ss$pixel >> $outf
+end
+
+# add land, basin outlines
+pscoast -O -K -J -R -Di -S$blue -N1/7 -V -N2/2 -W1 -A2000 >> $outf
+psxy $poly -O -K -R -J -W5/150/0/0 -M -B4/4:.:WEsN  >> $outf
+
+# misc labels
+pstext $PLOT_LABEL -R -J -V -K -O >> $outf
+
+# --------- wrap up --------------------------------------
+psscale -C$cptfile -D2.8/-0.2/5.6/0.1h -O -V -N -B:"mm": -E -L >> $outf
+
+
+PLOT2:
+if ($plot2 == 0) goto PLOT3
+# =================================== plot 2 ===================================
+echo "plot SWE anomalies for western region .........................."
+
+set title = "Snow Water Equivalent Anomaly (wrt/ 1960-1999)"
+set outf = "$PLOTDIR/w_reg.swe_anom.ps"
+
+makecpt -T10/190/20 -C$cpt_anom >! $cptfile
+
+#titles, etc.
+pstext $pagesize -R0/1/0/1 -V -P -K -N <<END>! $outf
+0.38 1.0 16 0 5 6 $title
+0.38 .95 16 0 5 6 $CURR_DATE       threshold = $thresh mm
+END
+
+# plot data (loop through basins) ---------------------------------------
+pscoast -O -K -Y$YY -Di $proj -R$coord -Ggray -V -A2000 >> $outf
+
+foreach BAS ($BASIN)
+  awk '{if($3>'$thresh' && $4>'$thresh')print $1,$2,$6+100}' $XYZDIR/$CURR_FCST/$XYZZFILE |\
+    psxy -O -K -C$cptfile -G150/150/150 -R -J -V -Ss$pixel >> $outf
+end
+
+# add land, basin outlines
+pscoast -O -K -J -R -Di -S$blue -N1/7 -V -N2/2 -W1 -A2000 >> $outf
+psxy $poly -O -K -R -J -W5/150/0/0 -M -B4/4:.:WEsN  >> $outf
+
+# misc labels
+pstext $PLOT_LABEL -R -J -V -K -O >> $outf
+
+# --------- wrap up --------------------------------------
+psscale -C$cptfile -D2.8/-0.2/5.6/0.1h -O -V -N -B:"percent anomaly": -E >> $outf
+
+
+PLOT3:
+if ($plot3 == 0) goto PLOT4
+# =================================== plot 3 ===================================
+echo "plot SWE percentile for western region .........................."
+
+set title = "Snow Water Equivalent Percentiles (wrt/ 1960-1999)"
+set outf = "$PLOTDIR/w_reg.swe_qnt.ps"
+
+# makecpt -T0/100/10 -C$cpt_nonlin >! $cptfile 
+cp $cpt_linear $cptfile
+
+#titles, etc.
+pstext $pagesize -R0/1/0/1 -V -P -K -N <<END>! $outf
+0.38 1.0 16 0 5 6 $title
+0.38 .95 16 0 5 6 $CURR_DATE       threshold = $thresh mm
+END
+
+# plot data (loop through basins) ---------------------------------------
+pscoast -O -K -Y$YY -Di $proj -R$coord -Ggray -V -A2000 >> $outf
+
+foreach BAS ($BASIN)
+  awk '{if($3>'$thresh' || $4>'$thresh')print $1,$2,$7*100}' $XYZDIR/$CURR_FCST/$XYZZFILE |\
+    psxy -O -K -C$cptfile -G150/150/150 -R -J -V -Ss$pixel >> $outf
+end
+
+# add land, basin outlines
+pscoast -O -K -J -R -Di -S$blue -N1/7 -V -N2/2 -W1 -A2000 >> $outf
+psxy $poly -O -K -R -J -W5/150/0/0 -M -B4/4:.:WEsN  >> $outf
+
+# misc labels
+pstext $PLOT_LABEL -R -J -V -K -O >> $outf
+
+# --------- wrap up --------------------------------------
+psscale -C$cptfile -D2.8/-0.2/5.6/0.1h -O -V -N -B:"percentile": -L -E >> $outf
+
+
+PLOT4:
+if ($plot4 == 0) goto PLOT5
+# =================================== plot 4 ===================================
+echo "plot SWE Anomaly Change for western region .........................."
+
+set title = "Change of Snow Water Equivalent Anomaly (RAW)"
+set outf = "$PLOTDIR/w_reg.swe_anom.DELTA.ps"
+
+makecpt -T-50/50/10 -C$cpt_linear  >! $cptfile 
+
+#titles, etc.
+pstext $pagesize -R0/1/0/1 -V -P -K -N <<END>! $outf
+0.38 1.0 16 0 5 6 $title
+0.38 .95 16 0 5 6 $CURR_DATE vs $LAST_DATE  (threshold = $thresh mm)
+END
+
+# plot data (loop through basins) ---------------------------------------
+pscoast -O -K -Y$YY -Di $proj -R$coord -Ggray -V -A2000 >> $outf
+
+foreach BAS ($BASIN)
+  paste $XYZDIR/$CURR_FCST/$XYZZFILE $XYZDIR/$LAST_FCST/$XYZZFILE |\
+  awk '{if( ($3>'$thresh' && $4>'$thresh') && ($10>'$thresh' && $11>'$thresh') )print $1,$2,$6-$13}' |\
+    psxy -O -K -C$cptfile -G150/150/150 -R -J -V -Ss$pixel >> $outf
+end
+
+# add land, basin outlines
+pscoast -O -K -J -R -Di -S$blue -N1/7 -V -N2/2 -W1 -A2000 >> $outf
+psxy $poly -O -K -R -J -W5/150/0/0 -M -B4/4:.:WEsN  >> $outf
+
+# misc labels
+pstext $PLOT_LABEL -R -J -V -K -O >> $outf
+
+# --------- wrap up --------------------------------------
+psscale -C$cptfile -D2.8/-0.2/5.6/0.1h -O -V -N -B:"change in % of normal": -E >> $outf
+
+
+PLOT5:
+if ($plot5 == 0) goto PLOT6
+# =================================== plot 5 ===================================
+echo "plot SWE value Change for western region .........................."
+
+set title = "Change of Snow Water Equivalent (RAW)"
+set outf = "$PLOTDIR/w_reg.swe_val.DELTA.ps"
+
+makecpt -T-200/200/50 -C$cpt_linear  >! $cptfile 
+
+#titles, etc.
+pstext $pagesize -R0/1/0/1 -V -P -K -N <<END>! $outf
+0.38 1.0 16 0 5 6 $title
+0.38 .95 16 0 5 6 $CURR_DATE vs $LAST_DATE  (threshold = $thresh mm)
+END
+
+# plot data (loop through basins) ---------------------------------------
+pscoast -O -K -Y$YY -Di $proj -R$coord -Ggray -V -A2000 >> $outf
+
+foreach BAS ($BASIN)
+  paste $XYZDIR/$CURR_FCST/$XYZZFILE $XYZDIR/$LAST_FCST/$XYZZFILE |\
+  awk '{if( $3>'$thresh'  || $10>'$thresh' )print $1,$2,$3-$10}' |\
+    psxy -O -K -C$cptfile -G150/150/150 -R -J -V -Ss$pixel >> $outf
+end
+
+# add land, basin outlines
+pscoast -O -K -J -R -Di -S$blue -N1/7 -V -N2/2 -W1 -A2000 >> $outf
+psxy $poly -O -K -R -J -W5/150/0/0 -M -B4/4:.:WEsN  >> $outf
+
+# misc labels
+pstext $PLOT_LABEL -R -J -V -K -O >> $outf
+
+# --------- wrap up --------------------------------------
+psscale -C$cptfile -D2.8/-0.2/5.6/0.1h -O -V -N -B:"mm": -E >> $outf
+
+
+PLOT6:
+if ($plot6 == 0) goto DONE
+# =================================== plot 6 ===================================
+echo "smaller plot SWE percentile for western region .........................."
+
+set title = "Snow Water Equivalent Percentiles"
+set outf = "$PLOTDIR/w_reg.swe_qnt.small.ps"
+set proj = -JM3.5
+set YY = 0.4
+
+#makecpt -T0/100/10 -C$cpt_linear >! $cptfile 
+cp $cpt_linear $cptfile
+
+#titles, etc.
+pstext -JX6.5/9.5 -R0/1/0/1 -V -P -K -N <<END>! $outf
+0.27 .43 14 0 5 CB $title
+0.27 .41 14 0 5 CB $CURR_DATE        threshold = $thresh mm
+END
+
+# plot data (loop through basins) ---------------------------------------
+pscoast -O -K -Y$YY -Di $proj -R$coord -Ggray -V -A2000 >> $outf
+
+foreach BAS ($BASIN)
+  awk '{if($3>'$thresh' || $4>'$thresh')print $1,$2,$7*100}' $XYZDIR/$CURR_FCST/$XYZZFILE |\
+    psxy -O -K -C$cptfile -G150/150/150 -R -J -V -Ss$pixel >> $outf
+end
+
+# add land, basin outlines
+pscoast -O -K -J -R -Di -S$blue -N1/7 -V -N2/2 -W1 -A2000 >> $outf
+psxy $poly -O -K -R -J -W5/150/0/0 -M -B4/4:.:wesn >> $outf
+
+# misc labels
+pstext -R -J -V -K -O  << END  >> $outf
+-98  50 12 0 5 CM CANADA
+-98  48 12 0 5 CM USA
+-124 30.5 12 0 7 LM Pacific
+-124 29.0 12 0 7 LM Ocean
+END
+
+# --------- wrap up --------------------------------------
+psscale -C$cptfile -D1.75/-0.1/3.5/0.1h -O -V -N -B:"percentile": -E >> $outf
+
+DONE:

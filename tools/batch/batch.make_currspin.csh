@@ -1,0 +1,2 @@
+cp -r /raid8/forecast/sw_monitor/data/conus.new/forcing/curr_spinup/asc_vicinp.200807 /raid8/forecast/sw_monitor/data/conus.new/forcing/curr_spinup/asc_vicinp
+wrap_append.pl /raid8/forecast/sw_monitor/data/conus.new/forcing/curr_spinup/asc_vicinp /raid8/forecast/sw_monitor/data/conus.new/forcing/curr_spinup/asc_vicinp.200808 data /raid8/forecast/sw_monitor/data/conus.new/forcing/curr_spinup/asc_vicinp

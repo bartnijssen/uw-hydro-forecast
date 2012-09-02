@@ -1,0 +1,14 @@
+rename_statefiles.pl ../data/conus.new/state/spinup.retro/sac sac state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.01/sac sac state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.02/sac sac state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.03/sac sac state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.04/sac sac state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.05/sac sac state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.06/sac sac state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.07/sac sac state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.08/sac sac state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.09/sac sac state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.10/sac sac state nc state nc
+rename_statefiles.pl ../data/conus.new/state/retro/sac sac state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup_nearRT/sac sac state nc state nc
+rename_statefiles.pl ../data/conus.new/state/curr_spinup/sac sac state nc state nc

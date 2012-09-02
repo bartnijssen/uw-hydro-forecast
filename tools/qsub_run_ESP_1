@@ -1,0 +1,7 @@
+#!/bin/bash
+#
+#$ -cwd
+#$ -j y
+#$ -S /bin/bash
+#$ -q forecast.q
+/raid8/forecast/proj/uswide/tools/run_VIC_and_rout_ESP.pl pnw vic 1 1 2011 03 20 1971 1980

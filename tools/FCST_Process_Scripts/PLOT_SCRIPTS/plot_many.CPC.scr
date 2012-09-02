@@ -1,0 +1,85 @@
+#!/bin/csh
+# AWW-02/2004
+# plot all the spatial forecast plots
+# XDZ-2007
+
+set FCST = $1
+set DAY  = $2$3$4
+
+set MON  = $3
+if ($DAY > 1) then    # if forecast starting day > 1, plots start from the next month
+  @ MON ++
+endif
+
+switch ($FCST)
+  case ESP:
+    set FIG_HEAD = w_reg
+    breaksw
+  case CPC:
+    set FIG_HEAD = w_reg.CPC
+    breaksw
+  default:
+    echo wrong usage!
+    exit 1
+endsw
+
+set DATE = `date -d $DAY "+%B %e, %Y"`
+set FMON = (JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC)
+# note: the month names in FMON appear twice so that we do not need change the script for each month
+
+set BAS = "pnw cali colo gbas mo arkred riog gulf up low"
+set poly = w_reg.all.coarse.poly
+
+echo "forecast date: " $DATE
+
+SWE:
+#goto SM
+echo "............ploting SWE"
+plot.3comp.SWE.args.scr $FIG_HEAD.swe_fcst.m1-3.ps $MON "1 2 3" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.SWE.args.scr $FIG_HEAD.swe_fcst.m4-6.ps $MON "4 5 6" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.SWE.args.scr $FIG_HEAD.swe_fcst.m7-9.ps $MON "7 8 9" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.SWE.args.scr $FIG_HEAD.swe_fcst.m10-12.ps $MON "10 11 12" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+
+SM:
+#goto RO
+echo "............ploting SM"
+plot.3comp.SM.args.scr $FIG_HEAD.sm_fcst.m1-3.ps $MON "1 2 3" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.SM.args.scr $FIG_HEAD.sm_fcst.m4-6.ps $MON "4 5 6" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.SM.args.scr $FIG_HEAD.sm_fcst.m7-9.ps $MON "7 8 9" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.SM.args.scr $FIG_HEAD.sm_fcst.m10-12.ps $MON "10 11 12" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+
+RO:
+#goto P
+echo "............ploting RO"
+plot.3comp.RO.args.scr $FIG_HEAD.ro_fcst.m1-3.ps $MON "1 2 3" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.RO.args.scr $FIG_HEAD.ro_fcst.m4-6.ps $MON "4 5 6" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.RO.args.scr $FIG_HEAD.ro_fcst.m7-9.ps $MON "7 8 9" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.RO.args.scr $FIG_HEAD.ro_fcst.m10-12.ps $MON "10 11 12" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+
+P:
+#goto T
+echo "............ploting P"
+plot.3comp.P.args.scr $FIG_HEAD.p_fcst.m1-3.ps $MON "1 2 3" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.P.args.scr $FIG_HEAD.p_fcst.m4-6.ps $MON "4 5 6" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.P.args.scr $FIG_HEAD.p_fcst.m7-9.ps $MON "7 8 9" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.P.args.scr $FIG_HEAD.p_fcst.m10-12.ps $MON "10 11 12" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+
+T:
+#goto LAST
+echo "............ploting T"
+plot.3comp.T.args.scr $FIG_HEAD.t_fcst.m1-3.ps $MON "1 2 3" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.T.args.scr $FIG_HEAD.t_fcst.m4-6.ps $MON "4 5 6" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.T.args.scr $FIG_HEAD.t_fcst.m7-9.ps $MON "7 8 9" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.T.args.scr $FIG_HEAD.t_fcst.m10-12.ps $MON "10 11 12" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+
+LAST:
+echo "............converting"
+cd $FCST
+foreach F (*ps)
+  convert -trim +repage $F $F:r.gif
+end
+\rm *ps
+cd ../
+
+# upload spatial Hydrologic Forecast plots to website
+#cp -p --reply=yes *.gif /home/www-forecast/westwide/spatial/hydr_fcst/images/

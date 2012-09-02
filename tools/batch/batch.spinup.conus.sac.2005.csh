@@ -1,0 +1,1 @@
+run_model.pl -m sac -p conus.new -f retro.2005 -pf full_data -s 2005-01-01 -e 2005-12-31 -i /raid8/forecast/sw_monitor/data/conus.new/state/retro/sac/state.200412.nc -mspc "-pe /raid8/forecast/sw_monitor/data/conus.new/results/retro.2005/noah_2.8/daily/nc"

@@ -1,0 +1,18 @@
+#!/bin/csh
+set indir = "/raid8/forecast/proj/uswide/tools" 
+set basin = $1
+set CURR = "/raid8/forecast/proj/uswide/data/$basin/forcing/curr_spinup/asc_vicinp"
+set NEAR_RT = "/raid8/forecast/proj/uswide/data/$basin/forcing/spinup_nearRT2/asc_vicinp"
+set FILELIST = "/raid8/forecast/proj/uswide/data/$basin/forcing/grid/grid_info/$basin.125.datafiles.maskorder"
+
+foreach file (`cat $FILELIST`)
+#awk '{print}' $CURR/$file >> $NEAR_RT/$file
+\rm $CURR/$file
+\rm $NEAR_RT/$file
+touch $CURR/$file
+touch $NEAR_RT/$file
+end
+
+
+
+

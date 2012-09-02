@@ -1,0 +1,263 @@
+#!/bin/csh
+# XDZ-2007 modified from 
+# plot.ADJ_swe_val.ARGS.scr, plot.ADJ_swe_anom.ARGS.scr, plot.ADJ_swe_qnt.ARGS.scr,  
+# plot.ADJ_swe_anom.DELTA.ARGS.scr, plot.ADJ_swe_val.DELTA.ARGS.scr, plot.ADJ_swe_qnt.small.ARGS.scr (AWW-2005)
+gmtset ANOT_FONT_SIZE 12 LABEL_FONT_SIZE 12 HEADER_FONT_SIZE 16
+gmtset D_FORMAT %.0f
+
+# setthe number to 0 to turn off the corresponding plot
+set plot1 = 1             # sweADJ_val
+set plot2 = 1             # sweADJ_anom
+set plot3 = 1             # sweADJ_qnt
+set plot4 = 0             # sweADJ_anom.DELTA
+set plot5 = 0             # sweADJ_val.DELTA
+set plot6 = 1             # sweADJ_qnt.small
+
+# input file set in basin loop below
+set COMMON = /raid8/forecast/common
+set XYZADJ = /raid8/forecast/proj/assim/obs_swe/plots/update/xyzz
+set BASIN  = "$1"                # list of basin to plot, e.g. 
+set poly   = $COMMON/basdln/$2   # basin outlines file
+
+set CURR_DATE = "$3"  # e.g., "July 1, 2005"
+set CURR_FCST = "$4"  # e.g., "20050701", not use currently
+set LAST_DATE = "$5"  # e.g., "July 1, 2005", not use currently
+set LAST_DATE = "$6"  # e.g., "20050701", not use currently
+set thresh    = $7    # in mm
+
+set coord = -125/-90/25/53
+set proj = -JM5.6
+set pagesize = -JX7.6/7.8
+set blue = 180/180/255
+set pixel = 0.05
+set txt_label = plot_label.txt
+set YY = 1.1
+
+set cpt_linear = $COMMON/cpt/sw_mon.SWE.cpt
+set cpt_nonlin = $COMMON/cpt/sw_mon.SWE.mm.cpt   # non-linear spacing cpt file for SWE
+set cpt_anom   = $COMMON/cpt/sw_mon.SWE.cpt      # anom_even.rev.cpt
+set cptfile = junk.cpt
+
+if ($plot1 == 0) goto PLOT2
+# =================================== plot 1 ===================================
+echo "plot ADJ SWE value for western region .........................."
+
+set title = "Snow Water Equivalent (after obs. assimilation)"
+set outf = w_reg.ADJ_swe_val.ps
+
+#makecpt -T50/600/50 -C$cpt_linear >! $cptfile
+cp $cpt_nonlin $cptfile
+
+#titles, etc.
+pstext $pagesize -R0/1/0/1 -V -P -K -N <<END>! $outf
+0.38 1.0 16 0 5 6 $title
+0.38 .95 16 0 5 6 $CURR_DATE       threshold = $thresh mm
+END
+
+# plot data (loop through basins) ---------------------------------------
+pscoast -O -K -Y$YY -Di $proj -R$coord -Ggray -V -A2000 >> $outf
+
+foreach BAS ($BASIN)
+  awk '{if($3>'$thresh' || $4>'$thresh')print $1,$2,$3}' $XYZADJ/swe_new.$BAS.f-c_mean.a-m_anom.qnt.xyzz |\
+    psxy -O -K -C$cptfile -G150/150/150 -R -J -V -Ss$pixel >> $outf
+end
+
+# add land, basin outlines
+pscoast -O -K -J -R -Di -S$blue -N1/7 -V -N2/2 -W1 -A2000 >> $outf
+psxy $poly -O -K -R -J -W5/150/0/0 -M -B4/4:.:WEsN  >> $outf
+
+# misc labels
+pstext $txt_label -R -J -V -K -O >> $outf
+
+# --------- wrap up --------------------------------------
+psscale -C$cptfile -D2.8/-0.2/5.6/0.1h -O -V -N -B:"mm": -E -L >> $outf
+
+
+PLOT2:
+if ($plot2 == 0) goto PLOT3
+# =================================== plot 2 ===================================
+echo "plot ADJ SWE anomalies for western region .........................."
+
+set title = "Snow Water Equivalent Anomaly (after obs. assimilation)"
+set outf = w_reg.ADJ_swe_anom.ps
+
+makecpt -T10/190/20 -C$cpt_anom >! $cptfile
+
+#titles, etc.
+pstext $pagesize -R0/1/0/1 -V -P -K -N <<END>! $outf
+0.38 1.0 16 0 5 6 $title
+0.38 .95 16 0 5 6 $CURR_DATE       threshold = $thresh mm
+END
+
+# plot data (loop through basins) ---------------------------------------
+pscoast -O -K -Y$YY -Di $proj -R$coord -Ggray -V -A2000 >> $outf
+
+foreach BAS ($BASIN)
+  awk '{if($3>'$thresh' && $4>'$thresh')print $1,$2,$6+100}' $XYZADJ/swe_new.$BAS.f-c_mean.a-m_anom.qnt.xyzz |\
+    psxy -O -K -C$cptfile -G150/150/150 -R -J -V -Ss$pixel >> $outf
+end
+
+# add land, basin outlines
+pscoast -O -K -J -R -Di -S$blue -N1/7 -V -N2/2 -W1 -A2000 >> $outf
+psxy $poly -O -K -R -J -W5/150/0/0 -M -B4/4:.:WEsN  >> $outf
+
+# misc labels
+pstext $txt_label -R -J -V -K -O >> $outf
+
+# --------- wrap up --------------------------------------
+psscale -C$cptfile -D2.8/-0.2/5.6/0.1h -O -V -N -B:"percent anomaly": -E >> $outf
+
+
+PLOT3:
+if ($plot3 == 0) goto PLOT4
+# =================================== plot 3 ===================================
+echo "plot ADJ SWE percentile for western region .........................."
+
+set title = "Snow Water Equivalent Percentiles (after obs. assimilation)"
+set outf = w_reg.ADJ_swe_qnt.ps
+
+# makecpt -T0/100/10 -C$cpt_nonlin >! $cptfile 
+cp $cpt_linear $cptfile
+#cp cptfile = $COMMON/cpt/percentile.rev.cpt $cptfile
+
+#titles, etc.
+pstext $pagesize -R0/1/0/1 -V -P -K -N <<END>! $outf
+0.38 1.0 16 0 5 6 $title
+0.38 .95 16 0 5 6 $CURR_DATE       threshold = $thresh mm
+END
+
+# plot data (loop through basins) ---------------------------------------
+pscoast -O -K -Y$YY -Di $proj -R$coord -Ggray -V -A2000 >> $outf
+
+foreach BAS ($BASIN)
+  awk '{if($3>'$thresh' || $4>'$thresh')print $1,$2,$7*100}' $XYZADJ/swe_new.$BAS.f-c_mean.a-m_anom.qnt.xyzz |\
+    psxy -O -K -C$cptfile -G150/150/150 -R -J -V -Ss$pixel >> $outf
+end
+
+# add land, basin outlines
+pscoast -O -K -J -R -Di -S$blue -N1/7 -V -N2/2 -W1 -A2000 >> $outf
+psxy $poly -O -K -R -J -W5/150/0/0 -M -B4/4:.:WEsN  >> $outf
+
+# misc labels
+pstext $txt_label -R -J -V -K -O >> $outf
+
+# --------- wrap up --------------------------------------
+psscale -C$cptfile -D2.8/-0.2/5.6/0.1h -O -V -N -B:"percentile": -E >> $outf
+
+
+PLOT4:
+if ($plot4 == 0) goto PLOT5
+# =================================== plot 4 ===================================
+echo "plot ADJ SWE Anomaly Change for western region .........................."
+
+set title = "Snow Water Equivalent Anomaly (ADJ): Change in Last Month"
+set outf = w_reg.swe_anom.DELTA.ADJ.ps
+
+makecpt -T-50/50/10 -C$cpt_linear  >! $cptfile 
+
+#titles, etc.
+pstext $pagesize -R0/1/0/1 -V -P -K -N <<END>! $outf
+0.38 1.0 16 0 5 6 $title
+0.38 .95 16 0 5 6 $CURR_DATE       threshold = $thresh mm
+END
+
+# plot data (loop through basins) ---------------------------------------
+pscoast -O -K -Y$YY -Di $proj -R$coord -Ggray -V -A2000 >> $outf
+
+foreach BAS ($BASIN)
+#  paste $XYZADJ/$BAS/$PATH_CURR/swe_new.$BAS.f-c_mean.a-m_anom.qnt.xyzz $XYZADJ/$BAS/$PATH_LAST/swe_new.$BAS.f-c_mean.a-m_anom.qnt.xyzz |\
+#  awk '{if( ($3>'$thresh' && $4>'$thresh') || ($10>'$thresh' && $11>'$thresh') )print $1,$2,$6-$13}' |\
+#    psxy -O -K -C$cptfile -G150/150/150 -R -J -V -Ss$pixel >> $outf
+end
+# PATH_LAST to be determined .....
+
+# add land, basin outlines
+pscoast -O -K -J -R -Di -S$blue -N1/7 -V -N2/2 -W1 -A2000 >> $outf
+psxy $poly -O -K -R -J -W5/150/0/0 -M -B4/4:.:WEsN  >> $outf
+
+# misc labels
+pstext $txt_label -R -J -V -K -O >> $outf
+
+# --------- wrap up --------------------------------------
+psscale -C$cptfile -D2.8/-0.2/5.6/0.1h -O -V -N -B:"change in % of normal": -E >> $outf
+
+
+PLOT5:
+if ($plot5 == 0) goto PLOT6
+# =================================== plot 5 ===================================
+echo "plot ADJ SWE value Change for western region .........................."
+
+set title = "Snow Water Equivalent (ADJ): Change In Last Month"
+set outf = w_reg.swe_val.DELTA.ADJ.ps
+
+makecpt -T-200/200/50 -C$cpt_linear  >! $cptfile 
+
+#titles, etc.
+pstext $pagesize -R0/1/0/1 -V -P -K -N <<END>! $outf
+0.38 1.0 16 0 5 6 $title
+0.38 .95 16 0 5 6 $CURR_DATE       threshold = $thresh mm
+END
+
+# plot data (loop through basins) ---------------------------------------
+pscoast -O -K -Y$YY -Di $proj -R$coord -Ggray -V -A2000 >> $outf
+
+foreach BAS ($BASIN)
+#  paste $XYZADJ/$BAS/20061101/swe_new.$BAS.f-c_mean.a-m_anom.qnt.xyzz $XYZADJ/$BAS/20061001/swe_new.$BAS.f-c_mean.a-m_anom.qnt.xyzz |\
+#  awk '{if( $3>'$thresh'  || $10>'$thresh' )print $1,$2,$3-$10}' |\
+#    psxy -O -K -C$cptfile -G150/150/150 -R -J -V -Ss$pixel >> $outf
+end
+# PATH_LAST to be determined .....
+
+# add land, basin outlines
+pscoast -O -K -J -R -Di -S$blue -N1/7 -V -N2/2 -W1 -A2000 >> $outf
+psxy $poly -O -K -R -J -W5/150/0/0 -M -B4/4:.:WEsN  >> $outf
+
+# misc labels
+pstext $txt_label -R -J -V -K -O >> $outf
+
+# --------- wrap up --------------------------------------
+psscale -C$cptfile -D2.8/-0.2/5.6/0.1h -O -V -N -B:"mm": -E >> $outf
+
+
+PLOT6:
+if ($plot6 == 0) goto DONE
+# =================================== plot 6 ===================================
+echo "smaller plot SWE percentile for western region .........................."
+
+set title = "Snow Water Equivalent Percentiles (ADJ)"
+set outf = w_reg.ADJ_swe_qnt.small.ps
+set proj = -JM3.5
+set YY = 0.8
+
+#makecpt -T0/100/10 -C$cpt_linear >! $cptfile 
+cp $cpt_linear $cptfile
+
+#titles, etc.
+pstext -JX6.5/9.5 -R0/1/0/1 -V -P -K -N <<END>! $outf
+0.27 .43 14 0 5 CB $title
+END
+
+# plot data (loop through basins) ---------------------------------------
+pscoast -O -K -Y$YY -Di $proj -R$coord -Ggray -V -A2000 >> $outf
+
+foreach BAS ($BASIN)
+  awk '{if($3>'$thresh' || $4>'$thresh')print $1,$2,$7*100}' $XYZADJ/swe_new.$BAS.f-c_mean.a-m_anom.qnt.xyzz |\
+    psxy -O -K -C$cptfile -G150/150/150 -R -J -V -Ss$pixel >> $outf
+end
+
+# add land, basin outlines
+pscoast -O -K -J -R -Di -S$blue -N1/7 -V -N2/2 -W1 -A2000 >> $outf
+psxy $poly -O -K -R -J -W5/150/0/0 -M -B4/4:.:wesn >> $outf
+
+# misc labels
+pstext -R -J -V -K -O  << END  >> $outf
+-98  50 12 0 5 CM CANADA
+-98  48 12 0 5 CM USA
+-124 33.5 12 0 7 LM Pacific
+-124 32.0 12 0 7 LM Ocean
+END
+
+# --------- wrap up --------------------------------------
+psscale -C$cptfile -D1.75/-0.1/3.5/0.1h -O -V -N -B:"percentile": -E >> $outf
+
+DONE:

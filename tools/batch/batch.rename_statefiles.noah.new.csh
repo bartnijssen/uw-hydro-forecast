@@ -1,0 +1,14 @@
+rename_statefiles.pl ../data/conus.new/state/spinup.retro/noah_2.8.new noah state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.01/noah_2.8.new noah state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.02/noah_2.8.new noah state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.03/noah_2.8.new noah state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.04/noah_2.8.new noah state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.05/noah_2.8.new noah state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.06/noah_2.8.new noah state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.07/noah_2.8.new noah state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.08/noah_2.8.new noah state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.09/noah_2.8.new noah state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup.1915.10/noah_2.8.new noah state nc state nc
+rename_statefiles.pl ../data/conus.new/state/retro/noah_2.8.new noah state nc state nc
+rename_statefiles.pl ../data/conus.new/state/spinup_nearRT/noah_2.8.new noah state nc state nc
+rename_statefiles.pl ../data/conus.new/state/curr_spinup/noah_2.8.new noah state nc state nc

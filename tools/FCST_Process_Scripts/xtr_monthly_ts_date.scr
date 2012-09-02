@@ -1,0 +1,62 @@
+#!/bin/csh
+# program to extract monthly averages from the daily flux file output
+# timeseries version, now finds nrecs automatically
+# AWW-2003
+
+if ( ${#argv} < 1 ) then
+  echo "USAGE: $0 METYR BASIN"
+  exit(1)
+endif
+
+set METYR = $argv[1]
+set BASIN = $argv[2]
+
+#exit(0)
+
+set BINDIR = "/raid8/forecast/proj/fcst/ESP/bin/"
+set ARCHDIR = "/state/partition1/forecast/ESP/saved"
+
+set VICOUT = "/state/partition1/forecast/ESP/output/flux/$BASIN"
+cd $VICOUT
+
+echo "Working VIC-output directory is $VICOUT"
+
+# Loop over output files
+if ( $BASIN == "klamath" ) then
+  set MASKFILE = "/raid8/forecast/proj/fcst/ESP/common/$BASIN.0625.fluxfiles.maskorder"
+else
+  set MASKFILE = "/raid8/forecast/proj/fcst/ESP/common/$BASIN.125.fluxfiles.maskorder"
+endif
+
+set FLUXFILES = `cat $MASKFILE`
+
+# Original Script starts here
+  set FLUXDIR = /state/partition1/forecast/ESP/output/flux/$BASIN
+  set MONDIR = /state/partition1/forecast/ESP/output/flux.mon/$BASIN
+
+
+  # find NRECS 
+  set F = `head -1 $MASKFILE`
+  set NRECS = `wc $FLUXDIR/$F | awk '{print $1}' `
+
+
+  echo "averaging flux files"
+
+
+  foreach F ($FLUXFILES)
+#     echo "Averaging file $F"
+    $BINDIR/xtr_mon_ts.9f $F $MONDIR/$F:t 1 12 $NRECS
+  end
+
+  echo "Extracting daily/monthly summary for basin $BASIN"
+  
+  $BINDIR/xtr.spatial_data.scr $BASIN
+  # Archive the output of xtr.spatial_data.scr
+#  tar -czf ${ARCHDIR}/spatial/xtr_vars.$METYR.$BASIN.tar.gv xtr_vars/
+
+  cp ${ARCHDIR}/xtr_vars/$BASIN.dy1_swe ${ARCHDIR}/spatial/$BASIN.dy1_swe.$METYR
+  cp ${ARCHDIR}/xtr_vars/$BASIN.all_monvars ${ARCHDIR}/spatial/$BASIN.all_monvars.$METYR
+
+echo "Done with $0"
+
+#end

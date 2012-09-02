@@ -1,0 +1,4 @@
+Shrad 20120717
+VIC_2 is the version of VIC 4.0.5 in which NO_REWIND is set to be false. This is done to run gunnission basin. 
+I didn't want to have to use that option for all the basins since this option slows down the VIC run, so created a different model config file.
+

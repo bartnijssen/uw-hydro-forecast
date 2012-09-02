@@ -1,0 +1,10 @@
+# GMT common arguments shelf
+-B:% chance of below 20th percentile:
+-JM7.5
+-JX7.5/9
+-R-126/-66/24/50
+-x-0.5
+-y4
+-jM7.5
+EOF
+F

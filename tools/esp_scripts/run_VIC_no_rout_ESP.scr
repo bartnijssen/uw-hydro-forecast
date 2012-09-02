@@ -1,0 +1,73 @@
+#!/bin/csh 
+# A. Wood August 2007
+# run a set of ESP forecasts, given existing state files & forcings, etc.
+# this version:  for SW Monitor, on sere, in aww dirs
+### Now runs on phobic in forecast dirs --Shrad March, 2008
+# sample cmd:  run_VIC_no_rout_ESP.scr 2008 01 27 1950 2002 184
+
+set GLOB    = /raid/forecast/sw_monitor/esp_scripts/conus.swm.global.5.TEMPLATE   # template for VIC run
+set OUTDIR  = /raid/forecast/sw_monitor/output/ESP/  # run output, overwritten
+
+# date settings from arguments
+set CYR = $1  # current (initial) day
+set CMO = $2
+set CDY = $3
+set FSYR = $4 # climatology boundaries
+set FEYR = $5
+set FLEN = $6 # forecast days to run
+
+# clear out working directories, make necessary ones
+set STORDIR = $OUTDIR/summary/$CYR$CMO$CDY
+mkdir $STORDIR
+
+#copy state file to local dir
+####scp /nfs/phobic/raid/forecast/sw_monitor/state/CONUS.5.dly_wb_state_$CYR$CMO$CDY /usr1/aww/proj/sw_monitor/run/fcst/state/
+
+# only run if state file is copied...
+if (-e /raid/forecast/sw_monitor/state/CONUS.5.dly_wb_state_$CYR$CMO$CDY) then
+
+set METYR = $FSYR
+while ($METYR <= $FEYR) # forecast year loop
+
+  echo running startyear $CYR metyear $METYR
+    
+  # update the global file (replaces preset field identifiers)
+ 
+$statefile = 
+# awk '{ \
+    if($1~/INIT_STATE/){ \
+      $2="/raid/forecast/sw_monitor/state/CONUS.5.dly_wb_state_"'$CYR''$CMO''$CDY'\
+    } \
+    if($1~/NRECS/){ \
+       $2='$FLEN' \
+    } \
+    print $0 \
+  }' $GLOB |\
+    sed 's/YYY1/'$METYR'/g' |\
+    sed 's/MM1/'$CMO'/g' |\
+    sed 's/DD1/'$CDY'/g' > $GLOB:r
+
+$cmd = "$TOOLS_DIR/run_model.pl -m $my_model -p $PROJECT -f curr_spinup -pf full_data -s $FORC_START_DATE -e $FORC_UPD_END_DATE -i $SPINUP_STATE_DIR/$my_model/$init_state_file";
+
+  # Run VIC
+  \rm -R $OUTDIR/flux # clear out to make failure easily detectable
+   mkdir $OUTDIR/flux
+  
+ # /raid/forecast/sw_monitor/run/vicNl405 -g $GLOB:r
+
+
+  # compress the outputs
+  # note these subdirs match those in global file
+  echo storing...
+  cd $OUTDIR
+    #run flux aggregation program once created
+    tar -czf $STORDIR/fluxes.$METYR.tar.gz flux/
+  cd -
+
+  @ METYR ++
+
+end  # end ESP start year loop
+
+else
+  echo "state file not found, quitting"
+endif

@@ -1,0 +1,55 @@
+#!/bin/csh 
+
+set PATH = "/raid8/forecast/proj/uswide/tools" 
+set Template = "$PATH/qsub_weekly_forecast_template"
+set script = "$PATH/qsub_weekly_forecast"
+set project = "feather"
+set model = "vic"
+set ESP = 1
+set ROUTE = 1
+set C_YR = 2012
+set C_MON = 07
+set C_DAY = 25
+set SENS   = 1960
+set EENS   = 2004
+set YR = $SENS
+set BATCH = 3
+
+##### First Batch of Ensemble runs
+set NUM = 1
+while ($YR < $EENS)
+set Syr = "$YR"
+set Eyr = `echo $Syr | awk '{print $1+'$BATCH'}'` #### 
+
+if ($Eyr > $EENS) then
+set Eyr = "$EENS"
+endif
+set DATE = `date`
+echo "Weekly forecast runs for Initilization Date $Syr $Eyr started at $DATE" > done
+mail shrad  < done
+cp $Template $script
+find $script -type f | xargs perl -pi -e "s|PROJECT|$project|g"
+find $script -type f | xargs perl -pi -e "s|MODEL|$model|g"
+find $script -type f | xargs perl -pi -e "s|RUN_ESP|$ESP|g"
+find $script -type f | xargs perl -pi -e "s|RUN_ROUT|$ROUTE|g"
+find $script -type f | xargs perl -pi -e "s|CYR|$C_YR|g"
+find $script -type f | xargs perl -pi -e "s|CMON|$C_MON|g"
+find $script -type f | xargs perl -pi -e "s|CDAY|$C_DAY|g"
+find $script -type f | xargs perl -pi -e "s|SYR|$Syr|g"
+find $script -type f | xargs perl -pi -e "s|EYR|$Eyr|g"
+find $script -type f | xargs perl -pi -e 's|queue|forecast.q|g'
+cp $script $script.$NUM
+qsub $script.$NUM
+echo "Qsubbing $script.$NUM $Syr  $Eyr"
+set QSUB_TIME = `date`
+echo "Weekly Forecast For $project and $model ($Syr - $Eyr) started at $QSUB_TIME" >> done
+@ NUM++
+set Nxt_Syr = `echo $Eyr | awk '{print $1+1}'`
+set YR = "$Nxt_Syr"
+sleep 30
+end
+
+mail shrad < done
+
+\rm done
+

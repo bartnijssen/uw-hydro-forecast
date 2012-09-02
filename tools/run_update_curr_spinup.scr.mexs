@@ -1,0 +1,10 @@
+#!/bin/csh
+## This script runs forcing generation script for any given time period of less than 2 months
+#$ -cwd
+#$ -j y
+#$ -S /bin/csh
+#$ -q forecast.q
+
+update_forcings_asc.pl mexs
+ 
+

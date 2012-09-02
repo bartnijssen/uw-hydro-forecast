@@ -1,0 +1,49 @@
+#!/bin/csh 
+# plot SPI for CONUS region
+# Author: A. Wood, Jan 2008
+gmtset ANOT_FONT_SIZE 12 LABEL_FONT_SIZE 12 HEADER_FONT_SIZE 16
+gmtset TICK_LENGTH 0.025 D_FORMAT %g PLOT_DEGREE_FORMAT -ddd:mm:ss
+
+set datestr = $1 # e.g., 20080106  
+set N = $2 # e.g., 3
+set PER = (1 2 3 6 9 12 18 24 36 48)
+set INFL = spi_sri.$datestr.xyzz
+set outfil = /raid/forecast/sw_monitor/spatial/ndxes/figs/$datestr/CONUS.SPI.$PER[$N]\mo.$datestr.ps
+set coord = -126/-66/24/50
+set proj = -JM7.5
+set pixel = 0.135
+set blue = 200
+set XYZDIR = /raid/forecast/sw_monitor/spatial/ndxes/xyzz/  
+mkdir -p /raid/forecast/sw_monitor/spatial/ndxes/figs/$datestr
+
+set cptfile = /raid/forecast/sw_monitor/spatial/ndxes/SRI_midwhite.cpt
+
+#titles, etc.
+pstext -JX7.5/9 -R0/1/0/1 -V -P -K -N <<END>! $outfil
+0.42 1.0 16 0 21 6 Standardized Precipitation Index ($PER[$N]\-Month)
+0.42 .97 16 0 21 6 based on rolling monthly climatology ending on $datestr
+END
+
+# data
+awk '{if($('$N'+12)>-5&&$('$N'+12)<5)print $1,$2,$('$N'+2)}' $XYZDIR/$INFL > test.xyzz
+
+xyz2grd test.xyzz -Gsm.ncdf -R$coord -V -I0.5 -F
+grdsample sm.ncdf -Gsm_smooth.ncdf -I3m -R$coord -Q0.25 -F
+grdimage -O -K -X-0.5 sm_smooth.ncdf $proj -R$coord -Y4 -C$cptfile >> $outfil
+
+# add land, basin outlines
+pscoast -O $proj -R$coord -A2000 -Di -S$blue -N1/7 -K -V -N2/2 -B8/4:.:WEsN -W1>> $outfil 
+
+# --------- wrap up --------------------------------------
+psscale -C$cptfile -D3.75/-0.2/5/0.1h -O -V -N -B:"SPI": -E >> $outfil
+
+pstogif $outfil
+gzip $outfil
+\rm $outfil:r.ppm
+\rm test.xyzz
+#gs $outfil
+\rm *.ncdf
+
+
+
+

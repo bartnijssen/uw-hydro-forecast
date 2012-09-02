@@ -1,0 +1,71 @@
+#!/bin/csh -x 
+## This script is run in the beginning of each month (Day 02 of the month) to extract and copy forcings as well as VIC flux files for last month and archive it to the ftp for UCMERCED group
+## UCMERCED group does wild fire forecasting using these data
+## Contacts at UCMERCED: Jeanne Milostan <jmilostan@ucmerced.edu> and Anthony Westerling <awesterling@ucmerced.edu>
+#$ -cwd
+#$ -j y
+#$ -S /bin/tcsh
+#$ -q forecast.q
+#$ -N Extract_and_archive_monthly_data
+#$ -M shrad@hydro.washington.edu
+#$ -m e
+
+
+set basin = $1
+
+set MON_NAME = (January February March April May June July August September October November December) ## Name of each months
+set MON_EDAY = (31 28 31 30 31 30 31 31 30 31 30 31) ### Last day in each month
+
+### First get the current month and current day
+set CURR_MONTH = `date +%m | awk '{x=$1; if (x<10) printf "%d", x; if (x>=10) printf "%2d", x;}'`
+set CURR_DAY = `date +%d | awk '{x=$1; if (x<10) printf "%d", x; if (x>=10) printf "%2d", x;}'`
+
+if ($CURR_MONTH > 1) then
+set LAST_MONTH = `echo "$CURR_MONTH" | awk '{print $1-1}'`
+else
+set LAST_MONTH = 12
+endif
+
+### Other paths
+set results_dir = "curr_spinup"
+set DATA_DIR = "/raid8/forecast/proj/uswide/data"
+set FORC_DIR = $DATA_DIR/"$basin"/forcing/"$results_dir"/asc_vicinp
+set FLIST = $DATA_DIR/"$basin"/forcing/grid/grid_info/"$basin".125.datafiles.maskorder
+set FLIST2 = $DATA_DIR/"$basin"/forcing/grid/grid_info/"$basin".125.fluxfiles.maskorder
+set FLUX_DIR = $DATA_DIR/"$basin"/results/"$results_dir"/vic/daily/asc
+set FTP_DIR = "/home/ftp/pub/fmunoz/forecast/UCMERCED_DATA/$MON_NAME[$LAST_MONTH]" 
+
+### Remove directories from last to last month
+rm -rf /home/ftp/pub/fmunoz/forecast/UCMERCED_DATA/*/$basin
+
+## Remove and create directory for the previous month
+\rm -rf $FTP_DIR/$basin
+mkdir -p $FTP_DIR/$basin/forcings
+mkdir -p $FTP_DIR/$basin/fluxes
+
+set DAY1 = "01"
+set DAY2 = "$MON_EDAY[$LAST_MONTH]"
+
+### Read forcings until yesterday (day 1 lag) and then extract forcings of previous monthly (exclude day 01 of the current month)
+
+set NUM_ROW = `echo "$MON_EDAY[$LAST_MONTH]" | awk '{print $1+'$CURR_DAY'-1}'`
+
+echo "$NUM_ROW $MON_EDAY[$LAST_MONTH]"
+
+foreach file (`cat $FLIST`)
+tail -$NUM_ROW $FORC_DIR/$file | head -$MON_EDAY[$LAST_MONTH] > $FTP_DIR/$basin/forcings/$file 
+end
+
+foreach file (`cat $FLIST2`)
+tail -$NUM_ROW $FLUX_DIR/$file | head -$MON_EDAY[$LAST_MONTH] > $FTP_DIR/$basin/fluxes/$file 
+end
+
+cd $FTP_DIR
+
+tar -czf $FTP_DIR/$basin.forc.tar.gz $basin/forcings
+
+tar -czf $FTP_DIR/$basin.fluxes.tar.gz $basin/fluxes
+
+\rm -rf $FTP_DIR/$basin
+
+

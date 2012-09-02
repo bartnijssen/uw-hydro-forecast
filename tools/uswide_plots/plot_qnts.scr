@@ -1,0 +1,12 @@
+#!/bin/csh
+
+set DATE = $argv[1]  
+# e.g., 20050215
+
+set BASEDIR = "/raid8/forecast/proj/uswide/tools/uswide_plots"
+set INDIR = "/raid8/forecast/proj/uswide/data"
+set OUTDIR = "/raid8/forecast/proj/uswide/data/conus.mexico/spatial/plots"
+$BASEDIR/plot.sm_qnt_conus.mexico.scr  $DATE $INDIR $OUTDIR
+$BASEDIR/plot.swe_qnt_conus.mexico.scr $DATE $INDIR $OUTDIR
+$BASEDIR/plot.swe_avg_conus.mexico.scr $DATE $INDIR $OUTDIR
+exit

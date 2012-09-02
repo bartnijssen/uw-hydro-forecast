@@ -1,0 +1,35 @@
+#!/bin/csh
+# Author: A. Wood, Jan 2008
+# run scripts for calculating and plotting the SPI & SRI on the sw monitor grid
+# run as cron job at time late enough that main SWM job has run, e.g., 10:45 a.m.
+
+set TOOLS_DIR = 
+set YR = 
+set MO = 
+set DY = 
+set DATESTR = "$YR$MO$DY"
+
+
+
+
+# calculate rolling climatology vars
+$cmd = "$TOOLS_DIR/ndxes/calc.vars_1mo_rolling.pl $YR $MO $DY $FLIST $RETRODIR $NEARTDIR $RTDIR $OUTDIRROOT >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+print "$cmd\n";
+(system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
+
+# calculated indices
+$cmd = "$TOOLS_DIR/ndxes/calc.std_indices.scr $DATESTR $PROG $OUTDIR $SCLIM $ECLIM >& $LogFile.tmp; cat $LogFile.tmp >>$LogFile";
+print "$cmd\n";
+(system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
+
+
+# make plots
+#foreach N ( 1 2 3 4 5 6 7 8 9 10 )
+ # $DOTDIR/ndxes/plot.SPI.scr $DATESTR $N
+ # $DOTDIR/ndxes/plot.SRI.scr $DATESTR $N
+#end
+
+# copy to website
+#foreach F ($DOTDIR/figs/$DATESTR/*gif)
+ # cp $F /nfs/dynamo/www/data/forecast/monitor/indices/curr/$F:t:r:r.gif
+#end

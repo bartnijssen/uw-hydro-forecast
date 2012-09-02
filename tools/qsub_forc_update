@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+#$ -cwd
+#$ -j y
+#$ -S /bin/bash
+#$ -q forecast.q
+/raid8/forecast/proj/uswide/tools/update_forcings_asc.pl.man east >& /raid8/forecast/proj/uswide/tools/log.east.update_forc.txt
+

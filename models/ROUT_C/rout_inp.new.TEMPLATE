@@ -1,0 +1,16 @@
+### INPUT FILE FOR (C) ROUTING PROGRAM -- order important ###
+FLOW_DIREC_FILE  /raid8/forecast/proj/fcst/ESP/inputs/routing/BAS_125.flowd.final
+VELOCITY_FILE    1.5
+DIFF_FILE        800
+XMASK_FILE       12500
+FRACTION_FILE    /raid8/forecast/proj/fcst/ESP/inputs/routing/BAS_125.fract
+STATION_FILE     /raid8/forecast/proj/fcst/ESP/inputs/routing/BAS_125.stnloc
+INPUT_FILE_PREC  4
+SPINUP_FILE_PATH /state/partition1/forecast/output/BAS/RETRO_2006/fluxes_     
+SPINUP_DATES     YYY1 MM1 YYY2 MM2
+INPUT_FILE_PATH  /state/partition1/forecast/ESP/output/flux/fluxes_      
+INPUT_DATES      YYY3 MM3 YYY4 MM4
+OUT_FILE_PATH    /state/partition1/forecast/ESP/output/sflow/
+OUTPUT_DATES     YYY5 MM5 YYY6 MM6
+UNIT_HYD_FILE    /raid8/forecast/proj/fcst/ESP/inputs/routing/UH_ALL  
+

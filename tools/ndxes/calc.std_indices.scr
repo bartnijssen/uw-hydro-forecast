@@ -1,0 +1,39 @@
+#!/bin/csh
+## Author: A. Wood jan 2008
+## This scripts combines the monthly data (unit 0.01 inches) for the period 1915-current 
+## calculates index for 1, 3, 6, 12 month; calibration period chosen is 1971-2000
+## SPI program inputs must be in integers - use 100ths of inches to keep precision
+
+## also, by default, generate xyzz summary of final record in results
+
+set DATE  = $1  # e.g., 20080131
+set PROG  = $2
+set OUTDir = $3
+set SCLIM = $4
+set ECLIM = $5
+set PDIR  = $OUTDir/out.p
+set RODIR = $OUTDir/out.ro
+set OUTD  = $OUTDir/spi_sri
+set XYZZ = $OUTDir/xyzz
+
+echo -n >! tmp.xyzz
+set N = 1
+foreach F ($RODIR/*)
+  # echo $F
+  $PROG -bc $SCLIM -ec $ECLIM 1 2 3 6 9 12 18 24 36 48 < $RODIR/$F:t > sri
+  $PROG -bc $SCLIM -ec $ECLIM 1 2 3 6 9 12 18 24 36 48 < $PDIR/$F:t > spi
+
+  paste spi sri | awk '{if(NR==2){$3="SPI";$14="";$15="";$16="SRI"}else{$13="";$14=""};print $0}' > $OUTD/$F:t
+
+  # generate file for plot
+  echo $F:t | awk '{printf("%s  ",$1)}' >> tmp.xyzz
+  tail -1 $OUTD/$F:t >> tmp.xyzz
+
+  @ N ++
+end
+\rm spi sri 
+
+# finish generating file of last record for plot
+sed 's:_: :g' tmp.xyzz | sed 's:.ndx::g' |\
+  awk '{$1=$3;$3="";$4="";$5="";print $0}' > t
+ mv t $XYZZ/spi_sri.$DATE.xyzz

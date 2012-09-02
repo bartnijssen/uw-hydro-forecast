@@ -1,0 +1,265 @@
+
+
+OBTAINING
+
+The distribution version of the SPI program is available as a
+compressed unix tar file.  It is available via anonymous ftp on
+ulysses.atmos.colostate.edu (129.82.107.18).  It is located in 
+pub/spi-0.2.tar.Z.
+
+Here's an example (type the text in _'s, without the _'s):
+
+--------------------------------------------------------------------------
+> _ftp 129.82.107.18_
+Connected to 129.82.107.18.
+220 ulysses FTP server (SunOS 4.1) ready.
+/users/johnk/.netrc: Permission denied
+Name (129.82.107.18:johnk): _ftp_
+331 Guest login ok, send ident as password.
+Password:_johnk@_
+230 Guest login ok, access restrictions apply.
+ftp> _cd pub_
+250 CWD command successful.
+ftp> _bin_
+200 Type set to I.
+ftp> _get spi-0.2.tar.Z_
+200 PORT command successful.
+150 Binary data connection for spi-0.2.tar.Z (129.82.107.18,2364) (36161 bytes).
+226 Binary Transfer complete.
+local: spi-0.2.tar.Z remote: spi-0.2.tar.Z
+36161 bytes received in 0.015 seconds (2.4e+03 Kbytes/s)
+ftp>_quit_
+221 Goodbye.
+>_uncompress spi-0.2.tar.Z_
+>_tar xvf spi-0.2.tar_
+x spi-0.2/
+x spi-0.2/
+x spi-0.2/Makefile
+x spi-0.2/data/
+x spi-0.2/data/53005.mon
+x spi-0.2/data/53038.mon
+x spi-0.2/data/53359.mon
+x spi-0.2/data/53488.mon
+x spi-0.2/data/denver.dat
+x spi-0.2/data/crested.hcn
+x spi-0.2/data/denver.spi
+x spi-0.2/ghcn_filter.c
+x spi-0.2/mon_filter.c
+x spi-0.2/rd_prec.c
+x spi-0.2/spi.c
+x spi-0.2/spi.doc
+x spi-0.2/spi.h
+x spi-0.2/spi_empiric.c
+x spi-0.2/spi_gamma.c
+x spi-0.2/spi-0.2/
+x spi-0.2/spi.f
+x spi-0.2/ghcn_filter.f
+x spi-0.2/ghcn_filter_f
+>
+-----end of example-----------------------------------------------------------
+
+Inventory of Files
+
+Makefile	- Unix style makefile
+ghcn_filter.c	- Example input filter for GHCN data format
+ghcn_filter.f	- Example input filter for GHCN data format in Fortran
+mon_filter.c	- Example input filter for Mon Drought format
+rd_prec.c	- Function reads input.
+spi.c		- Main.
+spi.f		- Fortran version
+spi.doc		- This file.
+spi.h		- Spi header file.
+spi_empiric.c	- Function to compute SPI using empiric distrib.
+spi_gamma.c	- Function to compute SPI using gamma distrib.
+
+data:		- example data files
+53005.mon
+53038.mon
+53359.mon
+53488.mon
+crested.hcn
+denver.dat
+denver.spi	- example output.
+
+BUILDING
+
+The requirements to compile and run spi are:
+
+o  An ANSI standard C compiler.  GNU gcc version 2.3.3 running under Linux
+   was used for developement, but the code is generic enough that it should
+   compile easily with any ANSI compiler.  If you are forced to use a K&R
+   compiler, you will have modify the function headers and remove the function
+   prototypes.
+
+o  An operating system that supports unix-like I/O redirection.  Other
+   operating system may be used, but will require some code
+   modifications.
+
+o  Sufficient memory to support the program and data arrays.
+
+o  A math library that provides lgamma(), the log gamma function.
+   (On some systems lgamma may be named gamma.)
+
+Unix systems:
+
+1) Edit Makefile to suit your system.
+
+2) Type 'make'.
+
+Other systems:
+
+1) Compile spi.c, rd_prec.c and spi_gamma.c (or spi_empiric.c).
+   
+2) Link the resulting object modules with the appropriate math library.
+
+If you have trouble running spi because your system does not have enough
+memory, you may want to edit spi.h and change the lines:
+
+#define BEGYR  1850
+#define ENDYR  2000
+
+to specify a shorter period of record.
+
+
+RUNNING
+
+The spi program is implemented as a unix-style filter; i.e. it reads
+from standard input (stdin) and write to standard output (stdout).
+Thus it is easy to use with a variety of input data and output
+processing without rewriting the SPI generating program.  All that
+needs to be done is to write apropriate 'frontend' and 'backend'
+filter.  For example, if several data streams are to be analyzed and
+each has a different format, we need only to write a filter that reads
+each format and outputs the format spi expects.  Similarly, we may
+have several filters that plot time series or perform statistical
+analysis on the resulting index values.
+
+Spi also requires specifying one or more time scale parameters.  Simply
+add these to the command line.  For example:
+
+	spi 3 6 12 <infile.dat >outfile.dat
+
+Input and Filters 
+
+Input to the spi program consists of a file for each station.  The
+file contains a single head line; this line may contain any character
+data; e.g. station number, latitude, longitude, etc.  The header is
+passed as-is to stdout.  Following the header are a the data records;
+each data record has 3 blank separarted fields:
+
+	yyyy mm prec
+
+        Where:
+            yyyy - year; values > ENDYR and < BEGYR will be skipped.
+            mm   - month [1-12]
+            prec - precipitation (in 0.01's of inches)
+
+        Special codes:
+            -9900 = Missing
+
+
+Two input filters have been included with the spi package as examples.
+One, mon_filter, translates files in the Colarado Climate monthly data
+format (.mon).  The other, ghcn_filter, reads data files extracted
+from the Global Historic Climate Network.  Examples of these formats
+appear in the data subdirectory.
+
+Calibration Period
+
+By default the probability function is calculated for the entire
+period of record.  It is also possible to specify the period of time
+for which the probability distribution is calculated.  This is useful
+for datasets that don't have identical period of records.  The
+switches -bc and -ec specify the beginning and end of the calibration
+period; e.g.
+
+	spi -bc 1961 -ec 1990 12 <denver.dat
+
+will use the 1961-1990 period for computing the distribution.  SPI
+values will still be claculated for al the input data.
+
+Usage Examples
+
+1) List 12 month time scale values for data in denver.dat:
+
+	spi 12 <denver.dat
+
+  Note: Output from this example is in data/denver.spi.
+
+2) Display spi index for time scale 3, 6 and 12 months using
+   data in the file 53005.mon.  The file is is '.mon' format.
+   Send the results to the file 53005.spi:
+
+	mon_filter <53005.mon | spi 3 6 12 >53005.spi
+
+3) Display current index values for all '.mon' format files in
+   ./data.  This is a unix shell script:
+
+#--begin script--
+#!/bin/sh
+
+for i in ./data/*.mon; do
+  echo $i
+  mon_filter <$i | spi 12 24 36 | tail -1
+done
+
+#--end script--
+
+
+
+FORTRAN NOTES
+
+A Fortran version, spi.f, has been provided for those without C
+capability.  
+
+- It works the same as the C version with the exception
+that the time scale values are fixed at 3, 6, 12 and 24 months.
+To change the number of time scales and/or their values:
+
+	1) Edit the 'parameter' statment in the main program.
+	Change 'nlen=4' to reflect the number of time scales
+	you want.
+
+	2) Edit the 'data len /...' statement to contain the
+	time scales you want.
+
+	3) Recompile.
+
+- The provided Makefile creates the executable spi_f.
+
+- The program as written uses the f77 default I/O unit numbers; i.e.
+  0=stderr, 5=stdin and 6=stdout.  These may easily be changed by
+  using explicit 'open' statments.
+
+- Every effort has been to be ANSI compliant.  The most notable
+  exception is the use of lower case.
+
+- The function 'gammln' has been provided since many Fortran
+  libraries lack a log-gamma function.
+
+- The output of the spi.f version should be nearly identical to that 
+  of spi.c.  Noted exceptions are:
+	
+	1) The header line is padded with blanks to 80 characters.
+	2) Fortran sometimes writes -0.00 where C writes 0.00.
+	3) There are occaisional small differences (usually 0.01)
+           due to differences in precision (spi.f is single precision;
+	   spi.c id double precision) and different log-gamma functions.
+
+- There is an Fortran example input filter, ghcn_filter.f.
+
+
+HELP?
+
+If you have any questions concerning these programs, please
+contact:
+
+	John Kleist
+	Email: johnk@ulysses.atmos.colostate.edu (preffered)
+	Phone: (303) 491-8220
+
+
+
+
+
+

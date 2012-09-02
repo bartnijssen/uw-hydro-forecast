@@ -1,0 +1,147 @@
+# conus Project Information
+#------------------------------------------------------------------------
+# Basic Info
+PROJECT_TYPE		real
+
+# Directories
+PROJECT_DIR		/raid8/forecast/proj/uswide/data/mo
+LOCAL_PROJECT_DIR	/state/partition1/forecast/uswide/data/mo
+WEB_PUB_DIR		/home/www-forecast/monitor/curr
+
+# Subdirectories
+# Locations relative to PROJECT_DIR must be listed after PROJECT_DIR in this file
+# (occurrences of <PROJECT_DIR> in the path will be replaced by PROJECT_DIR or LOCAL_PROJECT_DIR in the scripts)
+PARAMS_DIR		<PROJECT_DIR>/params
+FORCING_DIR		<PROJECT_DIR>/forcing
+RESULTS_DIR		<PROJECT_DIR>/results
+STATE_DIR		<PROJECT_DIR>/state
+CONTROL_DIR		<PROJECT_DIR>/control
+LOGS_DIR		<PROJECT_DIR>/logs
+SPATIAL_DIR		<PROJECT_DIR>/spatial
+
+# Run-specific subdirectories
+RETRO_SUBDIR	retro
+NEAR_RT_SUBDIR	spinup_nearRT
+CURR_SUBDIR	curr_spinup
+
+# Parameters subdirectories
+# For PARAMS_MODEL_DIR, MODEL_SUBDIR will be supplied by model config file
+PARAMS_MODEL_DIR	<PARAMS_DIR>/<MODEL_SUBDIR>
+
+# Forcing subdirectories
+FORCING_STN_INFO_DIR	<FORCING_DIR>/acis/stn_info
+#FORCING_ACIS_RAW_DIR	<FORCING_DIR>/acis/raw_data
+FORCING_ACIS_RAW_DIR	/raid8/forecast/sw_monitor/data/conus/forcing/acis/raw_data
+#FORCING_ACIS_RT_TS_DIR  /raid8/forecast/proj/uswide/data/pnw/forcing/acis/rt_data
+#FORCING_ACIS_LT_TS_DIR  /raid8/forecast/proj/uswide/data/pnw/forcing/acis/rt_data
+FORCING_ACIS_RT_TS_DIR  /raid8/forecast/sw_monitor/data/conus/forcing/acis/rt_data
+FORCING_ACIS_LT_TS_DIR  /raid8/forecast/sw_monitor/data/conus/forcing/acis/rt_data
+FORCING_GRID_INFO_DIR	<FORCING_DIR>/grid/grid_info
+FORCING_GRID_TMP_DIR	<FORCING_DIR>/grid/tmp_data
+FORCING_RETRO_DIR	<FORCING_DIR>/<RETRO_SUBDIR>
+FORCING_NEAR_RT_DIR	<FORCING_DIR>/<NEAR_RT_SUBDIR>
+FORCING_CURRSPIN_DIR	<FORCING_DIR>/<CURR_SUBDIR>
+# For FORCING_MODEL_DIR, FORCING_SUBDIR will be supplied by script, and FORCING_TYPE
+# will be supplied by model config file
+FORCING_MODEL_DIR	<FORCING_DIR>/<FORCING_SUBDIR>/<FORCING_TYPE>
+FORCING_TYPE_ASC_VIC	asc_vicinp
+FORCING_TYPE_ASC_DIS	asc_disagg
+FORCING_TYPE_NC		nc
+FORCING_ASC_VIC_PREFIX	data
+FORCING_ASC_DIS_PREFIX	full_data
+FORCING_NC_PREFIX	full_data
+
+# Results subdirectories
+RESULTS_RETRO_DIR	<RESULTS_DIR>/<RETRO_SUBDIR>
+RESULTS_NEAR_RT_DIR	<RESULTS_DIR>/<NEAR_RT_SUBDIR>
+RESULTS_CURRSPIN_DIR	<RESULTS_DIR>/<CURR_SUBDIR>
+# For RESULTS_MODEL_RAW_DIR, RESULTS_SUBDIR will be supplied by script, and MODEL_SUBDIR
+# and RESULTS_TYPE will be supplied by model config file
+RESULTS_MODEL_RAW_DIR	<RESULTS_DIR>/<RESULTS_SUBDIR>/<MODEL_SUBDIR>/daily/<RESULTS_TYPE>
+RESULTS_MODEL_ASC_DIR	<RESULTS_DIR>/<RESULTS_SUBDIR>/<MODEL_SUBDIR>/daily/asc
+RESULTS_MODEL_DIST_DIR	<RESULTS_DIR>/<RESULTS_SUBDIR>/<MODEL_SUBDIR>/daily/asc.distrib
+
+# State subdirectories
+STATE_RETRO_DIR		<STATE_DIR>/<RETRO_SUBDIR>
+STATE_NEAR_RT_DIR	<STATE_DIR>/<NEAR_RT_SUBDIR>
+STATE_CURRSPIN_DIR	<STATE_DIR>/<CURR_SUBDIR>
+# For STATE_MODEL_DIR, STATE_SUBDIR will be supplied by script, and MODEL_SUBDIR
+# will be supplied by model config file
+STATE_MODEL_DIR		<STATE_DIR>/<STATE_SUBDIR>/<MODEL_SUBDIR>
+
+# Control subdirectories
+CONTROL_RETRO_DIR	<CONTROL_DIR>/<RETRO_SUBDIR>
+CONTROL_NEAR_RT_DIR	<CONTROL_DIR>/<NEAR_RT_SUBDIR>
+CONTROL_CURRSPIN_DIR	<CONTROL_DIR>/<CURR_SUBDIR>
+# For CONTROL_MODEL_DIR, CONTROL_SUBDIR will be supplied by script, and MODEL_SUBDIR
+# will be supplied by model config file
+CONTROL_MODEL_DIR	<CONTROL_DIR>/<CONTROL_SUBDIR>/<MODEL_SUBDIR>
+
+# Logs subdirectories
+LOGS_GRID_DIR		<LOGS_DIR>/grid
+LOGS_RETRO_DIR		<LOGS_DIR>/<RETRO_SUBDIR>
+LOGS_NEAR_RT_DIR	<LOGS_DIR>/<NEAR_RT_SUBDIR>
+LOGS_CURRSPIN_DIR	<LOGS_DIR>/<CURR_SUBDIR>
+# For LOGS_MODEL_DIR, LOGS_SUBDIR will be supplied by script, and MODEL_SUBDIR
+# will be supplied by model config file
+LOGS_MODEL_DIR		<LOGS_DIR>/<LOGS_SUBDIR>/<MODEL_SUBDIR>
+
+# Forcing start/end/update date files
+FORCING_RETRO_START_DATE_FILE		<FORCING_RETRO_DIR>/FORC.START_DATE
+FORCING_RETRO_END_DATE_FILE		<FORCING_RETRO_DIR>/FORC.END_DATE
+FORCING_NEAR_RT_START_DATE_FILE		<FORCING_NEAR_RT_DIR>/FORC.START_DATE
+FORCING_CURRSPIN_START_DATE_FILE	<FORCING_CURRSPIN_DIR>/FORC.START_DATE
+FORCING_CURRSPIN_END_DATE_FILE		<FORCING_CURRSPIN_DIR>/FORC.END_DATE
+
+# Spatial dirs
+XYZZ_DIR	<SPATIAL_DIR>/xyzz.all
+NDXES_DIR       <SPATIAL_DIR>/ndxes.all
+ESP 		<SPATIAL_DIR>/esp
+PLOT_DIR	<SPATIAL_DIR>/plots
+PLOT_DEPOT_DIR	<SPATIAL_DIR>/plots/depot
+
+# Models to be run here
+MODEL_LIST	vic
+
+# Geographic information
+EQUAL_AREA	FALSE
+RESOLUTION	0.5
+
+# Gridding Info
+STN_LIST		<FORCING_STN_INFO_DIR>/CONUS.stns.info
+MET_MEANS_STN		<FORCING_STN_INFO_DIR>/all_stns.met_dly_avgs.6099
+MET_MEANS_GRD		<FORCING_GRID_INFO_DIR>/met_means.mo.1960-1999
+DEM			<FORCING_GRID_INFO_DIR>/mo.125.dem
+LONLAT_LIST		<FORCING_GRID_INFO_DIR>/mo.125.lonlat.maskorder
+DATA_FLIST		<FORCING_GRID_INFO_DIR>/mo.125.datafiles.maskorder
+FLUX_FLIST		<FORCING_GRID_INFO_DIR>/mo.125.fluxfiles.maskorder
+FORC_CLIM_START_YR	1960
+FORC_CLIM_END_YR	1999
+MIN_DAYS	21
+STNS_REQ	1181
+FRACT_REQ	0.80
+VOID		-99
+
+# Climatology for expressing results as percentiles
+CLIM_START_YR	1916
+CLIM_END_YR	2004
+WINDOW_WIDTH	5
+SWE_THRESH	10
+RO_CLIM_START_YR	1955
+RO_CLIM_END_YR		2005
+
+# Ensemble year for ESP runs
+ENS_START_YR   1971
+ENS_END_YR     2000
+
+# Plotting information
+MAP_PROJ	-JM7.5
+MAP_COORD	-126/-66/24/50
+MAP_ANNOT	-B8/4:.:WEsN
+MAP_XX		-0.5
+MAP_YY		4.5
+MAP_SCALE_X	3.75
+
+# Email addresses for notification
+EMAIL_LIST	tbohn@hydro.washington.edu,shrad@hydro.washington.edu,fmunoz@hydro.washington.edu
+MERGE_DEPOT_DIR <SPATIAL_DIR>/xyzz.all/merge_depot

@@ -1,0 +1,83 @@
+#!/bin/csh
+# AWW-2004
+# script to take the ensemble averages of the xtr_vars/ spatial summaries from each
+# ensemble member.  outputs are .xyz files that can be plotted, or used as
+# precursors to making the comparison of forecast and climatology
+#
+#     VARS: SWE, 1st day of month, from forecasts; and mon. avg. wb vars
+#
+# XDZ-2007
+# (1) change to work for both ESP and CPC
+# (2) work for 1 basin each time, so it can be called from ESP forecast main script
+# (3) if forecast starting day > 1, do the monthly ens averaged vars since the second month, 
+#     because the average for the first month is not correct
+#
+
+set FCST = $1    # ESP or CPC
+set BAS  = $2
+set date  = $3
+
+# basin, date settings
+set MASK = ./mask
+set LONLAT = $MASK/$BAS.125.lonlat.maskorder
+set TMPDIR = /state/partition1/forecast/$FCST/saved/spatial
+
+set NFCST_MON = 12  
+set S_AVGPER = 1960
+set E_AVGPER = 1999
+
+# now get ensemble averages of each SWE day 1 (inefficient; do better in perl)
+  echo -n >! all_mon.dy1_swe_avgs.$BAS
+  set FM = 0
+  while ($FM < $NFCST_MON)
+    @ FM ++ 
+    echo $BAS - getting average: mon $FM
+
+    # make file w/ cols from each run, then take average at end
+    echo -n >! junk.$BAS
+    set Y = $S_AVGPER
+    while ($Y <= $E_AVGPER)
+      awk '{print $('$FM')}' $TMPDIR/$BAS.dy1_swe.$Y > t.$BAS
+      paste -d" " junk.$BAS t.$BAS > t2.$BAS
+      mv t2.$BAS junk.$BAS
+      @ Y ++ 
+    end
+    awk '{for(i=1;i<NF+1;i++)c+=$i;print c/NF;c=0}' junk.$BAS > z.$BAS
+    paste -d" " all_mon.dy1_swe_avgs.$BAS z.$BAS > t2.$BAS
+    mv t2.$BAS all_mon.dy1_swe_avgs.$BAS   # all variables, averages
+  end
+
+  paste $LONLAT all_mon.dy1_swe_avgs.$BAS > ./xyzz.$FCST/$BAS.dy1_swe_avgs.xyzz
+  \rm t.$BAS z.$BAS junk.$BAS all_mon.dy1_swe_avgs.$BAS
+
+  # %%%%%% now do the monthly averaged vars - get ensemble averages %%%%%%
+
+  echo -n >! monvars.avgs.$BAS
+  set FM = 0
+  if ($date > 1) then     # do the monthly averaged vars from the 2nd month
+    set FM = 1
+    set NFCST_MON = 13
+  endif
+  while ($FM < $NFCST_MON)
+    foreach V (1 2 3 4 5)
+      echo $BAS - getting average: mon $FM var $V
+      # make file w/ cols from each run, then take average at end
+      echo -n >! junk.$BAS
+      set Y = $S_AVGPER
+      while ($Y < $E_AVGPER)
+        awk '{print $('$FM'*5+'$V')}' $TMPDIR/$BAS.all_monvars.$Y > t.$BAS
+        paste -d" " junk.$BAS t.$BAS > t2.$BAS
+        mv t2.$BAS junk.$BAS
+        @ Y ++ 
+      end
+      awk '{for(i=1;i<NF+1;i++)c+=$i;print c/NF;c=0}' junk.$BAS > z.$BAS
+      paste -d" " monvars.avgs.$BAS z.$BAS > t2.$BAS
+      mv t2.$BAS monvars.avgs.$BAS   # all variables, averages
+    end
+    @ FM ++  # NO spinup when starting on day 1 of month
+  end
+
+  paste $LONLAT monvars.avgs.$BAS > ./xyzz.$FCST/$BAS.monvars_avgs.xyzz
+ ### \rm monvars.avgs.$BAS junk.$BAS t.$BAS z.$BAS
+
+

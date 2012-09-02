@@ -1,0 +1,105 @@
+#!/bin/csh
+# AWW-2004
+# plot differences in SWE value, anomaly and percentile after assimilation
+# Western U.S. Region 
+gmtset ANOT_FONT_SIZE 14 LABEL_FONT_SIZE 14 HEADER_FONT_SIZE 16
+gmtset D_FORMAT %.0f
+
+# input file set in basin loop below
+set COMMON = /raid8/forecast/common
+set XYZDIR = /raid8/forecast/proj/ncast/spatial/xyzz.all
+set XYZADJ = /raid8/forecast/proj/assim/obs_swe/plots/update/xyzz
+set BASIN  = "$1"  # list of basin to plot, e.g. 
+set poly   = $COMMON/basdln/$2   # basin outlines file
+
+set CURR_DATE = "$3"  # e.g., "July 1, 2005"
+set CURR_FCST = "$4"  # e.g., "20070101"
+set thresh    = $5    # in mm
+
+set outf = w_reg.SWE_assim_delta.ps
+set coord = -125/-90/25/53
+set proj = -JM3
+set pagesize = -JX6.5/9.0
+set blue = 180/180/255
+set pixel = 0.05
+
+set X = 3.5
+set Y1 = 5.2
+set Y2 = -4.8
+
+set anom_cpt = $COMMON/cpt/sw_mon.SWE.cpt    # pct_of_norm.rev.cpt
+set qnt_cpt  = $COMMON/cpt/sw_mon.SWE.cpt    # percentile.rev.cpt
+
+echo "plot SWE differences due to assimilation............................."
+
+#titles, etc.
+pstext $pagesize -R0/1/0/1 -V -P -K -N <<END>! $outf
+0.23 .84 18 0 21 6 SWE state differences due to
+0.23 .81 18 0 21 6 assimilation of
+0.23 .78 18 0 21 6 SNOTEL/ASP observations 
+0.23 .67 16 0 21 6 Threshold \= $thresh mm
+0.77 .96 16 0 21 6 change in value
+0.23 .42 16 0 21 6 change in anomaly
+0.77 .42 16 0 21 6 change in percentile
+END
+
+pstext $pagesize -R0/1/0/1 -V -O -K -N -G200/0/0 <<END>> $outf
+0.23 .70 18 0 21 6 $CURR_DATE
+END
+
+# goto HAVE_DATA
+# ---- make data (loop through basins) ---------------------------------------
+echo "processing data"
+echo -n >! alldat
+foreach BAS ($BASIN)
+  paste $XYZDIR/$BAS/$CURR_FCST/swe.$BAS.f-c_mean.a-m_anom.qnt.xyzz $XYZADJ/swe_new.$BAS.f-c_mean.a-m_anom.qnt.xyzz |\
+    awk '{if($3>'$thresh' && $4>'$thresh' && $10>'$thresh')print $1,$2,$10-$3,$13-$6,$14-$7}' >> alldat
+end
+
+HAVE_DATA:
+
+# ====== PLOTS ==============================
+
+# 1. plot adj. value difference
+makecpt -T-200/200/50 -C$anom_cpt  >! junk.cpt
+awk '{print $1,$2,$3}' alldat | \
+  psxy -O -K -Y$Y1 -X$X -Cjunk.cpt -G150/150/150 $proj -R$coord -V -Ss$pixel >> $outf
+
+# add land, basin outlines, scale bar
+pscoast -O $proj -R$coord -Di -S$blue -N1/7 -K -V -N2/2 -B4/4:.:wesn >> $outf
+psxy $poly -O -K -R$coord $proj -W5/150/0/0 -M  >> $outf
+psscale -Cjunk.cpt -D1.5/-0.2/3/0.1h -O -K -V -N -Ba100:"swe difference (mm)": -E >> $outf
+
+
+#2. anom. diff from before assim
+makecpt -T-40/40/10 -C$anom_cpt >! junk.cpt
+awk '{print $1,$2,$4}' alldat | \
+  psxy -O -K -X-$X -Y$Y2 -Cjunk.cpt -G150/150/150 $proj -R$coord -V -Ss$pixel >> $outf
+
+# add land, basin outlines, scale bar
+pscoast -O $proj -R$coord -Di -S$blue -N1/7 -K -V -N2/2 -B4/4:.:wesn >> $outf
+psxy $poly -O -K -R$coord $proj -W5/150/0/0 -M  >> $outf
+psscale -Cjunk.cpt -D1.5/-0.2/3/0.1h -O -K -V -N -B:"% of normal diff": -E >> $outf
+
+
+#4. percentile diff from before assim
+makecpt -T-30/30/10 -C$qnt_cpt >! junk.cpt
+awk '{print $1,$2,$5*100.0}' alldat | \
+  psxy -O -K -X$X -Cjunk.cpt -G150/150/150 $proj -R$coord -V -Ss$pixel >> $outf
+
+# add land, basin outlines, scale bar
+pscoast -O -K $proj -R$coord -Di -S$blue -N1/7 -V -N2/2 -B4/4:.:wesn >> $outf
+psxy $poly -O -K -R$coord $proj -W5/150/0/0 -M  >> $outf
+psscale -Cjunk.cpt -D1.5/-0.2/3/0.1h -O -V -N -B:"percentile diff": -E >> $outf
+
+# --------- wrap up --------------------------------------
+
+#gs $outf
+
+# misc labels
+#pstext $proj -R$coord -V -K -O  << END  >> $outf
+#-111.5 49.5 12 0.45 6 CANADA
+#-111.5 48.5 12 0.45 6 USA
+#-124 35 12 0 7 5 Pacific
+#-124 34 12 0 7 5 Ocean
+#END

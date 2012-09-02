@@ -1,0 +1,2 @@
+#run_model.noextract.pl -m clm -p conus.new -f curr_spinup -pf full_data -s 2008-07-01 -e 2008-07-31 -i /raid8/forecast/sw_monitor/data/conus.new/state/spinup_nearRT/clm/conus.new.clm2.r.2008-07-01-00000.nc
+run_model.pl -m clm -p conus.new -f curr_spinup -pf full_data -s 2008-08-01 -e 2008-08-31 -i /raid8/forecast/sw_monitor/data/conus.new/state/curr_spinup/clm/conus.new.clm2.r.2008-08-01-00000.nc

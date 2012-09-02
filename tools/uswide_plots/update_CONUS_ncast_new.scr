@@ -1,0 +1,42 @@
+#!/bin/csh
+## master script which calls the scripts to estimate daily sm and swe percentile values for the Eastern US basins. Currently we generate the daily forcings and pass it to Princeton. They run VIC and then send us the daily flux output. Therefore all we have to take care of is estimating the SM and SWE percentiles, plot them and copy them over to the webdir.
+
+## Shrad 062008
+
+### Run this on node 2
+
+set BASEDIR =  "/raid8/forecast/proj/uswide/tools/uswide_plots" ### Directory where all the scripts are
+set FTP_DIR = "/home/ftp/incoming/princeton" ### This is the directory where flux output from princeton downloads to
+set FYR = "$argv[1]" ## Argument given with the script
+set FMON = "$argv[2]"
+set FDAY = "$argv[3]"
+set TODAY = "$FYR$FMON$FDAY"
+
+### LOG FILE for the stats
+set CURR_SPINUP = "/state/partition2/forecast/output/east_US_CURR/$TODAY"
+
+echo "$TODAY"
+foreach BAS (east glakes ohio)
+echo "Copying basin $BAS"
+foreach file ($CURR_SPINUP/$BAS/*)
+
+set CURR_SPINUP2 = /raid8/forecast/proj/uswide/data/$BAS/results/curr_spinup/vic/daily/asc/
+cp $file $CURR_SPINUP2
+end
+end
+### Post simulation analysis 
+set nowcast = /raid8/forecast/proj/uswide/tools/nowcast_model.pl
+foreach BASIN (east glakes ohio)
+echo "Calculating stats for basin $BAS"
+$nowcast $BAS vic stats #### Calculates stats only
+end
+
+##### Making plots 
+
+#$BASEDIR/plot_qnts.scr $FYR$FMON$FDAY 
+
+##### copying plots
+ echo "Copying plots for all basins for $FYR $FMON $FDAY" 
+ ### Copying all the .gif files of the current day (i.e. TODAY)
+#cp /raid8/forecast/proj/uswide/data/conus.mexico/spatial/plots/$TODAY/*$TODAY*.gif /home/www-forecast/uswide/spatial/ncast/
+

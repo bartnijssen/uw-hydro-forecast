@@ -1,0 +1,95 @@
+#!/bin/csh
+# AWW-02/2004
+# Shrad 20110519 Edited this script so it can get all the inputs from a central script
+# plot all the spatial forecast plots
+# XDZ-2007
+
+## Usage <BAS> <FCST> <DAY> <MON> <YEAR> <XYZZDIR> <PLOTDIR> <PLOT SCRIPT DIR> <COMMON>
+
+set BAS = "$1" ## Name of the basin
+set FCST = "$2" ## Type of FCST ESP or CPC
+set DAY  = "$3" ## Forecast initialization day
+set MON  = "$4"  ## Month of Forecast
+set YEAR = "$5"  ## Year 
+set XYZZDIR = "$6" ## Directory where all the processed data are
+set PLOTDIR = "$7" ### Directory where the plots will go to
+set PLOT_SCRIPT_DIR = "$8" ## Directory where all the plotting scripts which are called in this script are located
+set COMMON = "$9"  #### Directory where all the boundary files are located
+
+set DATE = "$YEAR$MON$DAY"
+
+if ($DAY > 1) then    # if forecast starting day > 1, plots start from the next month
+  @ MON ++
+endif
+
+switch ($FCST)
+  case ESP:
+    set FIG_HEAD = "$PLOTDIR/w_reg"
+    breaksw
+  case CPC:
+    set FIG_HEAD = "$PLOTDIR/w_reg.CPC"
+    breaksw
+  default:
+    echo wrong usage!
+    exit 1
+endsw
+
+set FCST_DATE = `date -d $DATE "+%B %e, %Y"`
+set FMON = (JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC)
+# note: the month names in FMON appear twice so that we do not need change the script for each month
+
+set poly = "$COMMON/basdln/w_reg.all.coarse.poly"
+
+echo "forecast date: " $FCST_DATE
+
+SWE:
+#goto SM
+echo "............ploting SWE"
+## USAGE <OUTF> <SMON> <N_FMON> <MSTR> <FCST_DATESTR> <BASIN> <poly> <TYPE> <COMMON> <XYZPATH>
+
+$PLOT_SCRIPT_DIR/plot.3comp.SWE.args.scr $FIG_HEAD.swe_fcst.m1-3.ps $MON "1 2 3" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+$PLOT_SCRIPT_DIR/plot.3comp.SWE.args.scr $FIG_HEAD.swe_fcst.m4-6.ps $MON "4 5 6" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+$PLOT_SCRIPT_DIR/plot.3comp.SWE.args.scr $FIG_HEAD.swe_fcst.m7-9.ps $MON "7 8 9" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+$PLOT_SCRIPT_DIR/plot.3comp.SWE.args.scr $FIG_HEAD.swe_fcst.m10-12.ps $MON "10 11 12" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+
+SM:
+#goto RO
+echo "............ploting SM"
+$PLOT_SCRIPT_DIR/plot.3comp.SM.args.scr $FIG_HEAD.sm_fcst.m1-3.ps $MON "1 2 3" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+$PLOT_SCRIPT_DIR/plot.3comp.SM.args.scr $FIG_HEAD.sm_fcst.m4-6.ps $MON "4 5 6" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+$PLOT_SCRIPT_DIR/plot.3comp.SM.args.scr $FIG_HEAD.sm_fcst.m7-9.ps $MON "7 8 9" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+$PLOT_SCRIPT_DIR/plot.3comp.SM.args.scr $FIG_HEAD.sm_fcst.m10-12.ps $MON "10 11 12" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+
+RO:
+#goto P
+echo "............ploting RO"
+$PLOT_SCRIPT_DIR/plot.3comp.RO.args.scr $FIG_HEAD.ro_fcst.m1-3.ps $MON "1 2 3" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+$PLOT_SCRIPT_DIR/plot.3comp.RO.args.scr $FIG_HEAD.ro_fcst.m4-6.ps $MON "4 5 6" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+$PLOT_SCRIPT_DIR/plot.3comp.RO.args.scr $FIG_HEAD.ro_fcst.m7-9.ps $MON "7 8 9" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+$PLOT_SCRIPT_DIR/plot.3comp.RO.args.scr $FIG_HEAD.ro_fcst.m10-12.ps $MON "10 11 12" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+
+P:
+#goto T
+echo "............ploting P"
+$PLOT_SCRIPT_DIR/plot.3comp.P.args.scr $FIG_HEAD.p_fcst.m1-3.ps $MON "1 2 3" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+$PLOT_SCRIPT_DIR/plot.3comp.P.args.scr $FIG_HEAD.p_fcst.m4-6.ps $MON "4 5 6" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+$PLOT_SCRIPT_DIR/plot.3comp.P.args.scr $FIG_HEAD.p_fcst.m7-9.ps $MON "7 8 9" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+$PLOT_SCRIPT_DIR/plot.3comp.P.args.scr $FIG_HEAD.p_fcst.m10-12.ps $MON "10 11 12" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+
+T:
+#goto LAST
+echo "............ploting T"
+$PLOT_SCRIPT_DIR/plot.3comp.T.args.scr $FIG_HEAD.t_fcst.m1-3.ps $MON "1 2 3" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+$PLOT_SCRIPT_DIR/plot.3comp.T.args.scr $FIG_HEAD.t_fcst.m4-6.ps $MON "4 5 6" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+$PLOT_SCRIPT_DIR/plot.3comp.T.args.scr $FIG_HEAD.t_fcst.m7-9.ps $MON "7 8 9" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+$PLOT_SCRIPT_DIR/plot.3comp.T.args.scr $FIG_HEAD.t_fcst.m10-12.ps $MON "10 11 12" "$FMON" "$FCST_DATE" "$BAS" "$poly" "$FCST" "$COMMON" "$XYZZDIR"
+ 
+LAST:
+echo "............converting"
+foreach F ($PLOTDIR/*ps)
+  convert -trim +repage $F $F:r.gif
+end
+\rm $PLOTDIR/*ps
+
+# upload spatial Hydrologic Forecast plots to website
+#cp -p --reply=yes *.gif /home/www-forecast/westwide/spatial/hydr_fcst/images/

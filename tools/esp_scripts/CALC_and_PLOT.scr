@@ -1,0 +1,70 @@
+#!/bin/csh
+# A. Wood Dec 2007
+# run processing scripts and plot results
+# paths for sere
+
+set Y = $1
+set M = $2
+set D = $3
+
+# don't need to change below here
+set DATE = $Y$M$D
+set PLOTDIR = /raid/forecast/sw_monitor/analysis/ESP/curr_figs/$DATE/
+set WEBDIR = /nfs/dynamo/www/data/forecast/monitor/curr
+set PATH = /raid/forecast/sw_monitor/esp_scripts
+mkdir $PLOTDIR
+    
+# calc climatology for current date, if not already done -------------
+$PATH/calc.per_stats.CLIM.pl $Y $M $D  # could be run in parallel to forecasts
+
+# calc stats and make full ensemble plots ----------------------------
+$PATH/calc.ens_fcst_stats.20-33.pl  $Y $M $D
+
+foreach LD (1 2 3)
+
+  $PATH/plot.fcst_sm_qnt.scr     $DATE $LD
+  $PATH/plot.fcst_ro_qnt.3mo.scr $DATE $LD
+
+  $PATH/plot.fcst_sm_p-lt20.scr      $DATE $LD
+  $PATH/plot.fcst_ro_p-lt20.3mo.scr  $DATE $LD
+
+end
+
+foreach F (/raid/forecast/sw_monitor/output/ESP/plots/*ps)
+ pstogif $F
+end
+gzip /raid/forecast/sw_monitor/output/ESP/plots/*ps
+
+mv /raid/forecast/sw_monitor/output/ESP/plots/*ps.gz /raid/forecast/sw_monitor/output/ESP/plots/*gif $PLOTDIR
+
+# calc stats and make SUBSET plots
+cd $PATH/subset
+
+  $PATH/subset/calc.ens_fcst_stats.SUBSET.20-33.pl $Y $M $D
+
+  foreach LD (1 2 3)
+    $PATH/subset/plot.fcst_sm_qnt.SUBSET.scr      $DATE $LD
+    $PATH/subset/plot.fcst_ro_qnt.3mo.SUBSET.scr  $DATE $LD
+
+    $PATH/subset/plot.fcst_sm_p-lt20.SUBSET.scr   $DATE $LD
+    $PATH/subset/plot.fcst_ro_p-lt20.SUBSET.scr   $DATE $LD
+  end
+
+  foreach F (/raid/forecast/sw_monitor/output/ESP/plots/*ps)
+    pstogif $F
+  end
+  gzip /raid/forecast/sw_monitor/output/ESP/plots/*ps
+  mv /raid/forecast/sw_monitor/output/ESP/plots/*ps.gz /raid/forecast/sw_monitor/output/ESP/plots/*gif $PLOTDIR
+
+cd -
+
+cd $PLOTDIR
+# move results for transfer to webdir
+echo "Copying plots to webdir"
+foreach F (./*gif)
+  cp $F $WEBDIR/$F:r:r:t.gif
+end
+
+cd -
+
+

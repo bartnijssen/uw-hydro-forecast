@@ -1,0 +1,23 @@
+#!/bin/csh
+## This script runs forcing generation script for any given time period of less than 2 months
+
+set Script = "/raid8/forecast/proj/uswide/tools/update_forcings_asc.pl.test"
+
+set basin = $1
+
+
+
+# Year 2009
+
+$Script $basin 2009-01-01 2008-12-31 2009-02-28
+
+$Script $basin 2009-03-01 2009-02-28 2009-04-30
+
+$Script $basin 2009-05-01 2009-04-30 2009-06-30
+
+$Script $basin 2009-07-01 2009-06-30 2009-08-31
+
+$Script $basin 2009-09-01 2009-08-31 2009-10-31
+
+$Script $basin 2009-11-01 2009-10-31 2009-12-31
+

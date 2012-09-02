@@ -1,0 +1,13 @@
+#!/bin/csh
+## This script runs forcing generation script for any given time period of less than 2 months
+#$ -cwd
+#$ -j y
+#$ -S /bin/bash
+#$ -q forecast.q
+
+set SCRIPT = /raid8/forecast/proj/uswide/tools/update_forcings_asc.pl
+
+set BASIN = pnw
+
+$SCRIPT $BASIN
+

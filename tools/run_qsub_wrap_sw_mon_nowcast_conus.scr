@@ -1,0 +1,10 @@
+#!/bin/csh 
+
+set DATE = `date`
+echo "Surface Water Monitor Nowcast run for CONUS started at $DATE " > SWM_mail_conus
+echo $HOST >> SWM_mail_conus
+mail shrad  < SWM_mail_conus
+
+set script = "/raid8/forecast/sw_monitor/tools/qsub_wrap_sw_mon_nowcast_conus.scr"
+
+qsub $script

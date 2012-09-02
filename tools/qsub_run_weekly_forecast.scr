@@ -1,0 +1,21 @@
+#!/bin/csh
+#
+#$ -cwd
+#$ -j y
+#$ -S /bin/csh
+#$ -q forecast.q
+#$ -M shrad@hydro.washington.edu
+#$ -N Weekly_forecast
+#$ -m abe
+
+set PROJECT = "$1"
+set MODEL = "$2"
+set RUN_ESP = "$3"
+set RUN_ROUT = "$4"
+set CYR  = "$5"
+set CMON = "$6"
+set CDAY = "$7"
+set ENS_SYR = "$8"
+set ENS_EYR = "$9"
+echo "/raid8/forecast/proj/uswide/tools/run_VIC_and_rout_ESP.pl $PROJECT $MODEL $RUN_ESP $RUN_ROUT $CYR $CMON $CDAY $ENS_SYR $ENS_EYR"
+/raid8/forecast/proj/uswide/tools/run_VIC_and_rout_ESP.pl $PROJECT $MODEL $RUN_ESP $RUN_ROUT $CYR $CMON $CDAY $ENS_SYR $ENS_EYR

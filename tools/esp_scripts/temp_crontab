@@ -1,0 +1,23 @@
+15 13 * * 0 /raid/forecast/sw_monitor/esp_scripts/Update_VIC_ESP_drought_fcst.pl
+15 03 * * * /nfs/dynamo/www/data/forecast/westwide/spatial/ncast/update_plots.scr
+35 17 * * * /nfs/dynamo/www/data/forecast/westwide/spatial/ncast/update_plots.scr
+30 05 * * * /raid/forecast/proj/ncast/spatial/copy_xyzz.pl 
+15 06 * * * /raid/forecast/proj/ncast/forc/spinup/dly_append/db2web.scr
+30 06 * * * /nfs/dynamic/usr/local/www/data/forecast/sarp/copy_scr/copy_fig.pl
+30 08 * * * /raid/forecast/sw_monitor/SWM_Update.pl
+15 08 * * * /raid/forecast/proj/ncast/mex_update.scr
+45 09 * * * /raid/forecast/proj/swe/SWE_Update.scr
+45 10 * * * /raid/forecast/proj/ncast/acis/stn_info/acis_download.pl
+45 11 * * * /raid/forecast/proj/ncast/acis/stn_info/acis_archive.pl
+01 14 * * * /nfs/dynamo/www/data/forecast/westwide/spatial/ncast/update_plots.scr
+21 14 * * * /raid/forecast/proj/ncast/mex_update.scr
+31 14 * * * /nfs/dynamo/www/data/forecast/westwide/spatial/ncast/update_plots.scr
+35 16 * * * /nfs/dynamo/www/data/forecast/westwide/spatial/ncast/update_plots.scr
+35 16 * * * /raid/forecast/sw_monitor/spatial/drought/src/run_wrapper.scr
+30 20 * * * /raid/forecast/sw_monitor/forc/spinup/dly_append/collect_runtime.pl
+0 22 25 * * /raid/forecast/sw_monitor/output/archive_flux.scr 
+15 22 * * * /nfs/dynamo/www/data/forecast/westwide/spatial/ncast/update_plots.scr
+20 14 * * 0 /raid/forecast/sw_monitor/spatial/drought/src/run_wrapper.scr
+0 11 * * * /raid/forecast/sw_monitor/multimodel/xfer_forc_cluster.pl
+0 11 * * * /raid/forecast/sw_monitor/multimodel/wrap_post_processing.pl conus
+45 10 * * * /raid/forecast/sw_monitor/spatial/ndxes/CALC_and_PLOT.ndxes.scr

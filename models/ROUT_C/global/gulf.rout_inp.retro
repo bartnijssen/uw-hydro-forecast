@@ -1,0 +1,15 @@
+### INPUT FILE FOR (C) ROUTING PROGRAM -- order important ###
+FLOW_DIREC_FILE  /raid8/forecast/proj/fcst/ESP/inputs/routing/gulf_125.flowd
+VELOCITY_FILE    1.5
+DIFF_FILE        800
+XMASK_FILE       12500
+FRACTION_FILE    /raid8/forecast/proj/fcst/ESP/inputs/routing/gulf_125.fract
+STATION_FILE     /raid8/forecast/proj/fcst/ESP/inputs/routing/gulf_125.stnloc
+INPUT_FILE_PREC  4
+SPINUP_FILE_PATH NONE
+SPINUP_DATES     1915 1 1994 12
+INPUT_FILE_PATH  /state/partition1/forecast/output/gulf/RETRO_1505/fluxes_      
+INPUT_DATES      1915 1 2005 12
+OUT_FILE_PATH    /state/partition1/forecast/output/gulf/route_RETRO1505/
+OUTPUT_DATES     1915 1 2005 12
+UNIT_HYD_FILE    /raid8/forecast/proj/fcst/ESP/inputs/routing/UH_ALL  

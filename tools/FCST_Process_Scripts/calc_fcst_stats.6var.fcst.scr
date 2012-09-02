@@ -1,0 +1,128 @@
+#!/bin/csh
+# use XYZ files for monthly [day1SWE && avg. vars] to get anoms & qnts
+# AWW-0204 do now for one basin, loop for basins later
+## Shrad 20110519 edited this script so it can get all the inputs from one master script
+#
+#   calls weibull.40 program (from meteor/usr1/aww/bin/weibull.c)
+#   needs a sorted climatology wrt which to calculate percentiles, etc.
+#
+# XDZ-2007
+# (1) change to work for both ESP and CPC
+# (2) work for all basins at a time
+# (3) if forecast starting day > 1, do the monthly ens averaged vars since the second month,
+#
+## Usage <FCST> <MON> <DAY> <BAS> <LONLAT> <BIN> <OBSCLIM> <XYZZDIR>
+
+set FCST = "$1"
+set MON  = "$2"
+set DAY  = "$3"
+set BAS  = "$4"
+set LONLAT = "$5"
+set BIN = "$6"
+set OBSCLIM = "$7"
+set XYZZDIR = "$8"
+
+if ($DAY > 1) then    # if forecast starting day > 1, process start from the next month
+  @ MON ++
+  if ($MON == 13) then
+     set MON = 1
+  endif
+endif
+set FM = ( 1 2 3 4 5 6 7 8 9 10 11 12 1 2 3 4 5 6 7 8 9 10 11 12)
+set NFCST_MON = 12  #number of forecast months
+set B = 1 
+  
+  # Day 1 SWE:  loop over all forecast months ----------------------------------
+  set DY1_AVGS = $XYZZDIR/$BAS[$B].dy1_swe_avgs.xyzz  # input: avgs of all forecasts
+                                   # fmt <lon lat [dy1_swe: fmon1 fmon2...]
+  set OBS = $OBSCLIM/$BAS[$B].srt_clim.dy1_swe
+  echo -n >! all
+
+  set N = 0
+  set N1 = $MON
+  while ($N < $NFCST_MON)
+    @ N ++
+    
+    set M = $FM[$N1] 
+    echo $BAS[$B] - getting dy1_swe, month $M
+
+    # extract mon-specific chunk of climatol. (makes 30 col file for 1 var, all cells) 
+    awk 'BEGIN{sf='$M'*30-29+2;ef=sf+30}{for(c=sf;c<ef;c++)printf("%s ",$c);printf("\n")}' $OBS > temp
+
+    # get average from forecast average file (+2 is for lonlat)
+    awk '{print $('$N' +2)}' $DY1_AVGS > f_tmp
+    paste -d" " f_tmp temp > junk  # junk has 1 fcst-avg col, then clim for same mon
+
+    # calculate quantiles and anomalies for current month ------------------------
+    $BIN/fcst_stats.pl junk all.1mo ### change path
+
+    # combine with other months
+    paste all all.1mo > t
+    mv t all
+
+   @ N1 ++
+
+  end    # end looping through months
+
+  # split out quantiles, anomalies, averages, and add lonlats (the +2)
+  paste $LONLAT all |\
+    awk '{printf("%s %s   ",$1,$2);for(i=0;i<'$NFCST_MON';i++)printf("%s ",$(i*5+5 +2));printf("\n")}' > $XYZZDIR/$BAS[$B].qnt.dy1_swe.xyzz
+
+  paste $LONLAT all |\
+    awk '{printf("%s %s   ",$1,$2);for(i=0;i<'$NFCST_MON';i++)printf("%s ",$(i*5+3 +2));printf("\n")}' > $XYZZDIR/$BAS[$B].a-anom.dy1_swe.xyzz
+
+  paste $LONLAT all |\
+    awk '{printf("%s %s   ",$1,$2);for(i=0;i<'$NFCST_MON';i++)printf("%s ",$(i*5+4 +2));printf("\n")}' > $XYZZDIR/$BAS[$B].m-anom.dy1_swe.xyzz
+
+  \rm all all.1mo f_tmp temp junk
+
+
+  # %%%%%%%%%%% monthly vars %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  set V = (p t ro sm swe)
+  set FAVGS = $XYZZDIR/$BAS[$B].monvars_avgs.xyzz  # input: averages of all the forecasts
+                              # fmt <l-l [fmon1: p t ro sm swe][fmon2: ...] ...
+
+  # cycle through all the files/variables
+  foreach NV (1 2 3 4 5)
+    echo -n >! all
+    set OFILE = $OBSCLIM/$BAS[$B].mon_srt_clim.$V[$NV]
+
+    # loop over all forecast months ----------------------------------
+    set N=0
+    set N1 = $MON
+    while ($N < $NFCST_MON)
+      @ N ++
+      set M = $FM[$N1] 
+      echo getting var $V[$NV], month $M
+
+      # extract mon-specific chunk of climatol. (makes 30 col file for 1 var, all cells) (+2 is for lonlat)
+      awk 'BEGIN{sf='$M'*30-29+2;ef=sf+30}{for(c=sf;c<ef;c++)printf("%s ",$c);printf("\n")}' $OFILE > temp
+
+      # get average from forecast average file (+2 is for lonlat)
+      awk '{print $( ('$N'-1)*5+'$NV' +2)}' $FAVGS > f_tmp
+      paste -d" " f_tmp temp > junk
+
+      # calculate quantiles and anomalies for current month ------------------------
+      $BIN/fcst_stats.pl junk all.1mo ### change path
+      # combine with other months
+      paste all all.1mo > t
+      mv t all
+
+     @ N1 ++
+
+    end    # end looping through months
+
+    # split out quantiles, anomalies, averages, and add lonlats (the +2)
+    paste $LONLAT all |\
+      awk '{printf("%s %s   ",$1,$2);for(i=0;i<'$NFCST_MON';i++)printf("%s ",$(i*5+5 +2));printf("\n")}' > $XYZZDIR/$BAS[$B].qnt.$V[$NV].xyzz
+
+    paste $LONLAT all |\
+      awk '{printf("%s %s   ",$1,$2);for(i=0;i<'$NFCST_MON';i++)printf("%s ",$(i*5+3 +2));printf("\n")}' > $XYZZDIR/$BAS[$B].a-anom.$V[$NV].xyzz
+
+    paste $LONLAT all |\
+      awk '{printf("%s %s   ",$1,$2);for(i=0;i<'$NFCST_MON';i++)printf("%s ",$(i*5+4 +2));printf("\n")}' > $XYZZDIR/$BAS[$B].m-anom.$V[$NV].xyzz
+
+    \rm all all.1mo f_tmp temp junk
+
+  end   # end looping through variables
+

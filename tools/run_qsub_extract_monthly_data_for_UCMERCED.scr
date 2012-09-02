@@ -1,0 +1,7 @@
+#!/bin/csh 
+
+### This script runs on the day 7th of each month at 5:30pm to extract flux files and forcings for previous month and uploads them on ftp for folks at UCEMRECD 
+foreach BASIN (ohio glakes arkred mo gbas riog gulf low up east pnw colo cali)
+set script = "/raid8/forecast/proj/uswide/tools/extract_and_upload_monthly_data_for_UC_MERCED_RT.scr"
+qsub $script $BASIN
+end

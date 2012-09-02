@@ -1,0 +1,41 @@
+#!/bin/csh 
+## This script is run in the beginning of each month (Day 02 of the month) to extract and copy forcings as well as VIC flux files for last month and archive it to the ftp for UCMERCED group
+## UCMERCED group does wild fire forecasting using these data
+## Contacts at UCMERCED: Jeanne Milostan <jmilostan@ucmerced.edu> and Anthony Westerling <awesterling@ucmerced.edu>
+#$ -cwd
+#$ -j y
+#$ -S /bin/tcsh
+#$ -q forecast.q
+#$ -N Extract_and_archive_monthly_data
+#$ -M shrad@hydro.washington.edu
+#$ -m e
+
+set PERIOD = $1
+set BASEDIR = "/raid8/forecast/proj/uswide"
+
+set SCRIPT = "$BASEDIR/tools/rescale_VICforcing" 
+
+set IN_FORC_DIR = "$BASEDIR/data/colo/forcing/$PERIOD/asc_vicinp/"
+set OUT_FORC_DIR = "$BASEDIR/data/gunnison/forcing/$PERIOD/asc_vicinp/"
+mkdir -p $OUT_FORC_DIR
+set LATLONGFILE = "$BASEDIR/data/gunnison/forcing/grid/grid_info/gunnison.125.latlon.maskorder"
+set RESCALE_RATIO_FILE = "$BASEDIR/data/gunnison/forcing/grid/grid_info/gunnison_forcings_prism_ratio.125.xyzz"
+set NUM_GRIDCELL = "147"
+### Get the start and end year of the forcings and the number of days
+
+set SYR = `awk '{if (NR==1) print $1}' $BASEDIR/data/colo/forcing/$PERIOD/FORC.START_DATE`
+if ($PERIOD == spinup_nearRT) then
+set EYR = `awk '{if (NR==1) print $1}' $BASEDIR/data/colo/forcing/curr_spinup/FORC.START_DATE`
+else
+set EYR = `awk '{if (NR==1) print $1}' $BASEDIR/data/colo/forcing/$PERIOD/FORC.END_DATE`
+endif
+## Get the following by using a forcings file for a random grid cell
+set NUM_DAYS = `wc $IN_FORC_DIR/data_37.8125_-107.5625 | awk '{print $1}'`
+
+### Usage #####
+
+### $SCRIPT <Input forcings Directory> <Output forcings directory> <Start Year> <End year> <Number of days> <List of Lat and long> <Number of grid cells in the basin> <Rescale Ratio file>
+
+echo "Rescaling forcings for $PERIOD period Start year = $SYR End Year = $EYR  and Number of days are: $NUM_DAYS"
+
+$SCRIPT $IN_FORC_DIR $OUT_FORC_DIR $SYR $EYR $NUM_DAYS $LATLONGFILE $NUM_GRIDCELL $RESCALE_RATIO_FILE

@@ -1,0 +1,62 @@
+#!/bin/csh
+# AWW-02/2004
+# plot all the spatial CFS forecast plots
+# XDZ-2007
+
+set DAY  = $1$2$3
+set MON  = $2
+
+set FCST = "CFS"
+set FIG_HEAD = "w_reg.CFS"
+
+set DATE = `date -d $DAY "+%B %e, %Y"`
+set FMON = (JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC)
+# note: the month names in FMON appear twice so that we do not need change the script for each month
+
+set BAS = "pnw cali colo gbas mo arkred riog gulf up low"
+#set BAS = "riog"
+set poly = w_reg.all.coarse.poly
+
+echo "forecast date: " $DATE
+
+SWE:
+#goto SM
+echo "............ploting SWE"
+plot.3comp.SWE.args.scr $FIG_HEAD.swe_fcst.m1-3.ps $MON "1 2 3" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.SWE.args.scr $FIG_HEAD.swe_fcst.m4-6.ps $MON "4 5 6" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+
+SM:
+#goto RO
+echo "............ploting SM"
+plot.3comp.SM.args.scr $FIG_HEAD.sm_fcst.m1-3.ps $MON "1 2 3" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.SM.args.scr $FIG_HEAD.sm_fcst.m4-6.ps $MON "4 5 6" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+
+RO:
+#goto P
+echo "............ploting RO"
+plot.3comp.RO.args.scr $FIG_HEAD.ro_fcst.m1-3.ps $MON "1 2 3" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.RO.args.scr $FIG_HEAD.ro_fcst.m4-6.ps $MON "4 5 6" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+
+P:
+#goto T
+echo "............ploting P"
+plot.3comp.P.args.scr $FIG_HEAD.p_fcst.m1-3.ps $MON "1 2 3" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.P.args.scr $FIG_HEAD.p_fcst.m4-6.ps $MON "4 5 6" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+
+T:
+#goto LAST
+echo "............ploting T"
+plot.3comp.T.args.scr $FIG_HEAD.t_fcst.m1-3.ps $MON "1 2 3" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+plot.3comp.T.args.scr $FIG_HEAD.t_fcst.m4-6.ps $MON "4 5 6" "$FMON" "$DATE" "$BAS" "$poly" $FCST
+
+LAST:
+echo "............converting"
+cd $FCST
+foreach F (*ps)
+  convert -trim +repage $F $F:r.gif
+end
+\rm *ps
+cd ../
+
+# upload spatial Hydrologic Forecast plots to website
+#cp -p --reply=yes *.gif /home/www-forecast/westwide/spatial/hydr_fcst/images/
