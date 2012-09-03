@@ -36,8 +36,8 @@
 /*************************************************************/
 /* Change if needed                                          */
 /*************************************************************/
-#define MAXROWS  300
-#define MAXCOLS  300
+#define MAXROWS  480
+#define MAXCOLS  480
 #define MAXYEARS 100
 #define MAXSTNS  100
 /*************************************************************/
@@ -1142,6 +1142,7 @@ void WriteData(float *FLOW,
   memset((void *)yearly_mean, 0, sizeof(yearly_mean));
   monthly_mean = 0; cnt = 0;
   for(i = day0; i <= day1; i ++) {
+    fprintf (stderr, "%4d %2d %2d %f, %d %d %d\n", yr, mn, day, FLOW[i], i, day1, day0); ///
     fprintf(fp,"%4d %2d %2d %f\n", yr, mn, day, FLOW[i]);
     monthly_mean += FLOW[i];
 	      
