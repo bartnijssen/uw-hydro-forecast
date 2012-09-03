@@ -1,2 +1,0 @@
-20 08 * * * /raid8/forecast/sw_monitor/tools/run_qsub_conus_data_download.scr
-15 09  * * * /raid8/forecast/sw_monitor/tools/run_qsub_wrap_sw_mon_nowcast_conus.scr
