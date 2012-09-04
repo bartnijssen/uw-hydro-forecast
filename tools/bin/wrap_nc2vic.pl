@@ -9,9 +9,15 @@ $TOOLS_DIR = "$ROOT_DIR/tools";
 # Command-line arguments
 $indir = shift;
 $prefix = shift;
-$ndate = shift;
+$varlist = shift;
 $outdir = shift;
-$col_pair_list = shift;
+$prefix_out = shift;
+$format = shift; # this is optional - if omitted, nc2vic will use its default format
+
+# Format
+if ($format) {
+  $format = "-f " . $format;
+}
 
 opendir (INDIR, $indir) or die "$0: ERROR: cannot open $indir\n";
 @filelist = grep /^$prefix/, readdir (INDIR);
@@ -23,7 +29,9 @@ closedir (INDIR);
 #  s/^\s+//;
 #}
 
+$append = "";
 foreach $file (sort(@filelist)) {
-  $cmd = "$TOOLS_DIR/add_fields.pl $indir/$file $ndate $col_pair_list > $outdir/$file";
+  $cmd = "$TOOLS_DIR/bin/nc2vic -i $indir/$file -o $outdir -p $prefix_out -v $varlist $append $format -t";
   (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+  $append = "-a";
 }

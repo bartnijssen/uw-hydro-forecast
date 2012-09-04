@@ -30,7 +30,7 @@ $CONFIG_DIR = "$ROOT_DIR/config";
 # Include external modules
 #----------------------------------------------------------------------------------------------
 # Subroutine for reading config files
-require "$TOOLS_DIR/src/simma_util.pl";
+require "$TOOLS_DIR/bin/simma_util.pl";
 
 # Date arithmetic
 use Date::Calc qw(Days_in_Month Delta_Days Add_Delta_Days);
@@ -38,7 +38,6 @@ use Date::Calc qw(Days_in_Month Delta_Days Add_Delta_Days);
 # Filename parsing
 use File::Basename;
 
-fileparse($0, ".pl");
 ($scriptname, $path, $suffix) = fileparse($0, ".pl");
 
 #----------------------------------------------------------------------------------------------
@@ -253,7 +252,7 @@ if ($var_info_model{"MODEL_TYPE"} eq "real") {
     }
 
     # Run Model
-#    $cmd = "$TOOLS_DIR/src/run_model.pl -m $MODEL -p $PROJECT -f curr_spinup -s $start_date -e $fcast_date -i $init_state_file >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+#    $cmd = "$TOOLS_DIR/bin/run_model.pl -m $MODEL -p $PROJECT -f curr_spinup -s $start_date -e $fcast_date -i $init_state_file >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
 #    print "$cmd\n";
 #    (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
 #    `echo $cmd > $LogFile`;
@@ -261,7 +260,7 @@ if ($var_info_model{"MODEL_TYPE"} eq "real") {
 #      `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
 #      die "$0: ERROR: $cmd failed: $?\n";
 #    }
-    $cmd = "$TOOLS_DIR/src/run_model.pl -m $MODEL -p $PROJECT -f curr_spinup -s $start_date -e $fcast_date -i $init_state_file >& $LogFile.tmp";
+    $cmd = "$TOOLS_DIR/bin/run_model.pl -m $MODEL -p $PROJECT -f curr_spinup -s $start_date -e $fcast_date -i $init_state_file >& $LogFile.tmp";
     print "$cmd\n";
     (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
     $cmd = "cat $LogFile.tmp >> $LogFile";
@@ -276,7 +275,7 @@ if ($var_info_model{"MODEL_TYPE"} eq "real") {
   if ($do_archive) {
 
     # Archive results and post to web site
-#    $cmd = "$TOOLS_DIR/src/archive_currspin.pl $MODEL $PROJECT >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+#    $cmd = "$TOOLS_DIR/bin/archive_currspin.pl $MODEL $PROJECT >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
 #    print "$cmd\n";
 #    (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
 #    `echo $cmd > $LogFile`;
@@ -284,7 +283,7 @@ if ($var_info_model{"MODEL_TYPE"} eq "real") {
 #      `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
 #      die "$0: ERROR: $cmd failed: $?\n";
 #    }
-    $cmd = "$TOOLS_DIR/src/archive_currspin.pl $MODEL $PROJECT >& $LogFile.tmp";
+    $cmd = "$TOOLS_DIR/bin/archive_currspin.pl $MODEL $PROJECT >& $LogFile.tmp";
     print "$cmd\n";
     (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
     $cmd = "cat $LogFile.tmp >> $LogFile";
@@ -309,7 +308,7 @@ if ($do_stats) {
   if ($ProjectType =~ /merge/i) {
 
     # Stats for this project will consist of merged stats files from other "sub-projects".
-#    $cmd =  "$TOOLS_DIR/src/merge_project_stats.pl $PROJECT $MODEL $Fyr $Fmon $Fday >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+#    $cmd =  "$TOOLS_DIR/bin/merge_project_stats.pl $PROJECT $MODEL $Fyr $Fmon $Fday >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
 #    print "$cmd\n";
 #    (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
 #    `echo $cmd >> $LogFile`;
@@ -317,7 +316,7 @@ if ($do_stats) {
 #      `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
 #      die "$0: ERROR: $cmd failed: $?\n";
 #    }
-    $cmd =  "$TOOLS_DIR/src/merge_project_stats.pl $PROJECT $MODEL $Fyr $Fmon $Fday >& $LogFile.tmp";
+    $cmd =  "$TOOLS_DIR/bin/merge_project_stats.pl $PROJECT $MODEL $Fyr $Fmon $Fday >& $LogFile.tmp";
     print "$cmd\n";
     (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
     $cmd = "cat $LogFile.tmp >> $LogFile";
@@ -331,7 +330,7 @@ if ($do_stats) {
   else {
 
     # Compute percentiles of model results (but not runoff)
-#    $cmd = "$TOOLS_DIR/src/get_stats.pl.bak $MODEL $PROJECT $Fyr $Fmon $Fday >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+#    $cmd = "$TOOLS_DIR/bin/get_stats.pl.bak $MODEL $PROJECT $Fyr $Fmon $Fday >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
 #    print "$cmd\n";
 #    (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
 #    `echo $cmd >> $LogFile`;
@@ -339,7 +338,7 @@ if ($do_stats) {
 #      `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
 #      die "$0: ERROR: $cmd failed: $?\n";
 #    }
-    $cmd = "$TOOLS_DIR/src/get_stats.pl.bak $MODEL $PROJECT $Fyr $Fmon $Fday >& $LogFile.tmp";
+    $cmd = "$TOOLS_DIR/bin/get_stats.pl.bak $MODEL $PROJECT $Fyr $Fmon $Fday >& $LogFile.tmp";
     print "$cmd\n";
     (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
     $cmd = "cat $LogFile.tmp >> $LogFile";
@@ -351,7 +350,7 @@ if ($do_stats) {
 
     # Compute percentiles of model runoff - not all models
     if (grep /ro/, $VarList) {
-#      $cmd = "$TOOLS_DIR/src/calc.cum_ro_qnts.pl $MODEL $PROJECT $Fyr $Fmon $Fday >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+#      $cmd = "$TOOLS_DIR/bin/calc.cum_ro_qnts.pl $MODEL $PROJECT $Fyr $Fmon $Fday >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
 #      print "$cmd\n";
 #      (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
 #      `echo $cmd >> $LogFile`;
@@ -359,7 +358,7 @@ if ($do_stats) {
 #        `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
 #        die "$0: ERROR: $cmd failed: $?\n";
 #      }
-      $cmd = "$TOOLS_DIR/src/calc.cum_ro_qnts.pl $MODEL $PROJECT $Fyr $Fmon $Fday >& $LogFile.tmp";
+      $cmd = "$TOOLS_DIR/bin/calc.cum_ro_qnts.pl $MODEL $PROJECT $Fyr $Fmon $Fday >& $LogFile.tmp";
       print "$cmd\n";
       (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
       $cmd = "cat $LogFile.tmp >> $LogFile";

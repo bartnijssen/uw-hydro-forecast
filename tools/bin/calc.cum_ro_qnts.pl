@@ -39,7 +39,7 @@ $CONFIG_DIR = "$ROOT_DIR/config";
 # Include external modules
 #----------------------------------------------------------------------------------------------
 # Subroutine for reading config files
-require "$TOOLS_DIR/simma_util.pl";
+require "$TOOLS_DIR/bin/simma_util.pl";
 
 # Perl statistics package
 use lib "/usr/lib/perl5/site_perl/5.6.1";

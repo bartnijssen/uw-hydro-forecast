@@ -29,7 +29,7 @@ $CONFIG_DIR = "$ROOT_DIR/config";
 # Include external modules
 #----------------------------------------------------------------------------------------------
 # Subroutine for reading config files
-require "$TOOLS_DIR/simma_util.pl";
+require "$TOOLS_DIR/bin/simma_util.pl";
 
 # Date arithmetic
 use Date::Calc qw(Days_in_Month Delta_Days Add_Delta_Days);
@@ -462,21 +462,21 @@ if ($MODEL =~ /vic/i) {
 
 # Find percentiles, anomalies
 # SM
-$cmd = "$TOOLS_DIR/fcst_stats.pl $SMFILE $OUTD/sm.$PROJECT_UC.$MODEL.stats";
+$cmd = "$TOOLS_DIR/bin/fcst_stats.pl $SMFILE $OUTD/sm.$PROJECT_UC.$MODEL.stats";
 print "$cmd\n";
 (system($cmd)==0) or die "$0: ERROR: cmd $cmd failed: $?\n";
 $cmd = "/usr/bin/paste $LONLAT $OUTD/sm.$PROJECT_UC.$MODEL.stats > $OUTD/sm.$PROJECT_UC.$MODEL.f-c_mean.a-m_anom.qnt.xyzz";
 print "$cmd\n";
 (system($cmd)==0) or die "$0: ERROR: cmd $cmd failed: $?\n";
 # SWE
-$cmd = "$TOOLS_DIR/fcst_stats.pl $SWEFILE $OUTD/swe.$PROJECT_UC.$MODEL.stats";
+$cmd = "$TOOLS_DIR/bin/fcst_stats.pl $SWEFILE $OUTD/swe.$PROJECT_UC.$MODEL.stats";
 print "$cmd\n";
 (system($cmd)==0) or die "$0: ERROR: cmd $cmd failed: $?\n";
 $cmd = "/usr/bin/paste $LONLAT $OUTD/swe.$PROJECT_UC.$MODEL.stats > $OUTD/swe.$PROJECT_UC.$MODEL.f-c_mean.a-m_anom.qnt.xyzz";
 print "$cmd\n";
 (system($cmd)==0) or die "$0: ERROR: cmd $cmd failed: $?\n";
 # STOT
-$cmd = "$TOOLS_DIR/fcst_stats.pl $STOTFILE $OUTD/stot.$PROJECT_UC.$MODEL.stats";
+$cmd = "$TOOLS_DIR/bin/fcst_stats.pl $STOTFILE $OUTD/stot.$PROJECT_UC.$MODEL.stats";
 print "$cmd\n";
 (system($cmd)==0) or die "$0: ERROR: cmd $cmd failed: $?\n";
 $cmd = "/usr/bin/paste $LONLAT $OUTD/stot.$PROJECT_UC.$MODEL.stats > $OUTD/stot.$PROJECT_UC.$MODEL.f-c_mean.a-m_anom.qnt.xyzz";
@@ -484,19 +484,19 @@ print "$cmd\n";
 (system($cmd)==0) or die "$0: ERROR: cmd $cmd failed: $?\n";
 # Layer-specific SoilMoist
 if ($MODEL =~ /vic/i) {
-  $cmd = "$TOOLS_DIR/fcst_stats.pl $SM1FILE $OUTD/sm1.$PROJECT_UC.$MODEL.stats";
+  $cmd = "$TOOLS_DIR/bin/fcst_stats.pl $SM1FILE $OUTD/sm1.$PROJECT_UC.$MODEL.stats";
   print "$cmd\n";
   (system($cmd)==0) or die "$0: ERROR: cmd $cmd failed: $?\n";
   $cmd = "/usr/bin/paste $LONLAT $OUTD/sm1.$PROJECT_UC.$MODEL.stats > $OUTD/sm1.$PROJECT_UC.$MODEL.f-c_mean.a-m_anom.qnt.xyzz";
   print "$cmd\n";
   (system($cmd)==0) or die "$0: ERROR: cmd $cmd failed: $?\n";
-  $cmd = "$TOOLS_DIR/fcst_stats.pl $SM2FILE $OUTD/sm2.$PROJECT_UC.$MODEL.stats";
+  $cmd = "$TOOLS_DIR/bin/fcst_stats.pl $SM2FILE $OUTD/sm2.$PROJECT_UC.$MODEL.stats";
   print "$cmd\n";
   (system($cmd)==0) or die "$0: ERROR: cmd $cmd failed: $?\n";
   $cmd = "/usr/bin/paste $LONLAT $OUTD/sm2.$PROJECT_UC.$MODEL.stats > $OUTD/sm2.$PROJECT_UC.$MODEL.f-c_mean.a-m_anom.qnt.xyzz";
   print "$cmd\n";
   (system($cmd)==0) or die "$0: ERROR: cmd $cmd failed: $?\n";
-  $cmd = "$TOOLS_DIR/fcst_stats.pl $SM3FILE $OUTD/sm3.$PROJECT_UC.$MODEL.stats";
+  $cmd = "$TOOLS_DIR/bin/fcst_stats.pl $SM3FILE $OUTD/sm3.$PROJECT_UC.$MODEL.stats";
   print "$cmd\n";
   (system($cmd)==0) or die "$0: ERROR: cmd $cmd failed: $?\n";
   $cmd = "/usr/bin/paste $LONLAT $OUTD/sm3.$PROJECT_UC.$MODEL.stats > $OUTD/sm3.$PROJECT_UC.$MODEL.f-c_mean.a-m_anom.qnt.xyzz";

@@ -36,7 +36,7 @@ $CONFIG_DIR = "$ROOT_DIR/config";
 # Include external modules
 #----------------------------------------------------------------------------------------------
 # Subroutine for reading config files
-require "$TOOLS_DIR/simma_util.pl";
+require "$TOOLS_DIR/bin/simma_util.pl";
 
 # This allows us to use sophisticated command-line argument parsing
 use Getopt::Long;
@@ -48,7 +48,7 @@ use Date::Calc qw(Days_in_Month Delta_Days Add_Delta_Days);
 use Env;
 
 # Model-specific subroutines
-require "$TOOLS_DIR/model_specific.pl";
+require "$TOOLS_DIR/bin/model_specific.pl";
 
 #-------------------------------------------------------------------------------
 # Parse the command line

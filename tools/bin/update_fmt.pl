@@ -59,8 +59,8 @@ $Void = shift;
 #----------------------------------------------------------------------------------------------
 $start_date = sprintf "%04d-%02d-%02d", $Syr, $Smon, $Sday;
 $end_date = sprintf "%04d-%02d-%02d", $Cyr, $Cmon, $Cday;
-#$cmd = "$TOOLS_DIR/write_fmt_file_from_raw_acis.pl $StnDir/../stn_info/rawdata $StnList $start_date $end_date $Void $p_ndx_fmt_file $tx_ndx_fmt_file $tn_ndx_fmt_file";
-$cmd = "$TOOLS_DIR/write_fmt_file_from_stn_ts.pl $StnDir $StnList $start_date $end_date $p_ndx_fmt_file $tx_ndx_fmt_file $tn_ndx_fmt_file";
+#$cmd = "$TOOLS_DIR/bin/write_fmt_file_from_raw_acis.pl $StnDir/../stn_info/rawdata $StnList $start_date $end_date $Void $p_ndx_fmt_file $tx_ndx_fmt_file $tn_ndx_fmt_file";
+$cmd = "$TOOLS_DIR/bin/write_fmt_file_from_stn_ts.pl $StnDir $StnList $start_date $end_date $p_ndx_fmt_file $tx_ndx_fmt_file $tn_ndx_fmt_file";
 print "$cmd\n";
 (system($cmd)==0) or die "$0: ERROR: $cmd failed: $! \n";
 

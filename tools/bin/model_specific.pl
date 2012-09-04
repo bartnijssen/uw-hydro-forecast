@@ -101,7 +101,7 @@ sub run_vic {
 #      }
 #      close(METADATA_TEMPLATE);
 #      close(METADATA);
-#      $cmd = "$TOOLS_DIR/vic2nc -i $results_dir_asc_daily -p $output_prefix -m $metadata $gridfile_opt -o $results_dir/$output_prefix $comp_str -t m >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+#      $cmd = "$TOOLS_DIR/bin/vic2nc -i $results_dir_asc_daily -p $output_prefix -m $metadata $gridfile_opt -o $results_dir/$output_prefix $comp_str -t m >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
 #      print "$cmd\n";
 #      if (system($cmd)!=0) {
 #        $exit_code = $?;
@@ -149,8 +149,8 @@ sub wrap_run_noah {
 
   # Optionally extract selected variables to ascii
   if ($extract_vars && $extract_vars !~ /^none$/i) {
-#    $cmd = "$TOOLS_DIR/wrap_nc2vic.pl $results_dir $output_prefixes[0] $extract_vars $results_dir_asc $output_prefixes[0] 2>&1 >> $LOGFILE";
-    $cmd = "$TOOLS_DIR/wrap_nc2vic.pl $results_dir $output_prefixes[0] $extract_vars $results_dir_asc $output_prefixes[0] scientific >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+#    $cmd = "$TOOLS_DIR/bin/wrap_nc2vic.pl $results_dir $output_prefixes[0] $extract_vars $results_dir_asc $output_prefixes[0] 2>&1 >> $LOGFILE";
+    $cmd = "$TOOLS_DIR/bin/wrap_nc2vic.pl $results_dir $output_prefixes[0] $extract_vars $results_dir_asc $output_prefixes[0] scientific >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
     (system($cmd)==0) or die "$0: ERROR in $cmd: $?\n";
 
 #    # Optional post-processing
@@ -161,7 +161,7 @@ sub wrap_run_noah {
 
     # Multiply moisture fluxes by sec_per_day to get daily total moisture fluxes
     $status = &make_dir("$results_dir_asc.tmp");
-    $cmd = "$TOOLS_DIR/wrap_mult.pl $results_dir_asc wb 4 4,5,6 86400 $results_dir_asc.tmp >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+    $cmd = "$TOOLS_DIR/bin/wrap_mult.pl $results_dir_asc wb 4 4,5,6 86400 $results_dir_asc.tmp >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
     (system($cmd)==0) or die "$0: ERROR in $cmd: $?\n";
 
     # Clean up temporary directories
@@ -278,8 +278,8 @@ sub wrap_run_sac {
 
   # Optionally extract selected variables to ascii
   if ($extract_vars && $extract_vars !~ /^none$/i) {
-#    $cmd = "$TOOLS_DIR/wrap_nc2vic.pl $results_dir $output_prefixes[0] $extract_vars $results_dir_asc $output_prefixes[0]";
-    $cmd = "$TOOLS_DIR/wrap_nc2vic.pl $results_dir $output_prefixes[0] $extract_vars $results_dir_asc $output_prefixes[0] scientific >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+#    $cmd = "$TOOLS_DIR/bin/wrap_nc2vic.pl $results_dir $output_prefixes[0] $extract_vars $results_dir_asc $output_prefixes[0]";
+    $cmd = "$TOOLS_DIR/bin/wrap_nc2vic.pl $results_dir $output_prefixes[0] $extract_vars $results_dir_asc $output_prefixes[0] scientific >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
     (system($cmd)==0) or die "$0: ERROR in $cmd: $?\n";
 
 #    # Optional post-processing
@@ -290,7 +290,7 @@ sub wrap_run_sac {
 
     # Multiply moisture fluxes by sec_per_day to get daily total moisture fluxes
     $status = &make_dir("$results_dir_asc.tmp");
-    $cmd = "$TOOLS_DIR/wrap_mult.pl $results_dir_asc wb 4 4,5,6 86400 $results_dir_asc.tmp >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+    $cmd = "$TOOLS_DIR/bin/wrap_mult.pl $results_dir_asc wb 4 4,5,6 86400 $results_dir_asc.tmp >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
     (system($cmd)==0) or die "$0: ERROR in $cmd: $?\n";
 
     # Clean up temporary directories
@@ -387,8 +387,8 @@ sub wrap_run_clm {
 
   # Optionally extract selected variables to ascii
   if ($extract_vars && $extract_vars !~ /^none$/i) {
-#    $cmd = "$TOOLS_DIR/wrap_nc2vic.pl $results_dir $output_prefixes[0] $extract_vars $results_dir_asc $output_prefixes[0]";
-    $cmd = "$TOOLS_DIR/wrap_nc2vic.pl $results_dir $output_prefixes[0] $extract_vars $results_dir_asc $output_prefixes[0] scientific >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+#    $cmd = "$TOOLS_DIR/bin/wrap_nc2vic.pl $results_dir $output_prefixes[0] $extract_vars $results_dir_asc $output_prefixes[0]";
+    $cmd = "$TOOLS_DIR/bin/wrap_nc2vic.pl $results_dir $output_prefixes[0] $extract_vars $results_dir_asc $output_prefixes[0] scientific >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
     (system($cmd)==0) or die "$0: ERROR in $cmd: $?\n";
 
     # Optional post-processing
@@ -399,17 +399,17 @@ sub wrap_run_clm {
 
     # Multiply moisture fluxes by sec_per_day to get daily total moisture fluxes
     $status = &make_dir("$results_dir_asc.tmp");
-    $cmd = "$TOOLS_DIR/wrap_mult.pl $results_dir_asc wb 4 4,5,6,7,8 86400 $results_dir_asc.tmp >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+    $cmd = "$TOOLS_DIR/bin/wrap_mult.pl $results_dir_asc wb 4 4,5,6,7,8 86400 $results_dir_asc.tmp >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
     (system($cmd)==0) or die "$0: ERROR in $cmd: $?\n";
 
     # Add liquid and frozen soil moisture fields together
     $status = &make_dir("$results_dir_asc.tmp2");
-    $cmd = "$TOOLS_DIR/wrap_add_fields.pl $results_dir_asc.tmp wb 4 $results_dir_asc.tmp2 4:5:6,10:20,11:21,12:22,13:23,14:24,15:25,16:26,17:27,18:28,19:29 >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+    $cmd = "$TOOLS_DIR/bin/wrap_add_fields.pl $results_dir_asc.tmp wb 4 $results_dir_asc.tmp2 4:5:6,10:20,11:21,12:22,13:23,14:24,15:25,16:26,17:27,18:28,19:29 >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
     (system($cmd)==0) or die "$0: ERROR in $cmd: $?\n";
 
     # Insert dummy records where leap days were omitted
     $status = &make_dir("$results_dir_asc.tmp3");
-    $cmd = "$TOOLS_DIR/wrap_insert_leap_day.pl $results_dir_asc.tmp2 wb $results_dir_asc.tmp3 $start_date $end_date >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+    $cmd = "$TOOLS_DIR/bin/wrap_insert_leap_day.pl $results_dir_asc.tmp2 wb $results_dir_asc.tmp3 $start_date $end_date >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
     (system($cmd)==0) or die "$0: ERROR in $cmd: $?\n";
 
     # Clean up temporary directories

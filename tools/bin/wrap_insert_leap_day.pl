@@ -40,7 +40,7 @@ if ($copy_files) {
 }
 else {
   foreach $file (sort(@filelist)) {
-    $cmd = "$TOOLS_DIR/insert_leap_day.pl $indir/$file > $outdir/$file";
+    $cmd = "$TOOLS_DIR/bin/insert_leap_day.pl $indir/$file > $outdir/$file";
     (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
   }
 }

@@ -29,7 +29,7 @@ $CONFIG_DIR = "$ROOT_DIR/config";
 # Include external modules
 #----------------------------------------------------------------------------------------------
 # Subroutine for reading config files
-require "$TOOLS_DIR/src/simma_util.pl";
+require "$TOOLS_DIR/bin/simma_util.pl";
 
 #-------------------------------------------------------------------------------
 # Parse the command line
