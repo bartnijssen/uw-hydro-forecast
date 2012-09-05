@@ -11,6 +11,19 @@
      j: col from bottom (starts at 1)
      [][]: [row][col]
      Indexing (arrays): Starts at 1 (i.e. 0 is left unused)
+
+     X.D.Z
+     Oct-Nov., 2006: 
+         add the part to read a seperate spinup data; change the control file format;
+         add the factor of 35.315 (factor of m3 to cft, which was in the old fortran version, but missed in the new c version);
+         rescale the unit in monthly output from cft per month back to cft per day;
+     Dec 2007:
+         change the order in SearchCatchment to be the same as in the fortran version, so that it can use the old uh_s files;
+     Feb 2007:
+         change the format of uh_s file;
+         ignore the negative runoff and baseflow in the fluxes files;
+     March 2007:
+         the input vic data can now start from any day in a month (the old version must start in the first day);
 */
 
 #include <stdio.h>
@@ -23,10 +36,10 @@
 /*************************************************************/
 /* Change if needed                                          */
 /*************************************************************/
-#define MAXROWS 300
-#define MAXCOLS 300
+#define MAXROWS  480
+#define MAXCOLS  480
 #define MAXYEARS 100
-#define MAXSTNS 100
+#define MAXSTNS  100
 /*************************************************************/
 /* No changes after here                                     */
 /*************************************************************/
@@ -37,8 +50,8 @@
                                //but I haven't figured out why 
                                //it is 48.........   
 #define DELTA_T 3600.0
-#define UH_DAY 96              //max days to outlet 
-#define TMAX   UH_DAY*24
+#define UH_DAY  96             //max days to outlet 
+#define TMAX    UH_DAY*24
 #define MAX_CELLS_IN_BASIN 5000   
 #define MAXSTRING 512
 #define NODATA -9999
@@ -50,8 +63,6 @@
 /*************************************************************/
 /* TYPE DEFINITIONS, GLOBALS, ETC.                           */
 /*************************************************************/
-typedef enum {double_f, int_f, float_f, long_f, short_f} FORMAT_SPECIFIER;
-
 typedef struct {
   int id;
   int ntypes;
@@ -84,34 +95,37 @@ typedef struct {
   int year;
   int month;
   int day;
-} TIME;
+} DATE;
+
+int DaysInMonth[13] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+
 /*************************************************************/
-void CalculateNumberDaysMonths(int,int,int,int,int *,int *);
-void FindRowsCols(char *, int *, int *, float *,
-		   float *, float *); 
-int IsLeapYear(int);
+int  CalculateDaysInYear(DATE *);
+int  CalculateNumberDays(DATE *, DATE *);
+void FindRowsCols(char *, int *, int *, float *, float *, float *); 
+int  IsLeapYear(int);
 void MakeConvolution(int,int,int,CATCH *,ARC **,
-		     float *,float *, float *,float **,LIST *,float,
-		     char *,char *,int,TIME *,float *,int,int,int,int);
+         float *,float *, float *,float **,float,
+         char *,char *,int,float *,long);
 void MakeGridUH(ARC **,CATCH *,LIST *,
-		int,int,float,float,float,float **,float ***,float **,float **,float **);
+         int,int,float,float,float,float **,float ***,float **,float **,float **);
 void MakeUH(float ***UH, ARC **, int, int);
 void ReadDiffusion(char *, ARC **, int, int); 
 void ReadDirection(char *, ARC **, int, int, int *); 
 void ReadFraction(char *, ARC **, int, int); 
 char ReadGridUH(ARC **,CATCH *,LIST *,int *,float **,char *);
 void ReadUHBox(char *, float **, int);
+void ReadStartStopDate(char *, DATE *, DATE *, char *);
 void ReadStation(char *,LIST *,char uhstring[MAXSTNS][MIDSTRING],int *);
 void ReadVelocity(char *, ARC **, int, int); 
 void ReadXmask(char *, ARC **, int, int); 
-void SearchCatchment(ARC **,CATCH *,
-		     int,int,int,int,int *);
-void WriteData(float *,char *,char *,TIME *,float,int,int,int,int,int,int);
+void SearchCatchment(ARC **,CATCH *,int,int,int,int,int *);
+void WriteData(float *,char *,char *,DATE *,int,int);
 /*************************************************************/
 /* Start of ROUT                                             */
 /*************************************************************/
-int main (int argc, char *argv[]) {   
-
+int main (int argc, char *argv[])
+{   
   FILE *fp;
 
   ARC **BASIN=NULL; //Grid input information is stored here,
@@ -122,16 +136,17 @@ int main (int argc, char *argv[]) {
   LIST *STATION=NULL;    //Holds information about station locations and names.
                     //Area is included in the list, although the value
                     //isn't used in the routing program.
-  TIME *DATE=NULL;
   CATCH *CATCHMENT=NULL;
+  DATE spinup_start, spinup_stop, inp_start, inp_stop, out_start, out_stop; 
+                    // start and stop date of spinpup, input flux data, and output route data;
 
-  char *filename;
-  char *spinuppath;
-  char *inpath;
-  char *outpath;
-  char *dummy;
-  char *name;
+  char filename[100];
+  char spinuppath[100];
+  char inpath[100];
+  char outpath[100];
+  char name[100];
   char uhstring[MAXSTNS][MIDSTRING]; //name of uhfile (or "NONE")
+  char dummy[MAXSTRING];
   char none[5]="NONE";
 
   float xllcorner; //x-coordinate, lower left corner of grid
@@ -141,35 +156,26 @@ int main (int argc, char *argv[]) {
   float factor_sum;
   float ***UH;     //impulse response function UH[row][col][1-48]
   float **UH_BOX;  //unit hydrograph[1-number_of_cells][1-12]. 
-                   //hm, why one for each cell?
   float **UH_DAILY;
   float **UH_S;
   float **FR;
   float *BASEFLOW;  
   float *RUNOFF;
-  float *FLOW;
+  float *FLOW;         // note: data in BASEFLOW,RUNOFF,FLOW starts from subscript 1;
 
-  int *MONTH;
-  int *YEAR;
   int i,j;
   int nrows,ncols;     //number of rows/columns in basin (read from direction file)
   int active_cells;    //total number of active cells in grid
   int number_of_cells; //number of cells upstream a station location
   int number_of_stations; //number of stations 
   int decimal_places;  //decimal places in VIC output 
-  int spinup_start_year,spinup_start_month; //start of spinup
-  int spinup_stop_year,spinup_stop_month;
-  int start_year,start_month; //start of VIC simulation
-  int stop_year,stop_month;
-  int first_year,first_month; //start of output to be written
-  int last_year,last_month;
-  int ndays,spinup_days,nmonths;   //number of days and months in spinup and VIC simulations 
+  int ndays,spinup_days,spinup_first_date;   //number of days and months in spinup and VIC simulations 
                        //what about skipping whatever is 
                        //before/after the period of interest?
-  int mn1, mn2;        // temporally variables
-  
-  char MISSING_STN;    // 1 if failed to read uh_s file (will skip this station), 0 otherwise
+  int day0, day1;      //the first and last day of output 
 
+  char MISSING_STN;    // 1 if failed to read uh_s file (will skip this station), 0 otherwise
+  
   /***********************************************************/
 
   if(argc != 2){
@@ -180,14 +186,6 @@ int main (int argc, char *argv[]) {
    printf("Cannot open %s\n",argv[1]);
    exit(1);
   }
-
-  /* Allocate memory for input parameters/names */
-  filename = (char*)calloc(100,sizeof(char));
-  spinuppath = (char*)calloc(100,sizeof(char));
-  inpath = (char*)calloc(100,sizeof(char));
-  outpath = (char*)calloc(100,sizeof(char));
-  dummy = (char*)calloc(100,sizeof(char));
-  name = (char*)calloc(100,sizeof(char));
 
   /* Find number of rows and cols in grid of interest */
   fgets(dummy, MAXSTRING, fp);
@@ -225,7 +223,6 @@ int main (int argc, char *argv[]) {
   for(i=0;i<=active_cells;i++) 
       UH_S[i]=(float*)calloc(KE+UH_DAY+1,sizeof(float));      
   STATION=calloc(MAXSTNS,sizeof(LIST));
-  DATE=calloc(DAYS,sizeof(TIME));
 
   /* Read velocity file if any */
   fscanf(fp, "%*s %s",filename);
@@ -273,84 +270,76 @@ int main (int argc, char *argv[]) {
 
   /* Read input precision of VIC filenames*/
   fscanf(fp, "%*s %d",&decimal_places);
+  printf("Decimal_places: %d\n",decimal_places);	  
 
   /* Read spinup path of VIC filenames, and start and end year/month */
-  fscanf(fp, "%*s %s",spinuppath);
+  fscanf(fp, "%*s %s ",spinuppath);
+  fgets(dummy, MAXSTRING, fp);
   if (strcmp(spinuppath,none) !=0 ) {
-    fscanf(fp, "%*s %d %d %d %d",
-	  &spinup_start_year,&spinup_start_month,&spinup_stop_year,&spinup_stop_month);
-    CalculateNumberDaysMonths(spinup_start_year,spinup_start_month,spinup_stop_year,spinup_stop_month,
-			      &spinup_days,&nmonths);
+    ReadStartStopDate(dummy, &spinup_start, &spinup_stop, "spinup");
+    spinup_days = CalculateNumberDays(&spinup_start, &spinup_stop);
+    spinup_first_date = spinup_start.year*10000L+spinup_start.month*100+spinup_start.day;
+    printf("Spinup path: %s\n", spinuppath);
+    printf("      start: %d %d %d; end: %d %d %d; Ndays: %d.\n",
+	   spinup_start.year,spinup_start.month,spinup_start.day,
+           spinup_stop.year, spinup_stop.month, spinup_stop.day, spinup_days);
   }
   else {
-    fscanf(fp, "%*s %*d %*d %*d %*d");
-//    fgets(dummy, MAXSTRING, fp);
     spinup_days = 0;
+    spinup_first_date = 0;
   }
 
   /* Read input path of VIC filenames, and start and end year/month */
-  fscanf(fp, "%*s %s",inpath);
-  fscanf(fp, "%*s %d %d %d %d", &start_year,&start_month,&stop_year,&stop_month);
+  fscanf(fp, "%*s %s ",inpath);
+  fgets(dummy, MAXSTRING, fp);
+  ReadStartStopDate(dummy, &inp_start, &inp_stop, "input flux");
+  ndays = CalculateNumberDays(&inp_start,&inp_stop);
+  printf("VIC    path: %s\n", inpath);
+  printf("      start: %d %d %d; end: %d %d %d; Ndays: %d.\n",
+         inp_start.year,inp_start.month,inp_start.day,inp_stop.year,inp_stop.month,inp_stop.day,ndays);  
+  ndays += spinup_days;    // ndays: the total days of data for MakeConvolution (spinup + input)
 
   /* Read output path, and start and end year/month */
-  fscanf(fp, "%*s %s",outpath);
-  fscanf(fp, "%*s %d %d %d %d", &first_year,&first_month,&last_year,&last_month);
-    
-  printf("Spinup path: %s\nInpath: %s\nOutpath: %s\nDecimal_places: %d\n",
-	 spinuppath,inpath,outpath,decimal_places);	  
+  fscanf(fp, "%*s %s ",outpath);
+  fgets(dummy, MAXSTRING, fp);
+  ReadStartStopDate(dummy, &out_start, &out_stop, "output route");
+  printf("Output path: %s\n", outpath);
+  printf("      start: %d %d %d; end: %d %d %d.\n",
+         out_start.year,out_start.month,out_start.day,out_stop.year,out_stop.month,out_stop.day);  
 
-  /* Calculate number of days & months in simulation,*/
-  CalculateNumberDaysMonths(start_year,start_month,stop_year,stop_month,
-			    &ndays,&nmonths);
-  printf("VIC Start: %d %d  End: %d %d  Ndays: %d Nmonths:%d\n",
-	  start_year,start_month,stop_year,stop_month,ndays,nmonths);  
-  ndays += spinup_days;
-  
   /* Check spinup, input and output period */
   if (spinup_days > 0) {
-    mn1 = spinup_start_year * 12 + spinup_start_month;
-    mn2 = first_year * 12 + first_month;
-    if (mn1 > mn2) {
+    day0 = CalculateNumberDays(&spinup_start, &out_start);  // the first day for WriteData();
+    if (day0 < 0) {
       printf("\nOutput starting date must not be earlier than spinup.\n");
-      printf("Spinup starts: %4d %2d,\n", spinup_start_year, spinup_start_month);
-      printf("Output starts: %4d %2d.\n", first_year, first_month);
-      printf("Change these dates and restart.\n\n");
-      exit(-1);
-    }
-    mn1 = spinup_stop_year * 12 + spinup_stop_month + 1;
-    mn2 = start_year * 12 + start_month;
-    if (mn1 != mn2) {
-      printf("\nSpinup stopping month must be exactly one month eariler than input starting.\n");
-      printf("Spinup stops: %4d %2d,\n", spinup_stop_year, spinup_stop_month);
-      printf("Input starts: %4d %2d.\n", start_year, start_month);
+      printf("Spinup starts: %4d %2d %2d,\n", spinup_start.year, spinup_start.month, spinup_start.day);
+      printf("Output starts: %4d %2d %2d.\n", out_start.year, out_start.month, out_start.day);
       printf("Change these dates and restart.\n\n");
       exit(-1);
     }
   }
   else {
-     spinup_start_year = start_year; spinup_start_month = start_month;
-     mn1 = start_year * 12 + start_month;
-     mn2 = first_year * 12 + first_month;
-     if (mn1 > mn2) {
-       printf("\nWhen no spinup is used, output starting date must not be earlier than input.\n");
-       printf("Input  starts: %4d %2d,\n", start_year, start_month);
-       printf("Output starts: %4d %2d.\n", first_year, first_month);
-       printf("Change these dates and restart.\n\n");
-       exit(-1);
-     }
+    day0 = CalculateNumberDays(&inp_start, &out_start); // the first day for WriteData();
+    if (day0 < 0) {
+      printf("\nWhen no spinup is used, output starting date must not be earlier than input.\n");
+      printf("Input  starts: %4d %2d %2d,\n", inp_start.year, inp_start.month, inp_start.day);
+      printf("Output starts: %4d %2d %2d.\n", out_start.year, out_start.month, out_start.day);
+      printf("Change these dates and restart.\n\n");
+      exit(-1);
+    }
+    memcpy((void *)&spinup_start, (void *)&inp_start, sizeof(DATE)); // use input start day for spinup (used to calculate day1)
   }
 
-  mn1 = stop_year * 12 + stop_month;
-  mn2 = last_year * 12 + last_month;
-  if (mn1 < mn2) {
+  day1 = CalculateNumberDays(&spinup_start, &out_stop);  // day1: the last day for WriteData()
+  if (day1 > ndays) {
     printf("\nOutput stopping date must not be later than input.\n");
-    printf("Input  stops: %4d %2d,\n", stop_year, stop_month);
-    printf("Output stops: %4d %2d.\n", last_year, last_month);
+//    printf("Input  stops: %4d %2d,\n", stop_year, stop_month);
+    printf("Output stops: %4d %2d %2d.\n", out_stop.year, out_stop.month, out_stop.day);
     printf("Change these dates and restart.\n\n");
     exit(-1);
-  }  
+  }
 
-  /* Allocate memory for BASEFLOW, RUNOFF and FLOW */
+/* Allocate memory for BASEFLOW, RUNOFF and FLOW */
   RUNOFF=(float*)calloc(ndays + 1,sizeof(float));
   BASEFLOW=(float*)calloc(ndays + 1,sizeof(float));
   FLOW=(float*)calloc(ndays + 1,sizeof(float));
@@ -385,23 +374,20 @@ int main (int argc, char *argv[]) {
           /* Making grid UH_S*/
           printf("Make grid UH_S\n");
           MakeGridUH(BASIN,CATCHMENT,STATION,number_of_cells,i,
-               xllcorner,yllcorner,size,UH_DAILY,UH,FR,UH_BOX,UH_S);
+                     xllcorner,yllcorner,size,UH_DAILY,UH,FR,UH_BOX,UH_S);
           MISSING_STN = 0;
 	}
 
-	if (MISSING_STN == 1) continue;  // no uh_s information, skip station
- 
+        if (MISSING_STN == 1) continue;  // no uh_s information, skip station
+
         /* Making convolution */
         printf("Make convolution...\n");
         MakeConvolution(number_of_cells,ndays,spinup_days,CATCHMENT,BASIN,BASEFLOW,RUNOFF,FLOW,
-  		       UH_S,STATION,size,
-		         inpath,spinuppath,decimal_places,DATE,&factor_sum,
-             start_year,start_month,spinup_start_year,spinup_start_month);
+                        UH_S,size,inpath,spinuppath,decimal_places,&factor_sum,spinup_first_date);
 
         /* Writing data */
         printf("Writing data...\n");
-        WriteData(FLOW,name,outpath,DATE,factor_sum,
-                  spinup_start_year,spinup_start_month,first_year,first_month,last_year,last_month);
+        WriteData(FLOW,name,outpath,&out_start,day0,day1);
         printf("finish processing station: %s\n", name);
       }
    }
@@ -415,51 +401,37 @@ int main (int argc, char *argv[]) {
   free(RUNOFF);
   free(FLOW);
   free(STATION);
-  free(DATE);
   free(CATCHMENT);
   
   printf("route program finished.\n");
   return(1);
 }
-/**********************************************************/
-/* CalculateNumberDaysMonths                              */
-/**********************************************************/
-void CalculateNumberDaysMonths(int start_year,
-			       int start_month,
-			       int stop_year,
-			       int stop_month,
-			       int *ndays,
-			       int *nmonths)
-
+/***************************************************/
+/* CalculateDaysInYear                             */
+/***************************************************/
+int CalculateDaysInYear(DATE *date)
 {
-  int DaysInMonth[13] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-  int i,j;
-  int month,year,leap_year;
+  int mn, days;
 
-  month=start_month;
-  year=start_year;
-  (*nmonths)=0;
-  (*ndays)=0;
+  days = date->day;
+  for (mn = 1; mn < date->month; mn ++) days += DaysInMonth[mn];
+  if (IsLeapYear(date->year) && (date->month > 2)) days ++;
+  return(days);
+}
+/****************************************************/
+/* CalculateNumberDays                              */
+/****************************************************/
+int CalculateNumberDays(DATE *start_date,            
+                        DATE *stop_date)
+{
+  int year, days;
 
-  for(i=start_month;i<=12*(stop_year-start_year)+stop_month;i++) {
-    if(month==2)
-      leap_year=IsLeapYear(year); 
-    else  
-      leap_year=0;
-    (*ndays)+=DaysInMonth[month]+leap_year;
-    (*nmonths)+=1;
-    month+=1;
-    if(month>12) {
-      month=1;
-      year+=1;
-    }
+  days = CalculateDaysInYear(stop_date) - CalculateDaysInYear(start_date) + 1;
+  for (year = start_date->year; year < stop_date->year; year ++) {
+    if (IsLeapYear(year)) days += 366;
+    else                  days += 365; 
   }
-
-  if((*ndays)>DAYS) {
-    printf("In rout_all.c reset DAYS to %d\n",(*ndays));
-    exit(0);
-  }
-  
+  return(days);
 }
 
 /**********************************************/
@@ -502,9 +474,8 @@ void FindRowsCols(char *filename,
 /*************************************/
 int IsLeapYear(int year)
 {
-  if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0)
-    return 1;
-  return 0;
+  if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) return 1;
+  else return 0;
 }  
 /**************************************/
 /* MakeConvolution                    */ 
@@ -518,33 +489,29 @@ void MakeConvolution(int number_of_cells,
 		     float *RUNOFF,
 		     float *FLOW,
 		     float **UH_S,
-		     LIST *STATION,
 		     float size,
 		     char *inpath,
 		     char *spinuppath,
 		     int decimal_places,
-		     TIME *DATE,
 		     float *factor_sum,
-		     int start_year,
-		     int start_month,
-		     int spinup_start_year,
-		     int spinup_start_month)
+                     long spinup_first_date)
 {
   FILE *fp;
-  int i,j,k,n; //ii,jj;
-  int yr,mn,delta_yr;
+  int  i,j,k,n; //ii,jj;
+  int  yr,mn,dy;
+  long date;
   double factor;
   char infile[500];
   char LATLON[50];
   char fmtstr[17];
-  char leftover[MAXSTRING];
+  char tmpdat[MAXSTRING];
   float lat, lon;
   double area,area_sum;
   double radius;
   double storage;
   float k_const;
   float dummy;
-  char none[5]="NONE", MISSING_CELL;
+  char  MISSING_CELL;
 
   k_const=1.0;
   area_sum=(*factor_sum)=0.0;
@@ -559,18 +526,13 @@ void MakeConvolution(int number_of_cells,
       BASEFLOW[i]=0.0;
     }
     
-//    ii = CATCHMENT[n].row; //row from bottom 
-//    jj = CATCHMENT[n].col; //col from left
-//    lat=yllcorner + ii*size - size/2.0;
-//    lon=xllcorner + jj*size - size/2.0;
     lon = CATCHMENT[n].lon;
     lat = CATCHMENT[n].lat;
     
     /* Give area of box in square kilometers */
     radius = (double)EARTHRADIUS;
     area = radius*radius*fabs(size)*PI/180*            
-      fabs(sin((lat-size/2.0)*PI/180)-     
-	   sin((lat+size/2.0)*PI/180));         // note: area: unit in km2
+           fabs(sin((lat-size/2.0)*PI/180)-sin((lat+size/2.0)*PI/180));         // note: area: unit in km2
     area_sum += area;
     factor = CATCHMENT[n].fraction*area/86.4;
 //    factor = BASIN[ii][jj].fraction*area/86.4;  //conversion factor for
@@ -587,20 +549,27 @@ void MakeConvolution(int number_of_cells,
       strcat(infile,LATLON);
 
       if((fp = fopen(infile,"r"))==NULL) { 
-        printf("Cannot open file %s \n",infile);
+        printf("Cannot open spinup file %s; skip the cell.\n",infile);
         MISSING_CELL = 1;
       }
       else {
       /* Read spinup: <year> <month> <day> <p> <et> <runoff> <baseflow>*/
         do {
-          fgets(leftover,MAXSTRING,fp); 
-          sscanf(leftover,"%d %d",&yr, &mn);
-        } while ((yr<spinup_start_year) || ((yr==spinup_start_year) && (mn<spinup_start_month)));
-      
-        sscanf(leftover,"%*d %*d %*d %*f %*f %f %f",&RUNOFF[1],&BASEFLOW[1]);
-        for (i = 2; i <= spinup_days; i ++) {
-          fscanf(fp,"%*d %*d %*d %*f %*f %f %f",&RUNOFF[i],&BASEFLOW[i]);
-          fgets(leftover,MAXSTRING,fp);
+          fgets(tmpdat,MAXSTRING,fp); 
+          sscanf(tmpdat,"%d %d %d",&yr, &mn, &dy);
+          date = yr * 10000L + mn * 100 + dy;
+        } while (date < spinup_first_date);
+
+        if (date != spinup_first_date) {
+          printf("Spinup data %s does not start from %ld; skip the cell.\n", infile, spinup_first_date);
+          MISSING_CELL = 1;
+        }
+        else {      
+          sscanf(tmpdat,"%*d %*d %*d %*f %*f %f %f",&RUNOFF[1],&BASEFLOW[1]);
+          for (i = 2; i <= spinup_days; i ++) {
+            fgets(tmpdat,MAXSTRING,fp);
+            sscanf(tmpdat,"%*d %*d %*d %*f %*f %f %f",&RUNOFF[i],&BASEFLOW[i]);
+          }
         }
         fclose(fp);
       }
@@ -616,15 +585,16 @@ void MakeConvolution(int number_of_cells,
     printf("File %d of %d: %s\n",n,number_of_cells,infile);
 
     if((fp = fopen(infile,"r"))==NULL) { 
-      printf("Cannot open file %s \n",infile);
+      printf("Cannot open flux file %s, skip the cell.\n",infile);
       MISSING_CELL = 1;
     }
     else {
       /* Read VIC model output: <year> <month> <day> <p> <et> <runoff> <baseflow> */
       for(i = (spinup_days + 1);i<=ndays;i++) {
-        fscanf(fp,"%*d %*d %*d %*f %*f %f %f",&RUNOFF[i],&BASEFLOW[i]);
-        fgets(leftover,MAXSTRING,fp); 
+        fgets(tmpdat,MAXSTRING,fp); 
+        sscanf(tmpdat,"%*d %*d %*d %*f %*f %f %f",&RUNOFF[i],&BASEFLOW[i]);
       }
+      fclose(fp);
     }
 
     if (MISSING_CELL == 1) continue;
@@ -642,7 +612,6 @@ void MakeConvolution(int number_of_cells,
         }
       }
     }
-    fclose(fp);
   }  
 }
 /************************************************************************/
@@ -653,9 +622,9 @@ void MakeGridUH(ARC **BASIN,
 		LIST *STATION,
 		int number_of_cells,
 		int station_number,
-    float xllcorner,
-    float yllcorner,
-    float size,
+                float xllcorner,
+                float yllcorner,
+                float size,
 		float **UH_DAILY,
 		float ***UH,
 		float **FR,
@@ -812,7 +781,7 @@ void ReadDiffusion(char *filename,
 
   for(i=nrows;i>=1;i--) { //kept bounds
     for(j=1;j<=ncols;j++) { 
-      fscanf(fp,"%d",&BASIN[i][j].diffusion); 
+      fscanf(fp,"%f",&BASIN[i][j].diffusion); 
       if(BASIN[i][j].diffusion<0.) BASIN[i][j].diffusion=0.; 
     }
   }
@@ -978,7 +947,33 @@ void ReadUHBox(char *filename,
   }
 
 }
-
+/*************************************************************************/
+/* Read the Start and Stop Date (of spinup, input flux, and output route */
+/*************************************************************************/
+void ReadStartStopDate(char *data, DATE *start_date, DATE *stop_date, char *msg)
+{
+  int n, t1, t2, t3, t4;  // temporally variables
+  n = sscanf(data, "%*s %d %d %d %d %d %d",
+	     &(start_date->year), &(start_date->month), &t1, &t2 ,&t3, &t4);
+  switch (n) {
+    case 6:
+      start_date->day = t1;
+      stop_date->year = t2; stop_date->month = t3; stop_date->day = t4;
+      break;
+    case 4:
+      start_date->day = 1;
+      stop_date->year = t1; stop_date->month = t2;
+      stop_date->day = DaysInMonth[t2];
+      if ((t2 == 2) && IsLeapYear(t1)) stop_date->day ++;
+      break;
+    default:
+      printf("%s dates format error.\n", msg);
+      printf("should be either: <start yr> <month> <day> <stop yr> <month> <day>\n");
+      printf("              or: <start yr> <month> <stop yr> <month>\n");
+      printf("Change the dates and restart.\n");
+      exit(-1);  
+  }
+}
 /*********************************/
 /* Reads the station file        */
 /*********************************/
@@ -1030,7 +1025,7 @@ void ReadVelocity(char *filename,
 
   for(i=nrows;i>=1;i--) { //kept bounds
     for(j=1;j<=ncols;j++) { 
-      fscanf(fp,"%d",&BASIN[i][j].velocity); 
+      fscanf(fp,"%f",&BASIN[i][j].velocity); 
       if(BASIN[i][j].velocity<0.) BASIN[i][j].velocity=0.; 
     }
   }
@@ -1113,63 +1108,56 @@ void SearchCatchment(ARC **BASIN,
 }
 /****************************************************************/
 void WriteData(float *FLOW,
-	       char *name,
+	       char *stn_name,
 	       char *outpath,
-	       TIME *DATE,
-	       float factor_sum,
-	       int spinup_start_year,
-	       int spinup_start_month,
-	       int first_year,
-	       int first_month,
-	       int last_year,
-	       int last_month)
+	       DATE *date,
+	       int day0,
+               int day1)
+// day0 and day1: the first and last day to be written (from the FLOW)
 {
   FILE *fp, *fp_m;
-  char *filename_fp;
+  char filename[MIDSTRING];
   float monthly_mean, yearly_mean[13];
   int i,j,k,nmonths;
-  int yr,mn,day,days_cur_mon,first_day,last_day;
-  int DaysInMonth[13] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-  int days_counts[13]; // count days of data in multiple years for the month 
+  int yr,mn,day,days_cur_mon;
+  int days_counts[13]; // count days of data in multiple years for the month
+  int cnt; // count days in current month (in case of not a full first/last month)
 
-  filename_fp = (char*)calloc(100,sizeof(char));
-  
-  sprintf(filename_fp,"%s%.5s.day",outpath,name);
-  if((fp = fopen(filename_fp, "w")) == NULL) {
-    printf("Cannot open %s\n",filename_fp);
+  sprintf(filename,"%s%.5s.day",outpath,stn_name);
+  if((fp = fopen(filename, "wt")) == NULL) {
+    printf("Cannot open %s\n",filename);
     exit(-1);
   }
-  sprintf(filename_fp,"%s%.5s.month",outpath,name);
-  if((fp_m = fopen(filename_fp, "w")) == NULL) {
-    printf("Cannot open %s\n",filename_fp);
+  sprintf(filename,"%s%.5s.month",outpath,stn_name);
+  if((fp_m = fopen(filename, "wt")) == NULL) {
+    printf("Cannot open %s\n",filename);
     exit(-1);
   }
 
-  CalculateNumberDaysMonths(spinup_start_year,spinup_start_month,first_year,first_month - 1,
-			    &first_day,&nmonths);
-  CalculateNumberDaysMonths(spinup_start_year,spinup_start_month,last_year,last_month,
-			    &last_day,&nmonths);
-  yr = first_year; mn = first_month; day = 1;
+  yr = date->year; mn = date->month; day = date->day;
   days_cur_mon = DaysInMonth[mn];
   if ((mn == 2) && (IsLeapYear(yr))) days_cur_mon ++; 
     
   /* Write daily data and monthly values */
   memset((void *)days_counts, 0, sizeof(days_counts));
   memset((void *)yearly_mean, 0, sizeof(yearly_mean));
-  monthly_mean = 0;
-  for(i = first_day + 1; i <= last_day; i ++) {
+  monthly_mean = 0; cnt = 0;
+  for(i = day0; i <= day1; i ++) {
+    fprintf (stderr, "%4d %2d %2d %f, %d %d %d\n", yr, mn, day, FLOW[i], i, day1, day0); ///
     fprintf(fp,"%4d %2d %2d %f\n", yr, mn, day, FLOW[i]);
     monthly_mean += FLOW[i];
 	      
-    /* update year, month, day at the end of each month*/	      
-    day ++; 
+    day ++; cnt ++;
+    /* update year, month, day at the end of each month, and write monthly flow*/	      
     if (day > days_cur_mon) {
       yearly_mean[mn] += monthly_mean;
       days_counts[mn] += days_cur_mon;
       
-      monthly_mean /= days_cur_mon;
-      fprintf(fp_m,"%4d %2d %f\n", yr, mn, monthly_mean);         
-      day = 1; mn ++; monthly_mean = 0;
+      monthly_mean /= cnt;
+      fprintf(fp_m,"%4d %2d %f\n", yr, mn, monthly_mean);
+      
+      day = 1; mn ++; 
+      cnt = 0; monthly_mean = 0;
       if (mn > 12) {mn = 1; yr ++; }
       days_cur_mon = DaysInMonth[mn];
       if ((mn == 2) && (IsLeapYear(yr))) days_cur_mon ++;          
@@ -1177,10 +1165,10 @@ void WriteData(float *FLOW,
   }
   fclose(fp); fclose(fp_m);
   
-  if ((last_day - first_day) < 730) return;  // less than 2 years of route data. do not write .year files
-  sprintf(filename_fp,"%s%.5s.year",outpath,name);
-  if((fp = fopen(filename_fp, "w")) == NULL) {
-    printf("Cannot open %s\n",filename_fp);
+  if ((day1 - day0) < 730) return;  // less than 2 years of route data. do not write .year files
+  sprintf(filename,"%s%.5s.year",outpath,stn_name);
+  if((fp = fopen(filename, "w")) == NULL) {
+    printf("Cannot open %s\n",filename);
     exit(-1);
   }
   for (mn = 1; mn < 13; mn ++) fprintf(fp, "%2d %f\n", mn, yearly_mean[mn] / days_counts[mn]);
