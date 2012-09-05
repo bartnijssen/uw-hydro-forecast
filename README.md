@@ -23,4 +23,15 @@ Of particular interest are the following publications:
 
 * Wood, A.W. and D.P. Lettenmaier, 2006: A testbed for new seasonal hydrologic forecasting approaches in the western U.S., *Bulletin of the American Meteorological Society*, 87(12), 1699-1712, [doi:10.1175/BAMS-87-12-1699](http://dx.doi.org/10.1175/BAMS-87-12-1699).
 
+uw-hydro-forecast
+-----------------
 
+The code for implementing and running a forecast system is contained in the following directories:
+
+ * **config**: configuration settings for the models to be used and the individual forecast projects. Each forecasting system can make forecasts for a large number of individual forecast projects.
+ * **models**: hydrological and routing models. This code may not belong here as part of the repository, because the various models typically have their own source code repositories. However, in some cases, changes have been made to the original models so that they can function as part of the forecast system
+ * **setup**: setup and configuration scripts to deploy a new forecasting system and to add new projects
+ * **tools**: the actual code and scripts that form a forecast system
+
+[Surface Water Hydrology Group](http://www.hydro.washington.edu)
+University of Washington

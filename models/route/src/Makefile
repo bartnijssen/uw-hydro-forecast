@@ -11,8 +11,11 @@ SHELL = /bin/csh
 # Set CC = your compiler here
 CC = gcc
 
-# Set TARGETDIR
-TARGETDIR = ../bin
+# Set INSTALLDIR
+INSTALLDIR = ../bin
+
+# Set EXECUTABLE
+EXECUTABLE = route_forecast
 
 # Uncomment for normal optimized code flags (fastest run option)
 CFLAGS  = -I. -O3 -Wall -Wno-unused
@@ -41,29 +44,20 @@ OBJS = route_forecast.o
 
 SRCS = $(OBJS:%.o=%.c) 
 
-default:
-	make depend
-	make model
+default: depend model
 
-all:
-	make depend
-	make model
-	make install
+all: depend model install
 
-full:
-	make clean
-	make depend
-	make tags
-	make model
+full: clean depend tags model
 
 clean::
-	\rm -f *.o core log *~
+	\rm -f *.o core log *~ .depend
 
 model: $(OBJS)
-	$(CC) -o route $(OBJS) $(CFLAGS) $(LIBRARY)
+	$(CC) -o $(EXECUTABLE) $(OBJS) $(CFLAGS) $(LIBRARY)
 
 clean::
-	\rm -f route
+	\rm -f $(EXECUTABLE)
 
 # -------------------------------------------------------------
 # tags
@@ -90,4 +84,4 @@ clean::
 # install
 # --------------------------------------------------------------------
 install:
-	mv route $(TARGETDIR)
+	mv route $(INSTALLDIR)

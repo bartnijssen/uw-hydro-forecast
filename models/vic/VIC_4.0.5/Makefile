@@ -19,6 +19,12 @@ SHELL = /bin/csh
 # Set CC = your compiler here
 CC = gcc
 
+# Set INSTALLDIR
+INSTALLDIR = ./
+
+# Set EXECUTABLE
+EXECUTABLE = vicNl
+
 # Uncomment for normal optimized code flags (fastest run option)
 CFLAGS  = -I. -O3 -Wall -Wno-unused
 LIBRARY = -lm
@@ -71,25 +77,20 @@ OBJS =  CalcAerodynamic.o SnowPackEnergyBalance.o StabilityCorrection.o \
 
 SRCS = $(OBJS:%.o=%.c) 
 
-all:
-	make depend
-	make model
+default: depend model
 
-default:
-	make depend
-	make model
+all: depend	model install
 
-full:
-	make clean
-	make depend
-	make tags
-	make model
+install:
+	mv $(EXECUTABLE) $(INSTALLDIR)
+
+full: clean depend tags model install
 
 clean::
 	/bin/rm -f *.o core log *~
 
 model: $(OBJS)
-	$(CC) -o vicNl $(OBJS) $(CFLAGS) $(LIBRARY)
+	$(CC) -o $(EXECUTABLE) $(OBJS) $(CFLAGS) $(LIBRARY)
 
 # -------------------------------------------------------------
 # tags

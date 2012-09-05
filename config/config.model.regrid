@@ -1,8 +1,8 @@
 # regrid Model Information
 #------------------------------------------------------------------------
 MODEL_TYPE	real
-MODEL_SRC_DIR	/raid8/forecast/proj/uswide/tools/src/regrid
-MODEL_EXE_DIR	/raid8/forecast/proj/uswide/tools/src/regrid
+MODEL_SRC_DIR	<BASEDIR>/tools/src/regrid
+MODEL_EXE_DIR	<BASEDIR>/tools/bin
 MODEL_EXE_NAME	regrid
 MODEL_SUBDIR	regrid
 INPUT_FILE	<MODEL_EXE_DIR>/regrid.runfile

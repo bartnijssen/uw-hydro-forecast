@@ -1,0 +1,8 @@
+# vic2nc tool information
+#------------------------------------------------------------------------
+TOOL_TYPE	real
+TOOL_SRC_DIR	<BASEDIR>/tools/src/nc2vic
+TOOL_EXE_DIR	<BASEDIR>/tools/bin
+TOOL_EXE_NAME	nc2vic
+TOOL_SUBDIR	    nc2vic
+INPUT_FILE	<TOOL_EXE_DIR>/nc2vic.runfile
