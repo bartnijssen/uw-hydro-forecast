@@ -1,4 +1,4 @@
-#!/usr/bin/env perl -w
+#!/usr/bin/env perl
 =pod
 
 =head1 NAME
@@ -88,6 +88,8 @@ may be required.
 =cut
 
 use strict;
+use warnings;                   # instead of -w since that does not work
+                                # reliably with /usr/bin/env
 
 use Cwd qw(abs_path chdir cwd);
 use File::Path qw(make_path);
