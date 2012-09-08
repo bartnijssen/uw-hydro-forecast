@@ -256,6 +256,28 @@ sub read_configuration {
   return %{$href};
 }
 
+################################### sed_file ###################################
+sub sed_file {
+  my ($file, $pattern, $replace) = @_;
+
+  open IN, "<$file" or die "Cannot open $file: $!\n";
+  my @content = <IN>;
+  close IN or warn "Cannot close $file: $!\n";
+  my $changed = 0;
+  for (my $i = 0; $i < @content; $i++) {
+    if ($content[$i] =~ m/$pattern/) {
+      $content[$i] =~ s/$pattern/$replace/;
+      $changed += 1;
+    }
+  }
+  if ($changed) {
+    open OUT, ">$file" or die "Cannot open $file: $!\n";
+    print OUT @content;
+    close OUT or warn "Cannot close $file: $!\n";
+    print "Replaced \"$pattern\" by \"$replace\" in $file\n" if $verbose;
+  }
+}
+
 ################################## setup_model #################################
 sub setup_model {
   my ($model) = @_;
@@ -372,15 +394,26 @@ sub setup_system {
 
   print "Checking directories and permissions ...\n" if $quiet;
 
-  # make sure that the scripts in $basepath/tools/bin are executable
+
+  # Get listing of executable files
   my @filelist;
   my $dirname = "$basepath/tools/bin";
   opendir(DIR, "$dirname") or die "Cannot opendir $dirname: $!";
   @filelist = grep !/^\./, readdir(DIR);
   closedir(DIR);
   @filelist = map { join('/', $dirname, $_) } @filelist;
+
+  # replace <BASEDIR> with $basepath
+  for my $file (@filelist) {
+    next unless -T $file;
+    sed_file($file, "<BASEDIR>", $basepath);
+  }
+
+  # make sure that the scripts in $basepath/tools/bin are executable
   map { print "chmod 0755 for $_\n" } @filelist if $verbose;
   chmod 0744, @filelist;
+
+
 
   # Create bin directory in $basepath/models
   if (not -d "$basepath/models/bin") {

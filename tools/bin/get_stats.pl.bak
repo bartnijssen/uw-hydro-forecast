@@ -7,24 +7,11 @@ use warnings;
 #-------------------------------------------------------------------------------
 
 #----------------------------------------------------------------------------------------------
-# Determine tools, root, and config directories - assume this script lives in TOOLS_DIR/
+# Determine tools, root, and config directories - assume script lives in ROOT_DIR/tools/bin
 #----------------------------------------------------------------------------------------------
-if ($0 =~ /^(.+)\/[^\/]+$/) {
-  $TOOLS_DIR = $1;
-}
-elsif ($0 =~ /^[^\/]+$/) {
-  $TOOLS_DIR = ".";
-}
-else {
-  die "$0: ERROR: cannot determine tools directory\n";
-}
-if ($TOOLS_DIR =~ /^(.+)\/tools/i) {
-  $ROOT_DIR = $1;
-}
-else {
-  $ROOT_DIR = "$TOOLS_DIR/..";
-}
-$CONFIG_DIR = "$ROOT_DIR/config";
+$ROOT_DIR = "<BASEDIR>";
+$TOOLS_DIR = join('/', $ROOT_DIR, 'tools/bin');
+$CONFIG_DIR = join('/', $ROOT_DIR, 'config');
 
 #----------------------------------------------------------------------------------------------
 # Include external modules
