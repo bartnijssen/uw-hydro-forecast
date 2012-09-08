@@ -1,4 +1,6 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
+
+use warnings;
 
 # This script adds groups of ascii text file columns together.  For each group of columns,
 # it places the sum in the first column and removes the other columns from the file.

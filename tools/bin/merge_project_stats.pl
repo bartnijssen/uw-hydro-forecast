@@ -1,4 +1,6 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
+use warnings;
+
 # Script for merging the model output statistics from a list of project domains into one
 # larger domain.
 #

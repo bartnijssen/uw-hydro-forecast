@@ -1,4 +1,5 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
+use warnings;
 # A. Wood
 # transforming gridded MONTHLY amounts to gridded daily amounts
 # - proceed one month at a time, since data inputs are very large

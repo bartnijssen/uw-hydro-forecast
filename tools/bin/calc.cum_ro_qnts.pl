@@ -1,4 +1,7 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
+
+use warnings;
+
 # calculate cumulative variable percentile for a variety of cumulation periods
 #   taken prior to the current (latest) day, for all cells in a basin
 # output format:  one row per cell

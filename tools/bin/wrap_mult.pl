@@ -1,5 +1,5 @@
-#!/usr/bin/perl
-
+#!/usr/bin/env perl
+use warnings;
 # Root Directory - Edit this to reflect location of your SIMMA installation
 $ROOT_DIR = "/raid8/forecast/sw_monitor";
 

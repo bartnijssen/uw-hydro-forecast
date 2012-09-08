@@ -1,6 +1,8 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 # Wrapper script for complete multi-model nowcast
 #----------------------------------------------------------------------------------------------
+
+use warnings;
 
 #----------------------------------------------------------------------------------------------
 # Determine tools, root, and config directories - assume this script lives in ROOT_DIR/tools/

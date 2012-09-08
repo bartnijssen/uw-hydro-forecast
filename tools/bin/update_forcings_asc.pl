@@ -1,4 +1,5 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
+use warnings;
 # Wrapper script that calls programs to update real-time ascii forcings
 #
 # Definitions

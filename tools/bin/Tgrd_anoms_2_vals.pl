@@ -1,4 +1,6 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
+
+use warnings;
 
 # calculate values from anomalies given precalculated means
 # inputs:  .grd file with anomalies in same column order as

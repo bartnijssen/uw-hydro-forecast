@@ -1,4 +1,5 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
+use warnings;
 # Wrapper for the regrid program.  This runs the regrid program to regrid
 # station data to a user-specified mask.
 

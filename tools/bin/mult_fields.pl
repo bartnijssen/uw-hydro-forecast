@@ -1,5 +1,5 @@
-#!/usr/bin/perl
-
+#!/usr/bin/env perl
+use warnings;
 # This script multiplies ascii text file columns by a factor.
 
 # Usage:

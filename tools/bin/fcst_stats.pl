@@ -1,4 +1,5 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
+use warnings;
 # AWW-112103
 
 # take a SORTED row of data and find interpolated weibull plotting

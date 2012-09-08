@@ -1,4 +1,5 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
+use warnings;
 # Wrapper script that makes a nowcast for a given model on a given day.  Does the following:
 # 1. runs the model
 # 2. converts the output to percentiles of model climatology

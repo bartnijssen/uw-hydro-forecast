@@ -1,6 +1,6 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 # AWW-1104
-  
+use warnings;
 # from the recent daily station fmt (spinup period),
 # make a format (.fmt) file of precip percentiles
 # this output file will be either for 1 or 2 periods:

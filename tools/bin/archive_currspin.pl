@@ -1,4 +1,7 @@
-#!/usr/bin/perl -w
+#!/usr/bin/end perl
+
+use warnings;
+
 # SGE directives
 #$ -cwd
 #$ -j y
