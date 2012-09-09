@@ -16,7 +16,7 @@ use warnings;
 #            tailored for ps / pnw only
 
 #use Date::Calc qw(Delta_Days);
-use lib "/raid8/forecast/proj/ncast/src/lib";
+use lib "<PERL_LIB>";
 use UWTime;
 
 # command-line arguments

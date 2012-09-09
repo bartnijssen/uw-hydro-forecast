@@ -57,8 +57,8 @@ if ($JOB_ID =~ /(\S+)/) {
 
 # !!!!!!!!!!!!!!!!! GET THIS FROM CONFIG FILE !!!!!!!!!!!!!!!!!!
 # Set up netcdf access
-$ENV{INC_NETCDF} = "/usr/local/i386/include";
-$ENV{LIB_NETCDF} = "/usr/local/i386/lib";
+$ENV{INC_NETCDF} = "<NETCDF_INC>";
+$ENV{LIB_NETCDF} = "<NETCDF_LIB>";
 
 # Configuration files
 $ConfigProject = "$CONFIG_DIR/config.project.$PROJECT";

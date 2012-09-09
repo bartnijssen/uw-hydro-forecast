@@ -19,7 +19,7 @@ use warnings;
 #            and to run off ARGS only
 
 #use Date::Calc qw(Days_in_Month Delta_Days);
-use lib "/raid8/forecast/proj/ncast/src/lib";
+use lib "<PERL_LIB>";
 use UWTime;
 use Date::Manip;
 

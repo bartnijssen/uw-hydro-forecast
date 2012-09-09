@@ -435,6 +435,8 @@ sub wrap_run_clm {
 #-------------------------------------------------------------------------------
 sub run_clm {
 
+  $ncodir = "<NCO_DIR>";
+
   # CLM-specific parameters
   ($clm_end_year,$clm_end_month,$clm_end_day) = Add_Delta_Days($end_year,$end_month,$end_day,1);
   $clm_end_month = sprintf "%02d", $clm_end_month;
@@ -484,7 +486,7 @@ sub run_clm {
     $cmd = "mv $results_dir/$myfile $results_dir/$newfile";
 #    print "$cmd\n";
     (system($cmd)==0) or die "$0: ERROR in $cmd: $?\n";
-    $cmd = "/usr/local/bin/ncatted -O -a time_origin,global,c,c,\"$start_year-$start_month-$start_day 00:00:00\" $results_dir/$newfile >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+    $cmd = "$ncodir/ncatted -O -a time_origin,global,c,c,\"$start_year-$start_month-$start_day 00:00:00\" $results_dir/$newfile >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
 #    print "$cmd\n";
     (system($cmd)==0) or die "$0: ERROR in $cmd: $?\n";
   }

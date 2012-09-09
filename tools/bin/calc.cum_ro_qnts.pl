@@ -32,7 +32,7 @@ $CONFIG_DIR = join('/', $ROOT_DIR, 'config');
 require "$TOOLS_DIR/bin/simma_util.pl";
 
 # Perl statistics package
-use lib "/usr/lib/perl5/site_perl/5.6.1";
+use lib "<SITEPERL_LIB>";
 use Statistics::Lite ("mean");
 
 # Date arithmetic
