@@ -411,7 +411,6 @@ sub setup_system {
  
   for my $key (keys %info) {
     $info{$key} =~ s/<BASEDIR>/$basepath/;
-    print "$key: $info{$key}\n";
   }
   print "Checking directories and permissions ...\n" if $quiet;
 
@@ -439,7 +438,6 @@ sub setup_system {
   for my $file (@filelist) {
     next if $file =~ /config\.system/;
     next unless -T $file;
-    print "Processing $file\n";
     sed_file($file, "<BASEDIR>", $basepath);
     sed_file($file, "<SITEPERL_LIB>", $info{SYSTEM_SITEPERL_LIB}) 
       if exists $info{SYSTEM_SITEPERL_LIB};
