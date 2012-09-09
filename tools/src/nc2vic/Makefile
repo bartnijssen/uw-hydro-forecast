@@ -7,13 +7,13 @@ EXECUTABLE = xxxxx
 #FLAGS = -Wall -O
 FLAGS = -O
 
-INC_NETCDF = /opt/local/include
+NETCDFINC = /opt/local/include
 
-LIB_NETCDF = /opt/local/lib
+NETCDFLIB = /opt/local/lib
 
 CC        = gcc 
-HDRS       = -I$(INC_NETCDF)
-LIBRARY      = -L$(LIB_NETCDF) -lnetcdf
+HDRS       = -I$(NETCDFINC)
+LIBRARY      = -L$(NETCDFLIB) -lnetcdf
 RM          = /bin/rm -f
 
 OBJS = nc2vic.c nc2vicIO.c

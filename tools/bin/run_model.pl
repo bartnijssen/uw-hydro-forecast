@@ -164,8 +164,8 @@ if ($JOB_ID =~ /(\S+)/) {
 }
 
 # Set up netcdf access
-$ENV{INC_NETCDF} = "/usr/local/i386/include";
-$ENV{LIB_NETCDF} = "/usr/local/i386/lib";
+$ENV{INC_NETCDF} = "<NETCDF_INC>";
+$ENV{LIB_NETCDF} = "<NETCDF_LIB>";
 
 # Miscellaneous
 @month_days = (31,28,31,30,31,30,31,31,30,31,30,31);
@@ -273,10 +273,10 @@ if (!$nodename) {
 
 # Determine local dir
 if ($nodename =~ /c-(0|1|2|3|4)/) {
-  $local_root = "/state/partition2";
+  $local_root = "<LOCAL_ROOT2>";
 }
 else {
-  $local_root = "/state/partition1";
+  $local_root = "<LOCAL_ROOT1>";
 }
 
 $LOCAL_PROJECT_DIR =~ s/\/raid/$local_root/;

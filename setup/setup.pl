@@ -14,11 +14,17 @@ setup.pl
    --help|?                  brief help message
    --man|info                full documentation
    --silent|quiet|verbose    verbosity level
-   --system                  configures the forecast system
+   --system=system           configures the forecast system
    --project=name            configures a forecast project
    --model=model             configures a new forecast model
 
 =head1 SYSTEM
+
+A forecast project is identified by a file config.system.<name> where <name> is
+the identifier passed on the command-line.
+
+ * Create a file config.system.<name> in config (user is responsible for this)
+ * Run setup/setup.pl --system=<name>
 
 The forecast system consists of the code that allows the production of
 forecasts. However, no actual forecasts will be produced until one or more
@@ -127,7 +133,7 @@ my $basepath;                   # base path for the forecast system
   require "$basepath/tools/bin/simma_util.pl";
 
   if (defined $system) {
-    setup_system();
+    setup_system($system);
   } elsif (defined $project) {
     setup_project($project);
   } elsif (defined $model) {
@@ -222,7 +228,7 @@ sub processcommandline {
                           "verbose" => sub {$quiet = 1, $verbose = 1},
                           "help|?" => \$help,
                           "man|info" => \$man,
-                          "system" => \$system,
+                          "system=s" => \$system,
                           "project=s" => \$project,
                           "model=s" => \$model,
                           "tool=s" => \$tool);
@@ -312,6 +318,10 @@ sub setup_model {
                  'INSTALLDIR' => $info{MODEL_EXE_DIR},
                  'TARGETDIR' => $info{MODEL_EXE_DIR}
                 );
+  $mapping{NETCDFINC} = $info{MODEL_NETCDF_INC} 
+    if exists $info{MODEL_NETCDF_INC};
+  $mapping{NETCDFLIB} = $info{MODEL_NETCDF_LIB} 
+    if exists $info{MODEL_NETCDF_LIB};
 
   # Determine source code modifications
   my %sourcemods;
@@ -369,6 +379,10 @@ sub setup_tool {
                  'INSTALLDIR' => $info{TOOL_EXE_DIR},
                  'TARGETDIR' => $info{TOOL_EXE_DIR}
                 );
+  $mapping{NETCDFINC} = $info{TOOL_NETCDF_INC} 
+    if exists $info{TOOL_NETCDF_INC};
+  $mapping{NETCDFLIB} = $info{TOOL_NETCDF_LIB} 
+    if exists $info{TOOL_NETCDF_LIB};
 
   # Determine source code modifications
   my %sourcemods;
@@ -389,11 +403,17 @@ sub setup_tool {
 
 ################################# setup_system #################################
 sub setup_system {
+  my ($system) = @_;
+  my %info;
 
-  print "Setting up system ...\n" if $quiet;
-
+  print "Setting up system: $system ...\n" if $quiet;
+  %info = read_configuration("$basepath/config/config.system.$system");
+ 
+  for my $key (keys %info) {
+    $info{$key} =~ s/<BASEDIR>/$basepath/;
+    print "$key: $info{$key}\n";
+  }
   print "Checking directories and permissions ...\n" if $quiet;
-
 
   # Get listing of executable files
   my @filelist;
@@ -402,18 +422,40 @@ sub setup_system {
   @filelist = grep !/^\./, readdir(DIR);
   closedir(DIR);
   @filelist = map { join('/', $dirname, $_) } @filelist;
-
-  # replace <BASEDIR> with $basepath
-  for my $file (@filelist) {
-    next unless -T $file;
-    sed_file($file, "<BASEDIR>", $basepath);
-  }
-
   # make sure that the scripts in $basepath/tools/bin are executable
   map { print "chmod 0755 for $_\n" } @filelist if $verbose;
   chmod 0744, @filelist;
 
+  # add listing of config files
+  my @configfilelist;
+  $dirname = "$basepath/config";
+  opendir(DIR, "$dirname") or die "Cannot opendir $dirname: $!";
+  @configfilelist = grep !/^\./, readdir(DIR);
+  closedir(DIR);
+  @configfilelist = map { join('/', $dirname, $_) } @configfilelist;
+  push @filelist, @configfilelist;
 
+  # replace tags in scripts
+  for my $file (@filelist) {
+    next if $file =~ /config\.system/;
+    next unless -T $file;
+    print "Processing $file\n";
+    sed_file($file, "<BASEDIR>", $basepath);
+    sed_file($file, "<SITEPERL_LIB>", $info{SYSTEM_SITEPERL_LIB}) 
+      if exists $info{SYSTEM_SITEPERL_LIB};
+    sed_file($file, "<PERL_LIB>", $info{SYSTEM_PERL_LIB})
+      if exists $info{SYSTEM_PERL_LIB};
+    sed_file($file, "<NETCDF_INC>", $info{SYSTEM_NETCDF_INC}) 
+      if exists $info{SYSTEM_NETCDF_INC};
+    sed_file($file, "<NETCDF_LIB>", $info{SYSTEM_NETCDF_LIB}) 
+      if exists $info{SYSTEM_NETCDF_LIB};
+    sed_file($file, "<NCO_DIR>", $info{SYSTEM_NCO_DIR}) 
+      if exists $info{SYSTEM_NCO_DIR};
+    sed_file($file, "<LOCAL_ROOT1>", $info{SYSTEM_LOCAL_ROOT1}) 
+      if exists $info{SYSTEM_LOCAL_ROOT1};
+    sed_file($file, "<LOCAL_ROOT2>", $info{SYSTEM_LOCAL_ROOT2}) 
+      if exists $info{SYSTEM_LOCAL_ROOT2};
+  }
 
   # Create bin directory in $basepath/models
   if (not -d "$basepath/models/bin") {
