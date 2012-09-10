@@ -425,7 +425,7 @@ sub setup_project {
     next unless $info{$key} =~ /\//;
     $result = testpath($info{$key}, 'e');
     if ($result =~ /success/i) {
-      print "\tSuccess: Found\t$key:\t$info{$key}\n";
+      print "\tSuccess: Found\t$key:\t$info{$key}\n" if $verbose;
     } else {
       print "\tWarning: Not found\t$key:\t$info{$key}\n";
     }
@@ -436,7 +436,7 @@ sub setup_project {
   for my $model (@models) {
     $result = testpath("$runtime/bin/$model", 'e');
     if ($result =~ /success/i) {
-      print "\tSuccess: Found\tModel $model\n";
+      print "\tSuccess: Found\tModel $model\n" if $verbose;
     } else {
       print "\tWarning: Not found\tModel $model\n";
     }
