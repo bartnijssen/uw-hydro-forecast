@@ -99,7 +99,7 @@ PLOT_DIR	<SPATIAL_DIR>/plots
 PLOT_DEPOT_DIR	<SPATIAL_DIR>/plots/depot
 
 # Models to be run here
-MODEL_LIST	vic_2
+MODEL_LIST	vic_rewind
 
 # Geographic information
 EQUAL_AREA	FALSE
