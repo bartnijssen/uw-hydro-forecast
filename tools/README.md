@@ -7,7 +7,6 @@ Following the layout of the original forecast system, most of the scripts and co
 The scripts have been further divided into a series of subdirectories:
 
 * **bin**: executable scripts and programs that perform one or more forecasting tasks.
-* **configure**: configuration scripts to set up a new forecasting system
 * **crontab**: crontab listings and driver scripts called by the crontab entries
 * **publish**: plotting and publishing scripts
 * **qsub**: scripts to be submitted to a cluster scheduler such as the Sun Grid Engine
