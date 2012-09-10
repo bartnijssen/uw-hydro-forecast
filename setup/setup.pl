@@ -150,6 +150,32 @@ my $basepath;                   # base path for the forecast system
   }
 }
 
+#################################### testpath ##################################
+sub testpath {
+  my ($path, $checks) = @_;
+
+  if ($checks =~ /e/) {
+    -e $path or return "Error: path does not exist: $path";
+  }
+  if ($checks =~ /d/) {
+    -d $path or return "Error: Not a directory: $path";
+  }
+  if ($checks =~ /f/) {
+    -f $path or return "Error: Not a file: $path";
+  }
+  if ($checks =~ /r/) {
+    -r $path or return "Error: Not readable: $path";
+  }
+  if ($checks =~ /w/) {
+    -w $path or return "Error: Not writable: $path";
+  }
+  if ($checks =~ /x/) {
+    -x $path or return "Error: Not executable: $path";
+  }
+
+  return "success";
+}
+
 ################################### get_tags ###################################
 sub get_tags {
   my ($file, $tag) = @_;
@@ -378,11 +404,43 @@ sub setup_model {
 ################################# setup_project ################################
 sub setup_project {
   my ($system, $project) = @_;
+  my $result;
 
   print "Setting up project: $project in $system ...\n" if $quiet;
   my %sysinfo = read_configuration("$basepath/config/config.system.$system");
   my %systags = get_tags("$basepath/config/config.system.$system", "SYSTEM");
 
+  my $runtime = $sysinfo{SYSTEM_INSTALLDIR};
+
+  my $srcfile = "$basepath/config/config.project.$project";
+  my $targetfile = "$runtime/config/config.project.$project";
+  sed_file($srcfile, $targetfile, \%systags);
+
+  my %info = read_configuration("$runtime/config/config.project.$project");
+
+  # Check whether paths exist and print a message for each path. Recognize a
+  # path by '/' in value. This is not fool-proof. Also no easy way to check for 
+  # variables designated SUBDIR
+  for my $key (sort keys %info) {
+    next unless $info{$key} =~ /\//;
+    $result = testpath($info{$key}, 'e');
+    if ($result =~ /success/i) {
+      print "\tSuccess: Found\t$key:\t$info{$key}\n";
+    } else {
+      print "\tWarning: Not found\t$key:\t$info{$key}\n";
+    }
+  } 
+
+  # Check models
+  my @models = split /,/, $info{MODEL_LIST};
+  for my $model (@models) {
+    $result = testpath("$runtime/bin/$model", 'e');
+    if ($result =~ /success/i) {
+      print "\tSuccess: Found\tModel $model\n";
+    } else {
+      print "\tWarning: Not found\tModel $model\n";
+    }
+  }
 }
 
 ################################## setup_tool ##################################
