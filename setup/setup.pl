@@ -527,13 +527,6 @@ sub setup_system {
     or die "Cannot copy $srcfile ==> $targetfile: $!\n";
   print "Copied: $srcfile ==> $targetfile\n" if $verbose;
 
-  # make sure that the scripts in $basepath/tools/bin are executable
-  opendir(DIR, "$runtime/bin") or die "Cannot opendir $runtime/bin: $!";
-  @filelist = grep !/^\./, readdir(DIR);
-  closedir(DIR);
-  map { print "chmod 0744 for $_\n" } @filelist if $verbose;
-  chmod 0744, @filelist;
-
   # setup tools
   print "Setting up tools ...\n" if $quiet;
   my $dirname = "$basepath/config";
@@ -553,6 +546,15 @@ sub setup_system {
   map { $_ =~ s/config\.model\.// } @modellist;
   map { print "Models to configure: $_\n" } @modellist if $verbose;
   map { setup_model($system, $_) } @modellist;
+
+  # make sure that the scripts in $basepath/tools/bin are executable
+  opendir(DIR, "$runtime/bin") or die "Cannot opendir $runtime/bin: $!";
+  @filelist = grep !/^\./, readdir(DIR);
+  closedir(DIR);
+  @filelist = map { join('/', "$runtime/bin", $_) } @filelist;
+  map { print "chmod 0744 for $_\n" } @filelist if $verbose;
+  chmod 0744, @filelist;
+
 }
 
 ##################################### trim #####################################
