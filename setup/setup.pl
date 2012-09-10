@@ -473,7 +473,7 @@ sub setup_system {
   opendir(DIR, "$runtime/bin") or die "Cannot opendir $runtime/bin: $!";
   @filelist = grep !/^\./, readdir(DIR);
   closedir(DIR);
-  map { print "chmod 0755 for $_\n" } @filelist if $verbose;
+  map { print "chmod 0744 for $_\n" } @filelist if $verbose;
   chmod 0744, @filelist;
 
   # setup tools
