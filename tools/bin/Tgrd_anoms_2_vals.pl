@@ -16,7 +16,7 @@ use warnings;
 #            tailored for ps / pnw only
 
 #use Date::Calc qw(Delta_Days);
-use lib "<PERL_LIB>";
+use lib "<SYSTEM_PERL_LIB>";
 use UWTime;
 
 # command-line arguments

@@ -30,8 +30,10 @@ The code for implementing and running a forecast system is contained in the foll
 
  * **config**: configuration settings for the models to be used and the individual forecast projects. Each forecasting system can make forecasts for a large number of individual forecast projects.
  * **models**: hydrological and routing models. This code may not belong here as part of the repository, because the various models typically have their own source code repositories. However, in some cases, changes have been made to the original models so that they can function as part of the forecast system
+ * **runtime**: The operational part of the forecast system. These are the version of the scripts and tools that are used at runtime, but they cannot be edited directly. Scripts and tools are installed by running the appropriate setup command first.
  * **setup**: setup and configuration scripts to deploy a new forecasting system and to add new projects
  * **tools**: the actual code and scripts that form a forecast system
+
 
 [Surface Water Hydrology Group](http://www.hydro.washington.edu)
 University of Washington

@@ -18,21 +18,20 @@ use warnings;
 # $Id: $
 #-------------------------------------------------------------------------------
 
-#----------------------------------------------------------------------------------------------
-# Determine tools, root, and config directories - assume script lives in ROOT_DIR/tools/bin
-#----------------------------------------------------------------------------------------------
-$ROOT_DIR = "<BASEDIR>";
-$TOOLS_DIR = join('/', $ROOT_DIR, 'tools/bin');
-$CONFIG_DIR = join('/', $ROOT_DIR, 'config');
+#-------------------------------------------------------------------------------
+# Determine tools and config directories
+#-------------------------------------------------------------------------------
+$TOOLS_DIR = "<SYSTEM_INSTALLDIR>/bin";
+$CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Include external modules
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Subroutine for reading config files
-require "$TOOLS_DIR/bin/simma_util.pl";
+require "$TOOLS_DIR/simma_util.pl";
 
 # Perl statistics package
-use lib "<SITEPERL_LIB>";
+use lib "<SYSTEM_SITEPERL_LIB>";
 use Statistics::Lite ("mean");
 
 # Date arithmetic

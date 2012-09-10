@@ -14,20 +14,20 @@
 # -----------------------------------------------------------------------
 
 # Set SHELL = your shell here
-SHELL = /bin/csh
+SHELL = <MAKE_SHELL>
 
 # Set CC = your compiler here
-CC = gcc
+CC = <MAKE_CC>
 
 # Set INSTALLDIR
-INSTALLDIR = ./
+INSTALLDIR = <MAKE_INSTALLDIR>
 
 # Set EXECUTABLE
-EXECUTABLE = vicNl
+EXECUTABLE = <MAKE_EXECUTABLE>
 
 # Uncomment for normal optimized code flags (fastest run option)
-CFLAGS  = -I. -O3 -Wall -Wno-unused
-LIBRARY = -lm
+CFLAGS  = <MAKE_CFLAGS>
+LIBRARY = <MAKE_LIBS>
 
 # Uncomment to include debugging information
 #CFLAGS  = -I. -g -Wall -Wno-unused

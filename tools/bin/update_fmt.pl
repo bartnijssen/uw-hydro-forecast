@@ -9,11 +9,10 @@ use warnings;
 #-------------------------------------------------------------------------------
 
 #----------------------------------------------------------------------------------------------
-# Determine tools, root, and config directories - assume script lives in ROOT_DIR/tools/bin
+# Determine tools and config directories
 #----------------------------------------------------------------------------------------------
-$ROOT_DIR = "<BASEDIR>";
-$TOOLS_DIR = join('/', $ROOT_DIR, 'tools/bin');
-$CONFIG_DIR = join('/', $ROOT_DIR, 'config');
+$TOOLS_DIR = "<SYSTEM_INSTALLDIR>/bin";
+$CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 
 #----------------------------------------------------------------------------------------------
 # Include external modules
@@ -47,8 +46,8 @@ $Void = shift;
 #----------------------------------------------------------------------------------------------
 $start_date = sprintf "%04d-%02d-%02d", $Syr, $Smon, $Sday;
 $end_date = sprintf "%04d-%02d-%02d", $Cyr, $Cmon, $Cday;
-#$cmd = "$TOOLS_DIR/bin/write_fmt_file_from_raw_acis.pl $StnDir/../stn_info/rawdata $StnList $start_date $end_date $Void $p_ndx_fmt_file $tx_ndx_fmt_file $tn_ndx_fmt_file";
-$cmd = "$TOOLS_DIR/bin/write_fmt_file_from_stn_ts.pl $StnDir $StnList $start_date $end_date $p_ndx_fmt_file $tx_ndx_fmt_file $tn_ndx_fmt_file";
+#$cmd = "$TOOLS_DIR/write_fmt_file_from_raw_acis.pl $StnDir/../stn_info/rawdata $StnList $start_date $end_date $Void $p_ndx_fmt_file $tx_ndx_fmt_file $tn_ndx_fmt_file";
+$cmd = "$TOOLS_DIR/write_fmt_file_from_stn_ts.pl $StnDir $StnList $start_date $end_date $p_ndx_fmt_file $tx_ndx_fmt_file $tn_ndx_fmt_file";
 print "$cmd\n";
 (system($cmd)==0) or die "$0: ERROR: $cmd failed: $! \n";
 

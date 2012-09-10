@@ -8,14 +8,13 @@
 # The -C flag will not work on this code due to the dynamic memory allocation.
 
 # Set INSTALLDIR
-INSTALLDIR = ../bin
+INSTALLDIR = <MAKE_INSTALLDIR>
 
-F77 = f77
+F77 = <MAKE_FORTRAN>
 
-#FFLAGS  = -O -Wall
-FFLAGS  = -O
+FFLAGS  = <MAKE_FFLAGS>
 
-TARGET = ./regrid
+EXECUTABLE = <MAKE_EXECUTABLE>
 
 OBJECTS = \
 	indexx.o \
@@ -37,23 +36,23 @@ SOURCE = \
 	chgtemp.f\
 	grd.f
 
-LIBS = 
+LIBS =
 
-default: $(TARGET)
+default: $(EXECUTABLE)
 
-all: $(TARGET) install
+all: $(EXECUTABLE) install
 
 .f.o:
 	$(F77) $(FFLAGS) -c $< -o $@
 
-$(TARGET): $(OBJECTS)
-	$(F77) $(FFLAGS) $(OBJECTS) -o $(TARGET) $(LIBS)
+$(EXECUTABLE): $(OBJECTS)
+	$(F77) $(FFLAGS) $(OBJECTS) -o $(EXECUTABLE) $(LIBS)
 
 clean:
-	/bin/rm -f *.o $(TARGET)
+	/bin/rm -f *.o $(EXECUTABLE)
 
 # --------------------------------------------------------------------
 # install
 # --------------------------------------------------------------------
 install:
-	mv $(TARGET) $(INSTALLDIR)
+	mv $(EXECUTABLE) $(INSTALLDIR)

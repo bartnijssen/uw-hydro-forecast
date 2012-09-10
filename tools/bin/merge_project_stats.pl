@@ -7,17 +7,16 @@ use warnings;
 #----------------------------------------------------------------------------------------------
 
 #----------------------------------------------------------------------------------------------
-# Determine tools, root, and config directories - assume script lives in ROOT_DIR/tools/bin
+# Determine tools config directories
 #----------------------------------------------------------------------------------------------
-$ROOT_DIR = "<BASEDIR>";
-$TOOLS_DIR = join('/', $ROOT_DIR, 'tools/bin');
-$CONFIG_DIR = join('/', $ROOT_DIR, 'config');
+$TOOLS_DIR = "<SYSTEM_INSTALLDIR>/bin";
+$CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 
 #----------------------------------------------------------------------------------------------
 # Include external modules
 #----------------------------------------------------------------------------------------------
 # Subroutine for reading config files
-require "$TOOLS_DIR/bin/simma_util.pl";
+require "$TOOLS_DIR/simma_util.pl";
 
 # Date arithmetic
 use Date::Calc qw(Days_in_Month Delta_Days Add_Delta_Days);

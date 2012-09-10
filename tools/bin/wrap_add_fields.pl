@@ -1,10 +1,8 @@
 #!/usr/bin/env perl
 use warnings;
-# Root Directory - Edit this to reflect location of your SIMMA installation
-$ROOT_DIR = "<BASEDIR>";
+# Tools Directory - Edit this to reflect location of your SIMMA installation
+$TOOLS_DIR = "<SYSTEM_INSTALLDIR>/bin";
 
-# Tools directory
-$TOOLS_DIR = "$ROOT_DIR/tools";
 
 # Command-line arguments
 $indir = shift;
@@ -24,6 +22,6 @@ closedir (INDIR);
 #}
 
 foreach $file (sort(@filelist)) {
-  $cmd = "$TOOLS_DIR/bin/add_fields.pl $indir/$file $ndate $col_pair_list > $outdir/$file";
+  $cmd = "$TOOLS_DIR/add_fields.pl $indir/$file $ndate $col_pair_list > $outdir/$file";
   (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
 }

@@ -1,10 +1,7 @@
 #!/usr/bin/env perl
 use warnings;
-# Root Directory - Edit this to reflect location of your SIMMA installation
-$ROOT_DIR = "<BASEDIR>";
-
 # Tools directory
-$TOOLS_DIR = "$ROOT_DIR/tools";
+$TOOLS_DIR = "<SYSTEM_INSTALLDIR>/bin";
 
 # Command-line arguments
 $indir = shift;
@@ -40,7 +37,7 @@ if ($copy_files) {
 }
 else {
   foreach $file (sort(@filelist)) {
-    $cmd = "$TOOLS_DIR/bin/insert_leap_day.pl $indir/$file > $outdir/$file";
+    $cmd = "$TOOLS_DIR/insert_leap_day.pl $indir/$file > $outdir/$file";
     (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
   }
 }

@@ -12,7 +12,7 @@ use warnings;
 # note, last month may be partial, so need to account for that AWW-013104
 
 #use Date::Calc qw(Days_in_Month Delta_Days Add_Delta_Days leap_year);
-use "<PERL_LIB>";
+use "<SYSTEM_PERL_LIB>";
 use UWTime; # Use this for Days_In_Month
 use Date::Manip;
 

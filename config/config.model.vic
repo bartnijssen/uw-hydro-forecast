@@ -1,8 +1,8 @@
 # vic Model Information
 #------------------------------------------------------------------------
 MODEL_TYPE	real
-MODEL_SRC_DIR	<BASEDIR>/models/vic/VIC_4.0.5
-MODEL_EXE_DIR	<BASEDIR>/models/bin
+MODEL_SRC_DIR	<SYSTEM_BASEDIR>/models/vic/VIC_4.0.5
+MODEL_EXE_DIR	<SYSTEM_INSTALLDIR>/bin
 MODEL_EXE_NAME	vicNl
 MODEL_VER	4.0.5
 MODEL_SUBDIR	vic
@@ -20,3 +20,10 @@ ESP_PLOT_VARS   sm,ro
 ESP_PLOT_TYPE   qnt,prob
 ESP_PLOT_LEAD   1,2,3
 ENS_TYPE        full
+# make settings
+MAKE_SHELL /bin/sh
+MAKE_CC gcc
+MAKE_INSTALLDIR <MODEL_EXE_DIR>
+MAKE_EXECUTABLE <MODEL_EXE_NAME>
+MAKE_CFLAGS -I. -O3 -Wall -Wno-unused
+MAKE_LIBS -lm

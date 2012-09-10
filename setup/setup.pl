@@ -47,26 +47,30 @@ inconsistencies.
 =head1 PROJECT
 
 A forecast project is identified by a file config.project.<name> where <name> is
-the identifier passed on the command-line.
+the identifier passed on the command-line. Each project is associated with a
+specific system identified as config.system.<system>.
 
 Configuration of a project involves the following steps:
 
  * Create a file config.project.<name> in config (user is responsible for this)
- * Run setup/setup.pl --project=<name>
+ * Run setup/setup.pl --project=<name> --system=<system>
 
 At this time, additional manual steps may be required.
 
 =head1 MODEL
 
 A new forecast model is identified by a file config.model.<model> where <model>
-is the identifier passed on the command-line. Note that during the system setup,
-all models that have a config.model.<model> entry will already be setup. You
-only need to run this script to add additional models.
+is the identifier passed on the command-line. Each model is associated with a
+specific system identified as config.system.<system>.
+
+Note that during the system setup, all models that have a config.model.<model>
+entry will already be setup. You only need to run this script to add additional
+models.
 
 Configuration of model involves the following steps:
 
  * Create a file config.model.<model> in config (user is responsible for this)
- * Run setup/setup.pl --model=<model>
+ * Run setup/setup.pl --model=<model> --system=<system>
 
 This will compile the model and install the executable in the right
 directory. At this time, additional manual steps may be required.
@@ -74,18 +78,22 @@ directory. At this time, additional manual steps may be required.
 =head1 TOOL
 
 A new forecast tool is identified by a file config.tool.<tool> where <tool>
-is the identifier passed on the command-line. Note that during the system setup,
-all tools that have a config.tool.<tool> entry will already be setup. You
-only need to run this script to add additional tools.
+is the identifier passed on the command-line. Each tool is associated with a
+specific system identified as config.system.<system>.
+
+Note that during the system setup, all tools that have a config.tool.<tool>
+entry will already be setup. You only need to run this script to add additional
+tools.
 
 Note that this step is only necessary for some of the forecast tools that need
 to be compiled and installed. Examples of this are vic2nc and regrid. Most
-forecast tools are perl and shell scripts that are installed directly in tools/bin
+forecast tools are perl and shell scripts that are copied directly in tools/bin
+when the system is installed.
 
 Configuration of a tool involves the following steps:
 
  * Create a file config.tool.<tool> in config (user is responsible for this)
- * Run setup/setup.pl --tool=<tool>
+ * Run setup/setup.pl --tool=<tool> --system=<system>
 
 This will compile the tool and install the executable in the right directory
 (specified in the config.tool.<tool> file. At this time, additional manual steps
@@ -98,6 +106,7 @@ use warnings;                   # instead of -w since that does not work
                                 # reliably with /usr/bin/env
 
 use Cwd qw(abs_path chdir cwd);
+use File::Copy qw(copy);
 use File::Path qw(make_path);
 use File::Temp qw(tempfile tempdir);
 use File::Basename;
@@ -116,8 +125,6 @@ my $verbose = 0;                # highest verbosity level
 my $scriptname;                 # name of this script
 my $basepath;                   # base path for the forecast system
 
-
-
 ################################################################################
 #                                     MAIN                                     #
 ################################################################################
@@ -132,54 +139,79 @@ my $basepath;                   # base path for the forecast system
   $basepath =~ s/\/setup$//;
   require "$basepath/tools/bin/simma_util.pl";
 
-  if (defined $system) {
-    setup_system($system);
-  } elsif (defined $project) {
-    setup_project($project);
+  if (defined $project) {
+    setup_project($system, $project);
   } elsif (defined $model) {
-    setup_model($model);
-  } elsif (defined $tool) {
-    setup_tool($tool);
+    setup_model($system, $model);
+  } elsif (defined $model) {
+    setup_tool($system, $tool);
   } else {
-    die "Internal error: Unrecognized setup option\n";
+    setup_system($system);
   }
+}
+
+################################### get_tags ###################################
+sub get_tags {
+  my ($file, $tag) = @_;
+  my %tags;
+  my $str;
+
+  my %info = read_configuration($file);
+  for my $key (keys %info) {
+    if ($key =~ /$tag/) {
+      ($str = $key) =~ s/\s*(${tag}.*?)\s*$/($1)/;
+      $tags{$key} = $info{$key};
+    }
+  }
+  return %tags;
 }
 
 ############################### make_and_install ###############################
 sub make_and_install {
-  my ($srcdir, $exe, $mref, $sref) = @_;
+  my ($srcdir, $exe, $makefile, $sourcemodsref) = @_;
 
   print "Make and install $exe ...\n" if $verbose;
-  open MAKE, "<Makefile" or
-    die "Cannot open Makefile in $srcdir: $!\n";
-  my @make = <MAKE>;
-  close MAKE or warn "Cannot close Makefile: $!\n";
-  open OUT, ">Makefile.make"
-    or die "Cannot open Makefile.make in $srcdir: $!\n";
-  for my $line (@make) {
-    for my $key (keys %$mref) {
-      if ($line =~ m/\s*$key\s*=.*/) {
-        $line = "$key = $mref->{$key}\n";
-      }
-    }
-    print OUT $line;
+
+  # change to MODEL_SRC_DIR
+  my $wd = cwd();
+  print "Changing to $srcdir ...\n" if $verbose;
+  chdir $srcdir or
+    die "Cannot change to $srcdir: $!\n";
+
+  for my $key (keys %$sourcemodsref) {
+    modify_source(cwd(), $sourcemodsref->{$key});
   }
-  close OUT or warn "Cannot close Makefile.make: $!\n";
-  
-  for my $key (keys %$sref) {
-    modify_source(cwd(), $sref->{$key});
-  }
-  
+
+  # redirect STDOUT to make.log
+  open OUT, ">&STDOUT";
+  open ERR, ">&STDERR";
+  open STDOUT, "> make.log" or die "Cannot open make.log: $!\n";
+  open STDERR, "> make.err.log" or die "Cannot open make.err.log: $!\n";
+  # Following line is stupid hack to prevent warning about ERR
+  print ERR "";
+
   # run make all (which will also do the install)
-  my @args = ('-f', 'Makefile.make', 'all');
+  my @args = ('-f', $makefile, 'all');
   system($make, @args);
   # run make clean
-  @args = ('clean');
+  @args = ('-f', $makefile, 'clean');
   system($make, @args);
+  # redirect STDOUT and STDERR back to where it belonged
+  close STDOUT;
+  open STDOUT, ">&OUT";
+  close STDERR;
+  open STDERR, ">&ERR";
+
   # check that executable is created - if not, give a warning
   if (not -e $exe or not -x $exe) {
     warn "Failed installing " . $exe;
+  } else {
+    print "Installed $exe ...\n" if $quiet;
   }
+
+  # change back to the starting directory
+  print "Changing to $wd ...\n" if $verbose;
+  chdir $wd or die "Cannot change to $wd: $!\n";
 }
 
 ################################ modify_source #################################
@@ -193,14 +225,15 @@ sub modify_source {
   @filelist = grep !/^\./, readdir(DIR);
   closedir(DIR);
   @filelist = map { join('/', $srcdir, $_) } @filelist;
+  my $changed;
   for my $file (@filelist) {
+    next unless -T $file;
     open IN, "<$file" or die "Cannot open $file: $!\n";
     my @content = <IN>;
     close IN or warn "Cannot close $file: $!\n";
-    my $changed = 0;
+    $changed = 0;
     for (my $i = 0; $i < @content; $i++) {
       if ($content[$i] =~ m/$match/) {
-        print "$file: $content[$i]\n";
         $content[$i] = "$value\n";
         $changed += 1;
       }
@@ -236,15 +269,33 @@ sub processcommandline {
   pod2usage(-verbose => 2, -exitstatus => 0) if $man;
   pod2usage(-verbose => 1, -exitstatus => 0) if $help;
 
+  if (not defined $system) {
+    warn "Error: Must specify system\n";
+    pod2usage(-verbose => 1, -exitstatus => 1);
+  }
+
+  if (defined $model and not defined $system) {
+    warn "Error: need to define system when defining model\n";
+    pod2usage(-verbose => 1, -exitstatus => 1)
+  }
+  if (defined $project and not defined $system) {
+    warn "Error: need to define system when defining project\n";
+    pod2usage(-verbose => 1, -exitstatus => 1)
+  }
+  if (defined $tool and not defined $system) {
+    warn "Error: need to define system when defining tool\n";
+    pod2usage(-verbose => 1, -exitstatus => 1)
+  }
+
   my $total = 0;
-  $total +=1 if defined $system;
   $total +=1 if defined $project;
   $total +=1 if defined $model;
   $total +=1 if defined $tool;
 
-  pod2usage(-verbose => 1, -exitstatus => 1) if $total == 0;
+  pod2usage(-verbose => 1, -exitstatus => 1) 
+    if not defined $system and $total == 0;
   if ($total > 1) {
-    warn "\nError: Can only specify either system, project, model or tool\n\n";
+    warn "\nError: Cannot specfiy more  than one project, model or tool\n\n";
     pod2usage(-verbose => 1, -exitstatus => 1)
   }
 
@@ -264,64 +315,45 @@ sub read_configuration {
 
 ################################### sed_file ###################################
 sub sed_file {
-  my ($file, $pattern, $replace) = @_;
+  my ($src, $target, $tref) = @_;
 
-  open IN, "<$file" or die "Cannot open $file: $!\n";
+  open IN, "<$src" or die "Cannot open $src: $!\n";
   my @content = <IN>;
-  close IN or warn "Cannot close $file: $!\n";
+  close IN or warn "Cannot close $src: $!\n";
   my $changed = 0;
   for (my $i = 0; $i < @content; $i++) {
-    if ($content[$i] =~ m/$pattern/) {
-      $content[$i] =~ s/$pattern/$replace/;
-      $changed += 1;
+    for my $pattern (keys %$tref) {
+      my $replace = $tref->{$pattern};
+      if ($content[$i] =~ m/\<$pattern\>/) {
+        $content[$i] =~ s/\<$pattern\>/$replace/;
+        $changed += 1;
+      }
     }
   }
-  if ($changed) {
-    open OUT, ">$file" or die "Cannot open $file: $!\n";
+  if ($changed or $src !~ $target) {
+    open OUT, ">$target" or die "Cannot open $target: $!\n";
     print OUT @content;
-    close OUT or warn "Cannot close $file: $!\n";
-    print "Replaced \"$pattern\" by \"$replace\" in $file\n" if $verbose;
+    close OUT or warn "Cannot close $target: $!\n";
+    print "Replaced tags: $src ==> $target\n" if $verbose and $changed;
+    print "Copied: $src ==> $target\n" if $verbose and not $changed;
   }
 }
 
-################################## setup_model #################################
+################################## setup_model ##################################
 sub setup_model {
-  my ($model) = @_;
-  my %info;
+  my ($system, $model) = @_;
 
-  # Setting up a model is very similar to setting up a tool. The two functions
-  # should probably be merged.
+  print "Setting up model: $model in $system ...\n" if $quiet;
+  
+  my %sysinfo = read_configuration("$basepath/config/config.system.$system");
+  my %systags = get_tags("$basepath/config/config.system.$system", "SYSTEM");
+  my $runtime = $sysinfo{SYSTEM_INSTALLDIR};
 
-  print "Setting up model: $model ...\n" if $quiet;
-  %info = read_configuration("$basepath/config/config.model.$model");
-  for my $key (keys %info) {
-    $info{$key} =~ s/<BASEDIR>/$basepath/;
-  }
+  my $srcfile = "$basepath/config/config.model.$model";
+  my $targetfile = "$runtime/config/config.model.$model";
+  sed_file($srcfile, $targetfile, \%systags);
 
-  # make sure that MODEL_EXE_DIR exists, if not create it
-  if (not -d $info{MODEL_EXE_DIR}) {
-    make_path($info{MODEL_EXE_DIR}, {verbose => $verbose, mode => 0755}) or
-      die "Cannot make path $info{MODEL_EXE_DIR}: $!";
-  } else {
-    chmod 0744, $info{MODEL_EXE_DIR} or die "Cannot change permission: $!\n";
-  }
-
-  # change to MODEL_SRC_DIR
-  my $wd = cwd();
-  print "Changing to $info{MODEL_SRC_DIR} ...\n" if $verbose;
-  chdir $info{MODEL_SRC_DIR} or
-    die "Cannot change to $info{MODEL_SRC_DIR}: $!\n";
-
-  # Makefile
-  my %mapping = ('EXECUTABLE' => $info{MODEL_EXE_NAME},
-                 'TARGET' => $info{MODEL_EXE_NAME},
-                 'INSTALLDIR' => $info{MODEL_EXE_DIR},
-                 'TARGETDIR' => $info{MODEL_EXE_DIR}
-                );
-  $mapping{NETCDFINC} = $info{MODEL_NETCDF_INC} 
-    if exists $info{MODEL_NETCDF_INC};
-  $mapping{NETCDFLIB} = $info{MODEL_NETCDF_LIB} 
-    if exists $info{MODEL_NETCDF_LIB};
+  my %info = read_configuration("$runtime/config/config.model.$model");
 
   # Determine source code modifications
   my %sourcemods;
@@ -332,57 +364,42 @@ sub setup_model {
     }
   }
 
-  # make and install
-  make_and_install(cwd(), join('/', $info{MODEL_EXE_DIR}, $info{MODEL_EXE_NAME}),
-                   \%mapping, \%sourcemods);
+  # edit Makefile
+  my %maketags = get_tags("$runtime/config/config.model.$model", "MAKE");
+  $srcfile = "$info{MODEL_SRC_DIR}/Makefile";
+  $targetfile = "$info{MODEL_SRC_DIR}/Makefile.make";
+  sed_file($srcfile, $targetfile, \%maketags);
 
-  # change back to the starting directory
-  print "Changing to $wd ...\n" if $verbose;
-  chdir $wd or die "Cannot change to $wd: $!\n";
+  make_and_install($info{MODEL_SRC_DIR}, 
+                   "$info{MAKE_INSTALLDIR}/$info{MAKE_EXECUTABLE}",
+                   "$info{MODEL_SRC_DIR}/Makefile.make", \%sourcemods);
 }
 
 ################################# setup_project ################################
 sub setup_project {
-  my ($project) = @_;
+  my ($system, $project) = @_;
 
-  print "Setting up project: $project ...\n" if $quiet;
+  print "Setting up project: $project in $system ...\n" if $quiet;
+  my %sysinfo = read_configuration("$basepath/config/config.system.$system");
+  my %systags = get_tags("$basepath/config/config.system.$system", "SYSTEM");
+
 }
 
 ################################## setup_tool ##################################
 sub setup_tool {
-  my ($tool) = @_;
-  my %info;
+  my ($system, $tool) = @_;
 
-  print "Setting up tool: $tool ...\n" if $quiet;
-  %info = read_configuration("$basepath/config/config.tool.$tool");
-  for my $key (keys %info) {
-    $info{$key} =~ s/<BASEDIR>/$basepath/;
-  }
+  print "Setting up tool: $tool in $system ...\n" if $quiet;
+  
+  my %sysinfo = read_configuration("$basepath/config/config.system.$system");
+  my %systags = get_tags("$basepath/config/config.system.$system", "SYSTEM");
+  my $runtime = $sysinfo{SYSTEM_INSTALLDIR};
 
-  # make sure that TOOL_EXE_DIR exists, if not create it
-  if (not -d $info{TOOL_EXE_DIR}) {
-    make_path($info{TOOL_EXE_DIR}, {verbose => $verbose, mode => 0755}) or
-      die "Cannot make path $info{TOOL_EXE_DIR}: $!";
-  } else {
-    chmod 0744, $info{TOOL_EXE_DIR} or die "Cannot change permission: $!\n";
-  }
+  my $srcfile = "$basepath/config/config.tool.$tool";
+  my $targetfile = "$runtime/config/config.tool.$tool";
+  sed_file($srcfile, $targetfile, \%systags);
 
-  # change to TOOL_SRC_DIR
-  my $wd = cwd();
-  print "Changing to $info{TOOL_SRC_DIR} ...\n" if $verbose;
-  chdir $info{TOOL_SRC_DIR} or
-    die "Cannot change to $info{TOOL_SRC_DIR}: $!\n";
-
-  # Makefile
-  my %mapping = ('EXECUTABLE' => $info{TOOL_EXE_NAME},
-                 'TARGET' => $info{TOOL_EXE_NAME},
-                 'INSTALLDIR' => $info{TOOL_EXE_DIR},
-                 'TARGETDIR' => $info{TOOL_EXE_DIR}
-                );
-  $mapping{NETCDFINC} = $info{TOOL_NETCDF_INC} 
-    if exists $info{TOOL_NETCDF_INC};
-  $mapping{NETCDFLIB} = $info{TOOL_NETCDF_LIB} 
-    if exists $info{TOOL_NETCDF_LIB};
+  my %info = read_configuration("$runtime/config/config.tool.$tool");
 
   # Determine source code modifications
   my %sourcemods;
@@ -393,85 +410,81 @@ sub setup_tool {
     }
   }
 
-  make_and_install(cwd(), join('/', $info{TOOL_EXE_DIR}, $info{TOOL_EXE_NAME}),
-                   \%mapping, \%sourcemods);
+  # Makefile
+  my %maketags = get_tags("$runtime/config/config.tool.$tool", "MAKE");
+  $srcfile = "$info{TOOL_SRC_DIR}/Makefile";
+  $targetfile = "$info{TOOL_SRC_DIR}/Makefile.make";
+  sed_file($srcfile, $targetfile, \%maketags);
 
-  # change back to the starting directory
-  print "Changing to $wd ...\n" if $verbose;
-  chdir $wd or die "Cannot change to $wd: $!\n";
+  make_and_install($info{TOOL_SRC_DIR}, 
+                   "$info{MAKE_INSTALLDIR}/$info{MAKE_EXECUTABLE}",
+                   "$info{TOOL_SRC_DIR}/Makefile.make", \%sourcemods);
 }
 
 ################################# setup_system #################################
 sub setup_system {
   my ($system) = @_;
-  my %info;
 
   print "Setting up system: $system ...\n" if $quiet;
-  %info = read_configuration("$basepath/config/config.system.$system");
- 
-  for my $key (keys %info) {
-    $info{$key} =~ s/<BASEDIR>/$basepath/;
+  my %info = read_configuration("$basepath/config/config.system.$system");
+
+  # Create SYSTEM_INSTALLDIR/bin and SYSTEM_INSTALLDIR/config 
+  my $runtime = $info{SYSTEM_INSTALLDIR};
+  if (not -d "$runtime/config") {
+    make_path("$runtime/config", {verbose => $verbose, mode => 0755}) or
+      die "Cannot make path $runtime/config: $!";
   }
-  print "Checking directories and permissions ...\n" if $quiet;
+  if (not -d "$runtime/bin") {
+    make_path("$runtime/bin", {verbose => $verbose, mode => 0755}) or
+      die "Cannot make path $runtime/bin: $!";
+  }
+ 
+  my %tags = get_tags("$basepath/config/config.system.$system", "SYSTEM");
 
   # Get listing of executable files
   my @filelist;
-  my $dirname = "$basepath/tools/bin";
-  opendir(DIR, "$dirname") or die "Cannot opendir $dirname: $!";
+  my %files;
+  my $srcdir = "$basepath/tools/bin";
+  my $targetdir = "$runtime/bin";
+  opendir(DIR, $srcdir) or die "Cannot opendir $srcdir: $!";
   @filelist = grep !/^\./, readdir(DIR);
   closedir(DIR);
-  @filelist = map { join('/', $dirname, $_) } @filelist;
+  for my $file (@filelist) {
+    $files{"$srcdir/$file"} = "$targetdir/$file";
+  }
+
+  # replace tags in scripts
+  for my $srcfile (keys(%files)) {
+    my $targetfile = $files{$srcfile};
+    if (-T $srcfile) {
+      sed_file($srcfile, $targetfile, \%tags);
+    } else {
+      copy($srcfile, $targetfile) 
+        or die "Cannot copy $srcfile ==> $targetfile: $!\n";
+    }
+  }
+  my $srcfile = "$basepath/config/config.system.$system";
+  my $targetfile = "$runtime/config/config.system.$system";
+  copy($srcfile, $targetfile) 
+    or die "Cannot copy $srcfile ==> $targetfile: $!\n";
+  print "Copied: $srcfile ==> $targetfile\n" if $verbose;
+
   # make sure that the scripts in $basepath/tools/bin are executable
+  opendir(DIR, "$runtime/bin") or die "Cannot opendir $runtime/bin: $!";
+  @filelist = grep !/^\./, readdir(DIR);
+  closedir(DIR);
   map { print "chmod 0755 for $_\n" } @filelist if $verbose;
   chmod 0744, @filelist;
 
-  # add listing of config files
-  my @configfilelist;
-  $dirname = "$basepath/config";
-  opendir(DIR, "$dirname") or die "Cannot opendir $dirname: $!";
-  @configfilelist = grep !/^\./, readdir(DIR);
-  closedir(DIR);
-  @configfilelist = map { join('/', $dirname, $_) } @configfilelist;
-  push @filelist, @configfilelist;
-
-  # replace tags in scripts
-  for my $file (@filelist) {
-    next if $file =~ /config\.system/;
-    next unless -T $file;
-    sed_file($file, "<BASEDIR>", $basepath);
-    sed_file($file, "<SITEPERL_LIB>", $info{SYSTEM_SITEPERL_LIB}) 
-      if exists $info{SYSTEM_SITEPERL_LIB};
-    sed_file($file, "<PERL_LIB>", $info{SYSTEM_PERL_LIB})
-      if exists $info{SYSTEM_PERL_LIB};
-    sed_file($file, "<NETCDF_INC>", $info{SYSTEM_NETCDF_INC}) 
-      if exists $info{SYSTEM_NETCDF_INC};
-    sed_file($file, "<NETCDF_LIB>", $info{SYSTEM_NETCDF_LIB}) 
-      if exists $info{SYSTEM_NETCDF_LIB};
-    sed_file($file, "<NCO_DIR>", $info{SYSTEM_NCO_DIR}) 
-      if exists $info{SYSTEM_NCO_DIR};
-    sed_file($file, "<LOCAL_ROOT1>", $info{SYSTEM_LOCAL_ROOT1}) 
-      if exists $info{SYSTEM_LOCAL_ROOT1};
-    sed_file($file, "<LOCAL_ROOT2>", $info{SYSTEM_LOCAL_ROOT2}) 
-      if exists $info{SYSTEM_LOCAL_ROOT2};
-  }
-
-  # Create bin directory in $basepath/models
-  if (not -d "$basepath/models/bin") {
-    make_path("$basepath/models/bin", {verbose => $verbose, mode => 0755}) or
-      die "Cannot make path $basepath/models/bin: $!";
-  } else {
-    chmod 0744, "$basepath/models/bin" or die "Cannot change permission: $!\n";
-  }
-
   # setup tools
   print "Setting up tools ...\n" if $quiet;
-  $dirname = "$basepath/config";
+  my $dirname = "$basepath/config";
   opendir(DIR, "$dirname") or die "Cannot opendir $dirname: $!";
   my @toollist = grep /^config\.tool/, readdir(DIR);
   closedir(DIR);
   map { $_ =~ s/config\.tool\.// } @toollist;
   map { print "Tools to configure: $_\n" } @toollist if $verbose;
-  map { setup_tool($_) } @toollist;
+  map { setup_tool($system, $_) } @toollist;
 
   # setup models
   print "Setting up models ...\n" if $quiet;
@@ -481,7 +494,7 @@ sub setup_system {
   closedir(DIR);
   map { $_ =~ s/config\.model\.// } @modellist;
   map { print "Models to configure: $_\n" } @modellist if $verbose;
-  map { setup_model($_) } @modellist;
+  map { setup_model($system, $_) } @modellist;
 }
 
 ##################################### trim #####################################

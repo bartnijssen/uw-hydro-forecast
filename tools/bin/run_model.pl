@@ -14,17 +14,16 @@ use warnings;
 #-------------------------------------------------------------------------------
 
 #----------------------------------------------------------------------------------------------
-# Determine tools, root, and config directories - assume script lives in ROOT_DIR/tools/bin
+# Determine tools and config directories
 #----------------------------------------------------------------------------------------------
-$ROOT_DIR = "<BASEDIR>";
-$TOOLS_DIR = join('/', $ROOT_DIR, 'tools/bin');
-$CONFIG_DIR = join('/', $ROOT_DIR, 'config');
+$TOOLS_DIR = "<SYSTEM_INSTALLDIR>/bin";
+$CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 
 #----------------------------------------------------------------------------------------------
 # Include external modules
 #----------------------------------------------------------------------------------------------
 # Subroutine for reading config files
-require "$TOOLS_DIR/bin/simma_util.pl";
+require "$TOOLS_DIR/simma_util.pl";
 
 # This allows us to use sophisticated command-line argument parsing
 use Getopt::Long;
@@ -36,7 +35,7 @@ use Date::Calc qw(Days_in_Month Delta_Days Add_Delta_Days);
 use Env;
 
 # Model-specific subroutines
-require "$TOOLS_DIR/bin/model_specific.pl";
+require "$TOOLS_DIR/model_specific.pl";
 
 #-------------------------------------------------------------------------------
 # Parse the command line
@@ -164,8 +163,8 @@ if ($JOB_ID =~ /(\S+)/) {
 }
 
 # Set up netcdf access
-$ENV{INC_NETCDF} = "<NETCDF_INC>";
-$ENV{LIB_NETCDF} = "<NETCDF_LIB>";
+$ENV{INC_NETCDF} = "<SYSTEM_NETCDF_INC>";
+$ENV{LIB_NETCDF} = "<SYSTEM_NETCDF_LIB>";
 
 # Miscellaneous
 @month_days = (31,28,31,30,31,30,31,31,30,31,30,31);
@@ -273,10 +272,10 @@ if (!$nodename) {
 
 # Determine local dir
 if ($nodename =~ /c-(0|1|2|3|4)/) {
-  $local_root = "<LOCAL_ROOT2>";
+  $local_root = "<SYSTEM_LOCAL_ROOT2>";
 }
 else {
-  $local_root = "<LOCAL_ROOT1>";
+  $local_root = "<SYSTEM_LOCAL_ROOT1>";
 }
 
 $LOCAL_PROJECT_DIR =~ s/\/raid/$local_root/;
@@ -437,7 +436,7 @@ sub usage() {
     print "\n";
     print "  -p <project>\n";
     print "    <project>  = Name of project or basin to simulate.  This script will look for project-specific\n";
-    print "                 parameters, including \$PROJECT_DIR, in the file \$ROOT_DIR/config/config.<project>.\n";
+    print "                 parameters, including \$PROJECT_DIR, in the file <SYSTEM_INSTALLDIR>/config/config.<project>.\n";
     print "\n";
     print "  -f <forcing_subdir>\n";
     print "    <forcing_subdir>  = (optional) subdirectory, under \$PROJECT_DIR/forcing, where forcing file tree starts.\n";

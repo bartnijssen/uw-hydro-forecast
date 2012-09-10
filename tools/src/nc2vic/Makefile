@@ -1,17 +1,16 @@
 # Set INSTALLDIR
-INSTALLDIR = ../../bin/
+INSTALLDIR = <MAKE_INSTALLDIR>
 
 # Set EXECUTABLE
-EXECUTABLE = xxxxx
+EXECUTABLE = <MAKE_EXECUTABLE>
 
-#FLAGS = -Wall -O
-FLAGS = -O
+CFLAGS = <MAKE_CFLAGS>
 
-NETCDFINC = /opt/local/include
+NETCDFINC = <MAKE_NETCDF_INC>
 
-NETCDFLIB = /opt/local/lib
+NETCDFLIB = <MAKE_NETCDF_LIB>
 
-CC        = gcc 
+CC        = <MAKE_CC>
 HDRS       = -I$(NETCDFINC)
 LIBRARY      = -L$(NETCDFLIB) -lnetcdf
 RM          = /bin/rm -f
@@ -23,10 +22,10 @@ default: nc2vic
 all: nc2vic	install
 
 clean :
-	$(RM) *.o core log *~ 
+	$(RM) *.o core log *~
 
 nc2vic: $(OBJS)
-	$(CC) $(FLAGS) -o $(EXECUTABLE) $(OBJS) $(LIBRARY) $(HDRS)
+	$(CC) $(CFLAGS) -o $(EXECUTABLE) $(OBJS) $(LIBRARY) $(HDRS)
 
 # --------------------------------------------------------------------
 # install

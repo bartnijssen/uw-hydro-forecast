@@ -7,10 +7,10 @@ use warnings;
 #   if 2, the first is one month long, second varies
 #   if 1, the period is combined
 
-use lib "<SITEPERL_LIB>";
+use lib "<SYSTEM_SITEPERL_LIB>";
 use Date::Calc qw(Add_Delta_YM);
 use Statistics::Lite ("mean");
-use lib "<PERL_LIB>";
+use lib "<SYSTEM_PERL_LIB>";
 use UWTime; # Use this for Days_In_Month
 
 # ---------- ARGS / SETTINGS ------------------------------

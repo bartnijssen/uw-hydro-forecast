@@ -13,7 +13,7 @@ $FmtFile = shift;
 $GrdFile = shift;
 
 # Subroutine for reading config files
-require "$TOOLS_DIR/bin/simma_util.pl";
+require "$TOOLS_DIR/simma_util.pl";
 
 # Regrid configuration info
 $var_info_regrid_ref = &read_config($CONFIG_REGRID);

@@ -14,7 +14,7 @@ use warnings;
 # output fmt: each row has
 #  <percentile><additive anom><multiplicative anom>
 
-use lib "<SITEPERL_LIB>";
+use lib "<SYSTEM_SITEPERL_LIB>";
 use Statistics::Lite ("mean");
 
 # read in filenames

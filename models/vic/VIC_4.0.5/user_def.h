@@ -49,7 +49,7 @@
        band files before read data for each cell.  This saves time
        but requires that all grid cells are listed in the same
        order as the soil parameter file *****/
-#define NO_REWIND TRUE
+#define NO_REWIND FALSE
 
 /***** If TRUE VIC reads the model forcing files, and creates the full
        internal forcing dataset (longwave, shortwave, humidity, etc.)

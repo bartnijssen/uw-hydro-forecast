@@ -1,10 +1,13 @@
 # System Information
 #------------------------------------------------------------------------
 SYSTEM_NAME     forecast
-SYSTEM_ROOT_DIR	<BASEDIR>
-SYSTEM_SITEPERL_LIB   <SITEPERL_LIB>
+SYSTEM_TAG_BASEDIR	<SYSTEM_BASEDIR>
+#SYSTEM_TAG_BASEDIR	/Users/nijssen/Dropbox/github/uw-hydro-forecast
+SYSTEM_TAG_INSTALLDIR <INSTALLDIR>
+#SYSTEM_TAG_INSTALLDIR	/Users/nijssen/Dropbox/github/uw-hydro-forecast/runtime
+SYSTEM_TAG_SITEPERL_LIB   <SITEPERL_LIB>
 #SYSTEM_SITEPERL_LIB /usr/lib/perl5/site_perl/5.6.1
-SYSTEM_PERL_LIB       <PERL_LIB>
+SYSTEM_TAG_PERL_LIB       <PERL_LIB>
 #SYSTEM_PERL_LIB /raid8/forecast/proj/ncast/src/lib
 SYSTEM_NETCDF_INC     <NETCDF_INC>
 #SYSTEM_NETCDF_INC /usr/local/i386/include

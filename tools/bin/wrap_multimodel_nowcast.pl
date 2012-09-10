@@ -5,17 +5,16 @@
 use warnings;
 
 #----------------------------------------------------------------------------------------------
-# Determine tools, root, and config directories - assume script lives in ROOT_DIR/tools/bin
+# Determine tools and config directories
 #----------------------------------------------------------------------------------------------
-$ROOT_DIR = "<BASEDIR>";
-$TOOLS_DIR = join('/', $ROOT_DIR, 'tools/bin');
-$CONFIG_DIR = join('/', $ROOT_DIR, 'config');
+$TOOLS_DIR = "<SYSTEM_INSTALLDIR>/bin";
+$CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 
 #----------------------------------------------------------------------------------------------
 # Include external modules
 #----------------------------------------------------------------------------------------------
 # Subroutine for reading config files
-require "$TOOLS_DIR/bin/simma_util.pl";
+require "$TOOLS_DIR/simma_util.pl";
 
 # Date computation
 use Date::Calc qw(Days_in_Month Delta_Days Add_Delta_Days);
@@ -57,8 +56,8 @@ if ($JOB_ID =~ /(\S+)/) {
 
 # !!!!!!!!!!!!!!!!! GET THIS FROM CONFIG FILE !!!!!!!!!!!!!!!!!!
 # Set up netcdf access
-$ENV{INC_NETCDF} = "<NETCDF_INC>";
-$ENV{LIB_NETCDF} = "<NETCDF_LIB>";
+$ENV{INC_NETCDF} = "<SYSTEM_NETCDF_INC>";
+$ENV{LIB_NETCDF} = "<SYSTEM_NETCDF_LIB>";
 
 # Configuration files
 $ConfigProject = "$CONFIG_DIR/config.project.$PROJECT";
@@ -88,7 +87,7 @@ foreach $dir ($LogDir) {
 #--------------------------------------------------------------------------------
 if ($stage == 1) {
 
-  $cmd = "$TOOLS_DIR/bin/update_forcings_asc.pl $PROJECT >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+  $cmd = "$TOOLS_DIR/update_forcings_asc.pl $PROJECT >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
   #`echo $cmd > $LogFile`;
   #if (system($cmd)!=0) {
   #  `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
@@ -114,7 +113,7 @@ if ($stage == 2) {
     $ModelType = $var_info_model{"MODEL_TYPE"};
     $ForcingType = $var_info_model{"FORCING_TYPE"};
     if ($ModelType eq "real" && $ForcingType ne "nc") {
-      $cmd = "$TOOLS_DIR/bin/nowcast_model.pl $PROJECT $model >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+      $cmd = "$TOOLS_DIR/nowcast_model.pl $PROJECT $model >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
       #    `echo $cmd >> $LogFile`;
       #    if (system($cmd)!=0) {
       #      `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
@@ -149,7 +148,7 @@ if ($stage == 3) {
   
   # Generate the netcdf forcings
   if ($need_netcdf) {
-    $cmd = "$TOOLS_DIR/bin/update_forcings_nc.pl $PROJECT >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+    $cmd = "$TOOLS_DIR/update_forcings_nc.pl $PROJECT >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
     #  `echo $cmd >> $LogFile`;
     #  if (system($cmd)!=0) {
     #    `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
@@ -176,7 +175,7 @@ if ($stage == 4) {
     $ModelType = $var_info_model{"MODEL_TYPE"};
     $ForcingType = $var_info_model{"FORCING_TYPE"};
     if ($ModelType eq "real" && $ForcingType eq "nc") {
-      $cmd = "$TOOLS_DIR/bin/nowcast_model.pl $PROJECT $model >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+      $cmd = "$TOOLS_DIR/nowcast_model.pl $PROJECT $model >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
       #    `echo $cmd >> $LogFile`;
       #    if (system($cmd)!=0) {
       #      `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
@@ -204,7 +203,7 @@ if ($stage == 5) {
     %var_info_model = %{$var_info_model_ref};
     $ModelType = $var_info_model{"MODEL_TYPE"};
     if ($ModelType eq "ensemble") {
-      $cmd = "$TOOLS_DIR/bin/nowcast_model.pl $PROJECT $model >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+      $cmd = "$TOOLS_DIR/nowcast_model.pl $PROJECT $model >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
       #    `echo $cmd >> $LogFile`;
       #    if (system($cmd)!=0) {
       #      `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
