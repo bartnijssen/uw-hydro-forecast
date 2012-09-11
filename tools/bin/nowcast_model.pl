@@ -78,7 +78,7 @@ $LogDir = $var_info_project{"LOGS_MODEL_DIR"};
 $LogDir =~ s/<LOGS_SUBDIR>/curr_spinup/;
 $VarList = $var_info_model{"PLOT_VARS"};
 
-$LogFile = "$LogDir/log.$scriptname.$suffix.$JOB_ID";
+$LogFile = "$LogDir/log.$scriptname$suffix.$JOB_ID";
 
 # Get info for each subproject in the list
 for ($proj_idx=0; $proj_idx<@SubProjects; $proj_idx++) {
@@ -270,7 +270,7 @@ if ($var_info_model{"MODEL_TYPE"} eq "real") {
 #      `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
 #      die "$0: ERROR: $cmd failed: $?\n";
 #    }
-    $cmd = "$TOOLS_DIR/archive_currspin.pl $MODEL $PROJECT >& $LogFile.tmp";
+    $cmd = "$TOOLS_DIR/archive_currspin.pl $PROJECT $MODEL >& $LogFile.tmp";
     print "$cmd\n";
     (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
     $cmd = "cat $LogFile.tmp >> $LogFile";

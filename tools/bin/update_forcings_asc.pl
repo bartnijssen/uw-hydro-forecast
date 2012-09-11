@@ -103,7 +103,7 @@ $tx_grd_file = "$FmtDir/tx.grd";
 $tn_grd_file = "$FmtDir/tn.grd";
 
 # Log File
-$LogFile = "$LogDir/log.$scriptname.$suffix.$JOB_ID";
+$LogFile = "$LogDir/log.$scriptname$suffix.$JOB_ID";
 
 # Check for directories; create if necessary & appropriate
 foreach $dir ($StnTSDir, $StnRetroTSDir, $RetroForcDir, $CurrForcDir) {

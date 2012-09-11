@@ -71,7 +71,7 @@ $EmailList    = $var_info_project{"EMAIL_LIST"};
 @emails = split /,/, $EmailList;
 $LogDir = $var_info_project{"LOGS_CURRSPIN_DIR"} . "/". $scriptname;
 
-$LogFile = "$LogDir/log.$scriptname.$suffix.$JOB_ID";
+$LogFile = "$LogDir/log.$scriptname$suffix.$JOB_ID";
 
 # Check for directories; create if necessary & appropriate
 foreach $dir ($LogDir) {
