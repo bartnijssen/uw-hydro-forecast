@@ -91,11 +91,6 @@ if (not defined $stage) {
 if ($stage == 1) {
 
   $cmd = "$TOOLS_DIR/update_forcings_asc.pl $PROJECT >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
-  #`echo $cmd > $LogFile`;
-  #if (system($cmd)!=0) {
-  #  `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
-  #  die "$0: ERROR: $cmd failed: $?\n";
-  #}
   print "$cmd\n";
   (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
   
@@ -117,11 +112,6 @@ if ($stage == 2) {
     $ForcingType = $var_info_model{"FORCING_TYPE"};
     if ($ModelType eq "real" && $ForcingType ne "nc") {
       $cmd = "$TOOLS_DIR/nowcast_model.pl $PROJECT $model >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
-      #    `echo $cmd >> $LogFile`;
-      #    if (system($cmd)!=0) {
-      #      `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
-      #      die "$0: ERROR: $cmd failed: $?\n";
-      #    }
       print "$cmd\n";
       (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
     }
@@ -152,11 +142,6 @@ if ($stage == 3) {
   # Generate the netcdf forcings
   if ($need_netcdf) {
     $cmd = "$TOOLS_DIR/update_forcings_nc.pl $PROJECT >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
-    #  `echo $cmd >> $LogFile`;
-    #  if (system($cmd)!=0) {
-    #    `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
-    #    die "$0: ERROR: $cmd failed: $?\n";
-    #  }
     print "$cmd\n";
     (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
   }
@@ -179,11 +164,6 @@ if ($stage == 4) {
     $ForcingType = $var_info_model{"FORCING_TYPE"};
     if ($ModelType eq "real" && $ForcingType eq "nc") {
       $cmd = "$TOOLS_DIR/nowcast_model.pl $PROJECT $model >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
-      #    `echo $cmd >> $LogFile`;
-      #    if (system($cmd)!=0) {
-      #      `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
-      #      die "$0: ERROR: $cmd failed: $?\n";
-      #    }
       print "$cmd\n";
       (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
     }
@@ -207,11 +187,6 @@ if ($stage == 5) {
     $ModelType = $var_info_model{"MODEL_TYPE"};
     if ($ModelType eq "ensemble") {
       $cmd = "$TOOLS_DIR/nowcast_model.pl $PROJECT $model >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
-      #    `echo $cmd >> $LogFile`;
-      #    if (system($cmd)!=0) {
-      #      `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
-      #      die "$0: ERROR: $cmd failed: $?\n";
-      #    }
       print "$cmd\n";
       (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
     }
@@ -228,11 +203,6 @@ if ($stage == 5) {
 if ($stage == 6) {
 
   $cmd = "$TOOLS_DIR/publish_figs.pl $PROJECT";
-  #`echo $cmd >> $LogFile`;
-  #if (system($cmd)!=0) {
-  #  `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
-  #  die "$0: ERROR: $cmd failed: $?\n";
-  #}
   print "$cmd\n";
   (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
 
@@ -248,11 +218,6 @@ if ($stage == 6) {
 $subject = "\"[USWIDE] Nowcast $PROJECT complete\"";
 $addresses = join " ", @emails;
 $cmd = "echo OK | /bin/mail $addresses -s $subject";
-#`echo $cmd >> $LogFile`;
-#if (system($cmd)!=0) {
-#  `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
-#  die "$0: ERROR: $cmd failed: $?\n";
-#}
 ####print "$cmd\n";
 ###(system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
 
