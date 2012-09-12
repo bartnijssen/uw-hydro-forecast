@@ -502,13 +502,15 @@ sub setup_system {
   # Get listing of executable files
   my @filelist;
   my %files;
-  my $srcdir = "$basepath/tools/bin";
+  my @dirlist = ("$basepath/tools/bin", "$basepath/tools/publish");
   my $targetdir = "$runtime/bin";
-  opendir(DIR, $srcdir) or die "Cannot opendir $srcdir: $!";
-  @filelist = grep !/^\./, readdir(DIR);
-  closedir(DIR);
-  for my $file (@filelist) {
-    $files{"$srcdir/$file"} = "$targetdir/$file";
+  for my $srcdir (@dirlist) {
+    opendir(DIR, $srcdir) or die "Cannot opendir $srcdir: $!";
+    @filelist = grep !/^\./, readdir(DIR);
+    closedir(DIR);
+    for my $file (@filelist) {
+      $files{"$srcdir/$file"} = "$targetdir/$file";
+    }
   }
 
   # replace tags in scripts

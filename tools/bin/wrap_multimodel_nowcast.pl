@@ -224,7 +224,7 @@ if ($stage == 5) {
 #--------------------------------------------------------------------------------
 if ($stage == 6) {
 
-  $cmd = "$TOOLS_DIR/publish/publish_figs.pl $PROJECT";
+  $cmd = "$TOOLS_DIR/publish_figs.pl $PROJECT";
   #`echo $cmd >> $LogFile`;
   #if (system($cmd)!=0) {
   #  `echo $0: ERROR: $cmd failed: $? >> $LogFile`;

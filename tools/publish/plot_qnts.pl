@@ -1,5 +1,7 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 # plot_qnts.pl: Script to plot model results
+
+use warnings;
 
 # Ali Akanda, 041805, 050505
 # A.Wood, jul07, modified to make runoff plots too
@@ -10,24 +12,10 @@
 #----------------------------------------------------------------------------------------------
 # Determine tools, root, and config directories - assume this script lives in TOOLS_DIR/
 #----------------------------------------------------------------------------------------------
-if ($0 =~ /^(.+)\/[^\/]+$/) {
-  $TOOLS_DIR = $1;
-}
-elsif ($0 =~ /^[^\/]+$/) {
-  $TOOLS_DIR = ".";
-}
-else {
-  die "$0: ERROR: cannot determine tools directory\n";
-}
-if ($TOOLS_DIR =~ /^(.+)\/tools/i) {
-  $ROOT_DIR = $1;
-}
-else {
-  $ROOT_DIR = "$TOOLS_DIR/..";
-}
-$CONFIG_DIR = "$ROOT_DIR/config";
-#$COMMON_DIR = "$ROOT_DIR/../common"; 
-$COMMON_DIR = "/raid8/forecast/common"; ##### HACK
+$TOOLS_DIR = "<SYSTEM_INSTALLDIR>/bin";
+$CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
+$COMMON_DIR = "<SYSTEM_COMMONDIR>";
+
 #----------------------------------------------------------------------------------------------
 # Include external modules
 #----------------------------------------------------------------------------------------------

@@ -374,7 +374,7 @@ if ($do_plots) {
 #    `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
 #    die "$0: ERROR: $cmd failed: $?\n";
 #  }
-  $cmd = "$TOOLS_DIR/publish/plot_qnts.pl $PROJECT $MODEL $Fyr $Fmon $Fday >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+  $cmd = "$TOOLS_DIR/plot_qnts.pl $PROJECT $MODEL $Fyr $Fmon $Fday >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
   print "$cmd\n";
   (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
   $cmd = "cat $LogFile.tmp >> $LogFile";
@@ -401,7 +401,7 @@ if ($do_depot) {
 #    `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
 #    die "$0: ERROR: $cmd failed: $?\n";
 #  }
-  $cmd = "$TOOLS_DIR/publish/copy_figs_depot.pl $PROJECT $MODEL $Fyr $Fmon $Fday >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+  $cmd = "$TOOLS_DIR/copy_figs_depot.pl $PROJECT $MODEL $Fyr $Fmon $Fday >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
   print "$cmd\n";
   (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
   $cmd = "cat $LogFile.tmp >> $LogFile";
