@@ -1,4 +1,4 @@
-#!/usr/bin/env 
+#!/usr/bin/env perl
 # copy_figs.pl: Script to copy model results plots to web site
 
 use warnings;
