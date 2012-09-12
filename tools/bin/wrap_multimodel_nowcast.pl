@@ -35,15 +35,6 @@ $PROJECT = shift;
 # This next argument is optional
 $stage = shift;
 
-if (!$stage) {
-  $stage = 1;
-}
-
-
-if (($PROJECT eq "feather") || ($PROJECT eq "gunnison")) {
-  $stage = 2; ## No need to generate forcings for Feather and Gunnison basin just use the forcings generated for Cali and Colo basins
-}
-
 #----------------------------------------------------------------------------------------------
 # Set up constants
 #----------------------------------------------------------------------------------------------
@@ -76,6 +67,18 @@ $LogFile = "$LogDir/log.$scriptname$suffix.$JOB_ID";
 # Check for directories; create if necessary & appropriate
 foreach $dir ($LogDir) {
   $status = &make_dir($dir);
+}
+
+# Stage can be defined in the config file. Precedence is:command-line, config file. 
+# It is 1 if it is not specified in either of those locations
+if (not defined $stage) {
+  if (exists($var_info_project{"NOWCAST_STAGE"}) and 
+      defined($var_info_project{"NOWCAST_STAGE"}) and 
+      $var_info_project{"NOWCAST_STAGE"}) {
+	$stage = $var_info_project{"NOWCAST_STAGE"};
+  } else {
+	$stage = 1;
+  }
 }
 
 #----------------------------------------------------------------------------------------------
