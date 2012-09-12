@@ -4,16 +4,18 @@
 PROJECT_TYPE		real
 
 # Directories
-PROJECT_DIR		/raid8/forecast/proj/uswide/data/feather
-LOCAL_PROJECT_DIR	/state/partition1/forecast/uswide/data/feather
-WEB_PUB_DIR		/home/www-forecast/monitor/curr
+PROJECT_DIR		/raid2/nijssen/forecast/proj/uswide/data/feather
+LOCAL_PROJECT_DIR	/state/partition1/nijssen/forecast/uswide/data/feather
+WEB_PUB_DIR		/raid2/nijssen/forecast/proj/uswide/www
 
 # Subdirectories
 # Locations relative to PROJECT_DIR must be listed after PROJECT_DIR in this file
 # (occurrences of <PROJECT_DIR> in the path will be replaced by PROJECT_DIR or LOCAL_PROJECT_DIR in the scripts)
+FORCING_PROXY_DIR       /raid8/forecast/proj/uswide/data/cali
 PARAMS_DIR		<PROJECT_DIR>/params
 ROUT_DIR                <PROJECT_DIR>/rout
-FORCING_DIR		<PROJECT_DIR>/forcing
+#FORCING_DIR		<PROJECT_DIR>/forcing
+FORCING_DIR		<FORCING_PROXY_DIR>/forcing
 RESULTS_DIR		<PROJECT_DIR>/results
 STATE_DIR		<PROJECT_DIR>/state
 CONTROL_DIR		<PROJECT_DIR>/control
@@ -36,8 +38,8 @@ FORCING_STN_INFO_DIR	<FORCING_DIR>/acis/stn_info
 FORCING_ACIS_RAW_DIR	/raid8/forecast/sw_monitor/data/conus/forcing/acis/raw_data
 FORCING_ACIS_RT_TS_DIR  /raid8/forecast/proj/uswide/data/pnw/forcing/acis/rt_data
 FORCING_ACIS_LT_TS_DIR  /raid8/forecast/proj/uswide/data/pnw/forcing/acis/rt_data
-FORCING_GRID_INFO_DIR	<FORCING_DIR>/grid/grid_info
-FORCING_GRID_TMP_DIR	<FORCING_DIR>/grid/tmp_data
+FORCING_GRID_INFO_DIR	<PROJECT_DIR>/forcing/grid/grid_info
+FORCING_GRID_TMP_DIR	<PROJECT_DIR>/forcing/grid/tmp_data
 FORCING_RETRO_DIR	<FORCING_DIR>/<RETRO_SUBDIR>
 FORCING_NEAR_RT_DIR	<FORCING_DIR>/<NEAR_RT_SUBDIR>
 FORCING_CURRSPIN_DIR	<FORCING_DIR>/<CURR_SUBDIR>
@@ -94,9 +96,12 @@ LOGS_FCST_DIR           <LOGS_DIR>/<LOGS_SUBDIR>/<MODEL_SUBDIR>
 # Forcing start/end/update date files
 FORCING_RETRO_START_DATE_FILE		<FORCING_RETRO_DIR>/FORC.START_DATE
 FORCING_RETRO_END_DATE_FILE		<FORCING_RETRO_DIR>/FORC.END_DATE
-FORCING_NEAR_RT_START_DATE_FILE		<FORCING_NEAR_RT_DIR>/FORC.START_DATE
-FORCING_CURRSPIN_START_DATE_FILE	/raid8/forecast/proj/uswide/data/cali/forcing/curr_spinup/FORC.START_DATE
-FORCING_CURRSPIN_END_DATE_FILE		/raid8/forecast/proj/uswide/data/cali/forcing/curr_spinup/FORC.END_DATE
+FORCING_NEAR_RT_START_DATE_FILE		/raid8/forecast/proj/uswide/data/cali/forcing/spinup_nearRT/FORC.START_DATE
+FORCING_CURRSPIN_START_DATE_FILE	<FORCING_CURRSPIN_DIR>/FORC.START_DATE
+FORCING_CURRSPIN_END_DATE_FILE		<FORCING_CURRSPIN_DIR>/FORC.END_DATE
+
+# Stage to start with
+NOWCAST_STAGE 2
 
 # Spatial dirs
 XYZZ_DIR	<SPATIAL_DIR>/xyzz.all
@@ -105,6 +110,7 @@ ROUT            <FCST_DIR>/rout
 NDXES_DIR       <SPATIAL_DIR>/ndxes.all
 PLOT_DIR	<SPATIAL_DIR>/plots
 PLOT_DEPOT_DIR	<SPATIAL_DIR>/plots/depot
+PLOT_VARS       none
 
 ### Route FCST
 
@@ -147,12 +153,12 @@ ENS_START_YR   1971
 ENS_END_YR     2000
 
 # Plotting information
-MAP_PROJ	-JM7.5
-MAP_COORD	-126/-66/24/50
-MAP_ANNOT	-B8/4:.:WEsN
+MAP_PROJ	-JM7.5i
+MAP_COORD	-124/-118/38/42
+MAP_ANNOT	-B1/0.5:.:WEsN
 MAP_XX		-0.5
 MAP_YY		4.5
 MAP_SCALE_X	3.75
 
 # Email addresses for notification
-EMAIL_LIST	tbohn@hydro.washington.edu,shrad@hydro.washington.edu,fmunoz@hydro.washington.edu
+EMAIL_LIST	nijssen@hydro.washington.edu
