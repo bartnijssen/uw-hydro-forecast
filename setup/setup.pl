@@ -143,7 +143,7 @@ my $basepath;                   # base path for the forecast system
     setup_project($system, $project);
   } elsif (defined $model) {
     setup_model($system, $model);
-  } elsif (defined $model) {
+  } elsif (defined $tool) {
     setup_tool($system, $tool);
   } else {
     setup_system($system);
