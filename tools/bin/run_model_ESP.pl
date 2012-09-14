@@ -418,8 +418,8 @@ if ($post_process == 1) {
   #### The script which converts daily ESP flux output into monthly and also
   #### extracts variable for spatial plots
 
-  $cmd = "$TOOLS_DIR/FCST_Process_Scripts/xtr_monthly_ts.scr $start_year " .
-    "$PROJECT$TOOLS_DIR/FCST_Process_Scripts $STORDIR $results_dir_asc " .
+  $cmd = "$TOOLS_DIR/xtr_monthly_ts.scr $start_year " .
+    "$PROJECT$TOOLS_DIR $STORDIR $results_dir_asc " .
       "$STORDIR/MON.$start_year $Flist >& $LOGFILE.tmp; " .
         "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
   (($status = &shell_cmd($cmd,$LOGFILE)) == 0) 
