@@ -97,7 +97,7 @@ if ($results_subdir_override) {
 }
 
 
-$ESP_START_TIME = `date`;
+$ESP_START_TIME = localtime;
 while ($METYR <= $FEYR) {         # forecast year loop
   $SDAY = $Cday;
   $FORC_START_DATE = sprintf "%04d-%02d-%02d",$METYR,$Cmon,$SDAY;
@@ -171,15 +171,15 @@ while ($METYR <= $FEYR) {         # forecast year loop
   }
   $METYR = $METYR+1;
 }
-$ESP_END_TIME = `date`;
+$ESP_END_TIME = localtime;
 
-$subject = "$PROJECT $MODEL: " .
+$subject = "\"$PROJECT $MODEL: " .
   "Forecast Runs for DATE $datestr started at $ESP_START_TIME and ended " .
-  "at $ESP_END_TIME Ensembles $METYR -  $FEYR";
+  "at $ESP_END_TIME Ensembles $METYR -  $FEYR\"";
 
 if (exists $var_info_project{"EMAIL_LIST"} and $var_info_project{"EMAIL_LIST"}) {
   ($addresses = $var_info_project{"EMAIL_LIST"}) =~ s/,/ /g;
-  $cmd = "echo Completed | /bin/mail $addresses -s $subject";
+  $cmd = "echo Completed | /bin/mail -s $subject $addresses";
   print "$cmd\n";
   (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
 }
