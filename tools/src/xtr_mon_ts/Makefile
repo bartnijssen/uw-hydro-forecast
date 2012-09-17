@@ -6,7 +6,7 @@ CFLAGS = <MAKE_CFLAGS>
 
 RM = /bin/rm -f
 
-OBJS = xtr_mon_ts.9f.c
+OBJS = xtr_mon_ts.c
 
 default: $(EXECUTABLE)
 
