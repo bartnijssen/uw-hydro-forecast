@@ -1,12 +1,14 @@
 # System Information
 #------------------------------------------------------------------------
 SYSTEM_NAME     mac
-SYSTEM_BASEDIR	/Users/nijssen/Dropbox/github/uw-hydro-forecast
-SYSTEM_INSTALLDIR /Users/nijssen/Dropbox/github/uw-hydro-forecast/mac/runtime
+SYSTEM_ROOT /Users
+SYSTEM_BASEDIR	<SYSTEM_ROOT>/nijssen/Dropbox/github/uw-hydro-forecast
+SYSTEM_INSTALLDIR <SYSTEM_ROOT>/nijssen/junk/mac/runtime
 SYSTEM_SITEPERL_LIB /opt/local/lib/perl5/site_perl/5.12.4
-SYSTEM_PERL_LIB /Users/nijssen/Dropbox/perllib
+SYSTEM_PERL_LIB <SYSTEM_ROOT>/nijssen/Dropbox/perllib
 SYSTEM_NETCDF_INC /opt/local/include
 SYSTEM_NETCDF_LIB  /opt/local/lib
-SYSTEM_LOCAL_ROOT1 /tmp
-SYSTEM_LOCAL_ROOT2 /tmp
+SYSTEM_LOCAL_ROOT /state/partition1
+SYSTEM_LOCAL_ROOT1 /state/partition1
+SYSTEM_LOCAL_ROOT2 /state/partition2
 SYSTEM_NCO_DIR /opt/local/bin

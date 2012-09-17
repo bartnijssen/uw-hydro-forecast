@@ -4,9 +4,9 @@
 PROJECT_TYPE		real
 
 # Directories
-PROJECT_DIR		/raid2/nijssen/forecast/proj/uswide/data/feather
-LOCAL_PROJECT_DIR	/state/partition1/nijssen/forecast/uswide/data/feather
-WEB_PUB_DIR		/raid2/nijssen/forecast/proj/uswide/www
+PROJECT_DIR		<SYSTEM_ROOT>/nijssen/forecast/proj/uswide/data/feather
+LOCAL_PROJECT_DIR	<SYSTEM_LOCAL_ROOT>/nijssen/forecast/uswide/data/feather
+WEB_PUB_DIR		<SYSTEM_ROOT>/nijssen/forecast/proj/uswide/www
 
 # Subdirectories
 # Locations relative to PROJECT_DIR must be listed after PROJECT_DIR in this file

@@ -299,9 +299,11 @@ if ($local_storage) {
   } else {
     $local_root = "<SYSTEM_LOCAL_ROOT1>";
   }
-  $PROJECT_DIR = $var_info_project{"PROJECT_DIR"};
-  $LOCAL_PROJECT_DIR = "$local_root";
-  print "$LOCAL_PROJECT_DIR\n";
+$PROJECT_DIR = $var_info_project{"PROJECT_DIR"};
+$LOCAL_PROJECT_DIR = $var_info_project{"LOCAL_PROJECT_DIR"};
+$replace = "<SYSTEM_ROOT>";
+$LOCAL_PROJECT_DIR =~ s/$replace/$local_root/;
+print "$0: LOCAL_PROJECT_DIR: $LOCAL_PROJECT_DIR\n";
 }
 #---------------------------------------------------
 

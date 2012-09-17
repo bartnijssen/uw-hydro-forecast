@@ -1,4 +1,5 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl 
+use warnings;
 # SGE directives
 #$ -cwd
 #$ -j y
@@ -12,29 +13,15 @@
 # $Id: $
 #-------------------------------------------------------------------------------
 
-#----------------------------------------------------------------------------------------------
-# Determine tools, root, and config directories - assume this script lives in ROOT_DIR/tools/
-#----------------------------------------------------------------------------------------------
-if ($0 =~ /^(.+)\/[^\/]+$/) {
-  $TOOLS_DIR = $1;
-}
-elsif ($0 =~ /^[^\/]+$/) {
-  $TOOLS_DIR = ".";
-}
-else {
-  die "$0: ERROR: cannot determine tools directory\n";
-}
-if ($TOOLS_DIR =~ /^(.+)\/tools/i) {
-  $ROOT_DIR = $1;
-}
-else {
-  $ROOT_DIR = "$TOOLS_DIR/..";
-}
-$CONFIG_DIR = "$ROOT_DIR/config";
+#-------------------------------------------------------------------------------
+# Determine tools and config directories
+#-------------------------------------------------------------------------------
+$TOOLS_DIR = "<SYSTEM_INSTALLDIR>/bin";
+$CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Include external modules
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Subroutine for reading config files
 require "$TOOLS_DIR/simma_util.pl";
 
@@ -185,8 +172,8 @@ if ($JOB_ID =~ /(\S+)/) {
 }
 
 # Set up netcdf access
-$ENV{INC_NETCDF} = "/usr/local/i386/include";
-$ENV{LIB_NETCDF} = "/usr/local/i386/lib";
+$ENV{INC_NETCDF} = "<SYSTEM_NETCDF_INC>";
+$ENV{LIB_NETCDF} = "<SYSTEM_NETCDF_LIB>";
 
 # Miscellaneous
 @month_days = (31,28,31,30,31,30,31,31,30,31,30,31);
@@ -319,16 +306,19 @@ if ($uname =~ /compute-(...)/) {
 
 # Determine local dir
 if ($nodename =~ /c-(0|1|2|3|4)/) {
- $local_root = "/state/partition2/forecast/proj/uswide";
+  $local_root = "<SYSTEM_LOCAL_ROOT2>";
 }
 else {
- $local_root = "/state/partition1/forecast/proj/uswide";
+  $local_root = "<SYSTEM_LOCAL_ROOT1>";
 }
-$PROJECT_DIR = "/raid8/forecast/proj/uswide";
-$LOCAL_PROJECT_DIR = "$local_root";
-print "$LOCAL_PROJECT_DIR\n"; #################### HACK!!!!!! By Shrad####################
 
+$PROJECT_DIR = $var_info_project{"PROJECT_DIR"};
+$LOCAL_PROJECT_DIR = $var_info_project{"LOCAL_PROJECT_DIR"};
+$replace = "<SYSTEM_ROOT>";
+$LOCAL_PROJECT_DIR =~ s/$replace/$local_root/;
+print "$0: LOCAL_PROJECT_DIR: $LOCAL_PROJECT_DIR\n";
 }
+
 #---------------------------------------------------
 
 # Date of beginning of data forcings
