@@ -60,7 +60,7 @@ sub run_rout {
   close(CONTROLFILE);
 
   # Run the model
- $cmd = "/raid8/forecast/proj/uswide/models/ROUT_C/rout_v4  $controlfile >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+ $cmd = "$MODEL_EXE_DIR/$MODEL_EXE_NAME  $controlfile >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
  (system($cmd)==0) or die "$0: ERROR in $cmd: $?\n";
 
 }### Sub_rout

@@ -6,20 +6,23 @@
 # -----------------------------------------------------------------------
 
 # Set SHELL = your shell here
-SHELL = /bin/csh
+SHELL = <MAKE_SHELL>
 
 # Set CC = your compiler here
-CC = gcc
+CC = <MAKE_CC>
 
 # Set INSTALLDIR
-INSTALLDIR = ../bin
+INSTALLDIR = <MAKE_INSTALLDIR>
 
 # Set EXECUTABLE
-EXECUTABLE = route_forecast
+EXECUTABLE = <MAKE_EXECUTABLE>
+
+CFLAGS = <MAKE_CFLAGS>
+LIBRARY = <MAKE_LIBS>
 
 # Uncomment for normal optimized code flags (fastest run option)
-CFLAGS  = -I. -O3 -Wall -Wno-unused
-LIBRARY = -lm
+#CFLAGS  = -I. -O3 -Wall -Wno-unused
+#LIBRARY = -lm
 
 # Uncomment to include debugging information
 #CFLAGS  = -I. -g -Wall -Wno-unused
@@ -84,4 +87,4 @@ clean::
 # install
 # --------------------------------------------------------------------
 install:
-	mv route $(INSTALLDIR)
+	mv $(EXECUTABLE) $(INSTALLDIR)
