@@ -188,6 +188,11 @@ $ConfigModel = "$CONFIG_DIR/config.model.$MODEL_NAME";
 $var_info_model_ref = &read_config($ConfigModel);
 %var_info_model = %{$var_info_model_ref};
 
+# Read routing model info
+$ConfigRoute = "$CONFIG_DIR/config.model.$var_info_project{ROUT_MODEL}";
+$var_info_route_ref = &read_config($ConfigRoute);
+%var_info_route = %{$var_info_route_ref};
+
 # Substitute model-specific information into project variables
 foreach $key_proj (keys(%var_info_project)) {
   foreach $key_model (keys(%var_info_model)) {
@@ -231,29 +236,9 @@ $ROUT               = $var_info_project{"ROUT"};  #### Directory where ROUT outp
 $STORDIR            = "$ESP/$MODEL_NAME/$FCST_DATE/dly_flux"; #### ESP FLUXOUTPUT storage directory 
 $STOR_ROUT_DIR      = "$ROUT/$MODEL_NAME/$FCST_DATE/sflow"; #### ESP Rout storage directory
 # Save relevant model info in variables
-$MODEL_SRC_DIR = $var_info_model{"MODEL_SRC_DIR"};
-$MODEL_EXE_DIR = $var_info_model{"MODEL_EXE_DIR"};
-$MODEL_EXE_NAME = $var_info_model{"MODEL_EXE_NAME"};
-$MODEL_VER = $var_info_model{"MODEL_VER"};
-$MODEL_SUBDIR = $var_info_model{"MODEL_SUBDIR"};
-$MODEL_FORCING_TYPE = $var_info_model{"FORCING_TYPE"};
-$MODEL_RESULTS_TYPE = $var_info_model{"RESULTS_TYPE"};
-$OUTPUT_PREFIX = $var_info_model{"OUTPUT_PREFIX"};
-@output_prefixes = split /,/, $OUTPUT_PREFIX;
-if (!$extract_vars) {
-  $extract_vars = $var_info_model{"EXTRACT_VARS"};
-}
-if ($var_info_model{"POSTPROC"}) {
-  $POSTPROC_STR = $var_info_model{"POSTPROC"};
-  @POSTPROC = split /;;/, $POSTPROC_STR;
-}
-
-if ($MODEL_FORCING_TYPE eq $ForcTypeAscVic) {
-  $prefix = $ForcingAscVicPrefix;
-}
-elsif ($MODEL_FORCING_TYPE eq $ForcTypeNC) {
-  $prefix = $ForcingNCPrefix;
-}
+$ROUTE_SRC_DIR = $var_info_route{"MODEL_SRC_DIR"};
+$ROUTE_EXE_DIR = $var_info_route{"MODEL_EXE_DIR"};
+$ROUTE_EXE_NAME = $var_info_route{"MODEL_EXE_NAME"};
 
 if ($forcing_subdir =~ /retro/i) {
   $StartDateFile    = $var_info_project{"FORCING_RETRO_START_DATE_FILE"};
@@ -264,8 +249,6 @@ elsif ($forcing_subdir =~ /spinup_nearRT/i) {
 elsif ($forcing_subdir =~ /curr_spinup/i) { 
   $StartDateFile = $var_info_project{"FORCING_CURRSPIN_START_DATE_FILE"};
 }
-
-
 
 ###### Estimate Spinup start and end Date here: Spinup start date is currently set to be the day 1 of curr_spinup, however for retro or spinup_nearRT, the date will be the first day of 2 months before the routing starts
 

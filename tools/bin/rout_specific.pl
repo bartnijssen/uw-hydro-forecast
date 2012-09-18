@@ -60,7 +60,7 @@ sub run_rout {
   close(CONTROLFILE);
 
   # Run the model
- $cmd = "$MODEL_EXE_DIR/$MODEL_EXE_NAME  $controlfile >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+ $cmd = "$ROUTE_EXE_DIR/$ROUTE_EXE_NAME $controlfile >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
  (system($cmd)==0) or die "$0: ERROR in $cmd: $?\n";
 
 }### Sub_rout
