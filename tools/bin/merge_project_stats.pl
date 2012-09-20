@@ -20,6 +20,7 @@ require "$TOOLS_DIR/simma_util.pl";
 
 # Date arithmetic
 use Date::Calc qw(Days_in_Month Delta_Days Add_Delta_Days);
+use POSIX qw(strftime);
 
 #----------------------------------------------------------------------------------------------
 # Command-line arguments
@@ -41,10 +42,7 @@ if (!$fyear || !$fmonth || !$fday) {
 #----------------------------------------------------------------------------------------------
 
 # Unique identifier for this job
-$JOB_ID = `date +%y%m%d-%H%M%S`;
-if ($JOB_ID =~ /(\S+)/) {
-  $JOB_ID = $1;
-}
+$JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
 
 # Derived variables
 $PROJECT_UC = $PROJECT;

@@ -7,6 +7,7 @@ use lib "<SYSTEM_SITEPERL_LIB>";
 use Date::Calc qw(leap_year Days_in_Month Delta_Days Add_Delta_Days
                   Add_Delta_YM);
 use Statistics::Lite qw(mean);
+use POSIX qw(strftime);
 
 #-------------------------------------------------------------------------------
 # Determine tools and config directories
@@ -42,10 +43,7 @@ $PROJECT_UC =~ tr/a-z/A-Z/;
 $FLEN = 367;                   ### Number of days to run the model for in future
 
 # Unique identifier for this job
-$JOB_ID = `date +%y%m%d-%H%M%S`;
-if ($JOB_ID =~ /(\S+)/) {
-  $JOB_ID = $1;
-}
+$JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
 
 # Read project configuration info
 $ConfigProject = "$CONFIG_DIR/config.project.$PROJECT";

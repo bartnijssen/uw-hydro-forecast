@@ -24,6 +24,7 @@ use Env;
 
 # Filename parsing
 use File::Basename;
+use POSIX qw(strftime);
 
 fileparse($0, ".pl");
 ($scriptname, $path, $suffix) = fileparse($0, ".pl");
@@ -40,10 +41,7 @@ $stage = shift;
 #----------------------------------------------------------------------------------------------
 
 # Unique identifier for this job
-$JOB_ID = `date +%y%m%d-%H%M%S`;
-if ($JOB_ID =~ /(\S+)/) {
-  $JOB_ID = $1;
-}
+$JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
 
 # !!!!!!!!!!!!!!!!! GET THIS FROM CONFIG FILE !!!!!!!!!!!!!!!!!!
 # Set up netcdf access

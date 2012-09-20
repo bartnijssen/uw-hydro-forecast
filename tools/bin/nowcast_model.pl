@@ -24,6 +24,7 @@ use Date::Calc qw(Days_in_Month Delta_Days Add_Delta_Days);
 
 # Filename parsing
 use File::Basename;
+use POSIX qw(strftime);
 
 ($scriptname, $path, $suffix) = fileparse($0, ".pl");
 
@@ -42,10 +43,7 @@ $fcast_date_override = shift;
 #----------------------------------------------------------------------------------------------
 
 # Unique identifier for this job
-$JOB_ID = `date +%y%m%d-%H%M%S`;
-if ($JOB_ID =~ /(\S+)/) {
-  $JOB_ID = $1;
-}
+$JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
 
 # Read project configuration info
 $ConfigProject = "$CONFIG_DIR/config.project.$PROJECT";

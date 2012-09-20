@@ -33,6 +33,7 @@ require "$TOOLS_DIR/simma_util.pl";
 # Perl statistics package
 use lib "<SYSTEM_SITEPERL_LIB>";
 use Statistics::Lite ("mean");
+use POSIX qw(strftime);
 
 # Date arithmetic
 use Date::Calc qw(leap_year Days_in_Month Delta_Days Add_Delta_Days Add_Delta_YM);
@@ -59,10 +60,7 @@ $PROJECT_UC =~ tr/a-z/A-Z/;
 $DATE = sprintf "%04d%02d%02d", $Cyr, $Cmon, $Cday;
 
 # Unique identifier for this job
-$JOB_ID = `date +%y%m%d-%H%M%S`;
-if ($JOB_ID =~ /(\S+)/) {
-  $JOB_ID = $1;
-}
+$JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
 
 # Miscellaneous
 @month_days = (31,28,31,30,31,30,31,31,30,31,30,31);

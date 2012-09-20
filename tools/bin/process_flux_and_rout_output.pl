@@ -162,7 +162,7 @@ foreach $dir ($ROUT_XYZZ_DIR, $ESP_XYZZ_DIR, $ROUT_PLOT_DIR, $ESP_PLOT_DIR,
   }
 }
 
-$cmd = "$TOOLS_DIR/FCST_Process_Scripts/fcst_sflow $FCST $ESP_CONTROL_FILE " .
+$cmd = "$TOOLS_DIR/fcst_sflow $FCST $ESP_CONTROL_FILE " .
   "$BASIN_CONTROL_FILE $Cyr $Cmon $Cday >& $LogFile.tmp";
 print "$cmd\n";
 (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
@@ -208,7 +208,7 @@ print "$cmd\n";
 
 $cmd = "$TOOLS_DIR/plot_many.scr $PROJECT " .
   "$FCST $Cday $Cmon $Cyr $ESP_XYZZ_DIR $ESP_PLOT_DIR " .
-  "$TOOLS_DIR/FCST_Process_Scripts/PLOT_SCRIPTS $COMMON_DIR >& $LogFile.tmp";
+  "$TOOLS_DIR/PLOT_SCRIPTS $COMMON_DIR >& $LogFile.tmp";
 print "$cmd\n";
 (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
 $cmd = "cat $LogFile.tmp >> $LogFile";
@@ -224,7 +224,7 @@ $LAST_FCST_DATE = sprintf("%04d%02d%02d",$L_fcst_yr, $L_fcst_mon, $L_fcst_day);
 
 $cmd = "$TOOLS_DIR/plots_spatial_initcond.WREG.scr " .
   "$DATE $LAST_FCST_DATE $PROJECT $COMMON_DIR $OBS_XYZZ_DIR $XYZZFILE " .
-  "$ESP_PLOT_DIR $TOOLS_DIR/FCST_Process_Scripts/PLOT_SCRIPTS>& $LogFile.tmp";
+  "$ESP_PLOT_DIR $TOOLS_DIR/PLOT_SCRIPTS>& $LogFile.tmp";
 print "$cmd\n";
 (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
 $cmd = "cat $LogFile.tmp >> $LogFile";

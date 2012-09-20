@@ -33,6 +33,7 @@ use Date::Calc qw(Days_in_Month Delta_Days Add_Delta_Days);
 
 # Access to environment variables
 use Env;
+use POSIX qw(strftime);
 
 # Model-specific subroutines
 require "$TOOLS_DIR/model_specific.pl";
@@ -157,10 +158,7 @@ if ($results_subdir) {
 #----------------------------------------------------------------------------------------------
 
 # Unique identifier for this job
-$JOB_ID = `date +%y%m%d-%H%M%S`;
-if ($JOB_ID =~ /(\S+)/) {
-  $JOB_ID = $1;
-}
+$JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
 
 # Set up netcdf access
 $ENV{INC_NETCDF} = "<SYSTEM_NETCDF_INC>";
