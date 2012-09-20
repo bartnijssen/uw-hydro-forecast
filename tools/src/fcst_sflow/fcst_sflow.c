@@ -218,7 +218,7 @@ void get_common_para(char *esp_file_bas) // Shrad made this change. Now this fun
   fp = fopen(esp_file_bas, "rt");      // Shrad changes this
   fscanf(fp, "%*s %d", &metyr0);
   fscanf(fp, "%*s %s", file_enso_pdo);
-  fscanf(fp, "%*s %d %d", &idx_enso, &idx_pdo);
+  fscanf(fp, "%*s %c %c", &idx_enso, &idx_pdo);
   // pnnl
   fprintf(stdout,"check idx_pdo %d\n",idx_pdo);
   fclose(fp);
@@ -250,7 +250,7 @@ void get_bas_info(char *file_bas)
   if (fp == NULL) {printf("cannot open BAS ctrl file: %s. exit!\n", file_bas); exit(-1);}
   fscanf(fp, "%*s %s", name_bas);
   fscanf(fp, "%*s %s", path_clim);
-  fscanf(fp, "%*s %d", &idx_stats_type);
+  fscanf(fp, "%*s %c", &idx_stats_type);
   fscanf(fp, "%*s %s", file_stn_info);
   fscanf(fp, "%*s %s", path_spinup);
   fscanf(fp, "%*s %s", file_trace_year);  
@@ -283,7 +283,7 @@ void get_bas_info(char *file_bas)
     case 2: total_mon_cum = 4; break;
     default: printf("cum period wrong, should be 1 or 2 (here %d). exit!\n", idx_stats_type); exit(-1);
   }
-  str_cum_period = name_cum_period[idx_stats_type]; 
+  str_cum_period = name_cum_period[(int)idx_stats_type]; 
 
   printf("basin:      %s\n", name_bas);
   printf("work path:  %s\n", path_work);
@@ -530,7 +530,7 @@ void read_fcst_last(int total_stn)
 
   printf("\nreading stats data of last forecast...\n\n");
   if (idx_cur_fcst == 0) {
-    printf("cannot read previous forecast. skip calculation of fcst change.\n", file_bas); 
+    printf("cannot read previous forecast: %s. skip calculation of fcst change.\n", file_bas); 
     op_calc_diff = 0;
     return;
   }
@@ -652,7 +652,8 @@ void update_bas_fcst_hist(long cur_fcst)
   char file_hist[MAX_CHAR], *str_fcst_type[4] = {"", "esp", "cpc", "cfs"}; int no, n; 
   FILE *fp;
 
-  sprintf(file_hist, "%s/%s.%3s.hist", path_work, name_bas, str_fcst_type[fcst_type]);
+  sprintf(file_hist, "%s/%s.%3s.hist", path_work, name_bas, 
+          str_fcst_type[(int)fcst_type]);
   
   fp = fopen(file_hist, "rt");
   if (fp == NULL) { // BAS.fcst.hist not found; set cur fcst as the first one
@@ -660,7 +661,9 @@ void update_bas_fcst_hist(long cur_fcst)
   }
   else {
     fscanf(fp, "%*s %d ", &num_fcst_hist);
-    for (no = 0; no < num_fcst_hist; no ++) fscanf(fp, "%ld ", &bas_fcst_hist[no]);
+    for (no = 0; no < num_fcst_hist; no ++) {
+        fscanf(fp, "%ld ", &bas_fcst_hist[no]);
+    }
     fclose(fp);
     for (no = num_fcst_hist - 1; no > -1; no --) {
       if (cur_fcst > bas_fcst_hist[no]) break;
@@ -673,8 +676,10 @@ void update_bas_fcst_hist(long cur_fcst)
   }
 
   fp = fopen(file_hist, "wt");
-  fprintf(fp, "total_fcst: %ld\n", num_fcst_hist);
-  for (no = 0; no < num_fcst_hist; no ++) fprintf(fp, "%8ld\n", bas_fcst_hist[no]);
+  fprintf(fp, "total_fcst: %d\n", num_fcst_hist);
+  for (no = 0; no < num_fcst_hist; no ++) {
+      fprintf(fp, "%8ld\n", bas_fcst_hist[no]);
+  }
   fclose(fp);
 
   if ((fcst_mn == 10) && (fcst_dy == 1)) op_calc_diff = 0; // donot calc forecast change for oct. 1.
@@ -774,12 +779,6 @@ void write_stats(int total_stn)
   
   // change directory to YYYYMMDD if exist, otherwise create it
   sprintf(new_dir, "%s/%8ld.%.3s", path_work, cur_fcst, str_fcst);  // path fmt: YYYYMMDD.ESP/CPC/CFS
-  //op = //*chdir(new_dir);
-  if (op == -1) {
-    sprintf(str_tmp, "mkdir %s", new_dir);
-    system(str_tmp);
-    //*chdir(new_dir);
-  }
 
   printf("\nwriting data to path: %s/%s\n", path_work, new_dir);
   
@@ -790,7 +789,7 @@ void write_stats(int total_stn)
   }
 
   if (op_calc_cum) {
-    printf("...writing bas stats and forweb.\n", str_fcst);
+    printf("...writing bas stats and forweb: %s.\n", str_fcst);
     sprintf(file_bas, "%s/%s.%3sstats", path_work, name_bas, str_fcst);
     fp = fopen(file_bas, "wt");
     fprintf(fp, "%s %d, %d\n", str_mon[fcst_mn], fcst_dy, fcst_yr);
@@ -810,7 +809,7 @@ void write_stats(int total_stn)
   }
 
   if (op_trace_year) {
-    printf("...writing trace year stats.\n", str_fcst);
+    printf("...writing trace year stats: %s.\n", str_fcst);
     sprintf(file_bas, "%s/%s.%3sstats_trace", path_work, name_bas, str_fcst);
     fp = fopen(file_bas, "wt");
     fprintf(fp, "%-56s %7s %7s %7s\n", "station", "ESP", "enso", "trace"); 
@@ -973,7 +972,7 @@ void write_stats(int total_stn)
         case -2: break; // skip the missing station
         default:
           pd = &stn_cum_stat[stn][0];
-          pdl = &stn_cum_stat_last[stn_idx[stn]][0];
+          pdl = &stn_cum_stat_last[(int)stn_idx[stn]][0];
           if (fcst_type == 1) {  // for ESP forecast
             fprintf(fp, "%-56s %7s %7d %7d %7d %9d %7d %9d %7d\n", 
                     name_stn_full[stn], str_cum_period, 
