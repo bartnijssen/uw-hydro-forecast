@@ -99,7 +99,7 @@ main(int   argc,
     char             inpath[150], prefix[150], outfile[200], outprefix[200],
                      metafile[100], gridfile[100], timespan[10];
     FILE           **infilehandle;
-    int              i, j, k, l, t, g, d, h, v;
+    int              i, k, l, t, g, v;
     float            levels[MAXLEV];
     float            time;
     int              timestep;
@@ -127,7 +127,6 @@ main(int   argc,
     long long        cumulative_recs, cumulative_secs;
     int              fidx;
     long long        dsec;
-    int              tmp_int;
 
     // Initialize FORMAT and ENDIAN
     strcpy(FORMAT, "ASCII");
@@ -221,7 +220,7 @@ main(int   argc,
         fprintf(
             stderr,
             "ERROR: cannot allocate sufficient number of file pointers (descriptors) to cover all input files\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     // Echo params to user
@@ -308,13 +307,13 @@ main(int   argc,
     if ((var3d = (float**)calloc(NUM3d, sizeof(float*))) == NULL) {
         fprintf(stderr,
                 "ERROR: cannot allocate sufficient memory for data array\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     for (v = 0; v < NUM3d; v++) {
         if ((var3d[v] = (float*)calloc(NCELLS, sizeof(float))) == NULL) {
             fprintf(stderr,
                     "ERROR: cannot allocate sufficient memory for data array\n");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -328,14 +327,14 @@ main(int   argc,
         if ((var4d = (float***)calloc(NUM4d, sizeof(float**))) == NULL) {
             fprintf(stderr,
                     "ERROR: cannot allocate sufficient memory for data array\n");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         for (v = 0; v < NUM4d; v++) {
             if ((var4d[v] = (float**)calloc(NCELLS, sizeof(float*))) == NULL) {
                 fprintf(
                     stderr,
                     "ERROR: cannot allocate sufficient memory for data array\n");
-                exit(1);
+                exit(EXIT_FAILURE);
             }
             for (k = 0; k < NCELLS; k++) {
                 if ((var4d[v][k] =
@@ -343,7 +342,7 @@ main(int   argc,
                     fprintf(
                         stderr,
                         "ERROR: cannot allocate sufficient memory for data array\n");
-                    exit(1);
+                    exit(EXIT_FAILURE);
                 }
             }
         }
@@ -459,6 +458,7 @@ main(int   argc,
 
         // Close the output file
         status = nc_close(ncid);
+        Handle_Error(status);
 
         // Advance the date/time counters
         cumulative_recs += NRECS;
@@ -496,6 +496,8 @@ main(int   argc,
         }
         free(var4d);
     }
+
+    return EXIT_SUCCESS;
 } // END PROGRAM
 
 // *************************************************************************************************
@@ -521,7 +523,7 @@ Read_Args(int   argc,
 
     if (argc == 1) {
         Usage(argv[0]);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     while ((optchar = getopt(argc, argv, optstring)) != EOF) {
@@ -563,7 +565,7 @@ Read_Args(int   argc,
         default:
             /** Print Usage if Invalid Command Line Arguments **/
             Usage(argv[0]);
-            exit(1);
+            exit(EXIT_FAILURE);
             break;
         }
     }
@@ -582,7 +584,7 @@ Read_Args(int   argc,
                 "ERROR: the specified value of timespan, %s, is not valid\n",
                 timespan);
             Usage(argv[0]);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
     else {
@@ -774,8 +776,7 @@ Read_Metadata(char          *metafile,
     char       data_end_date_str[20];
     char       data_end_time_str[20];
     char       file_start_time_str[20];
-    int        i, l, varcount, count3, count4;
-    char       current_date[50];
+    int        i, varcount, count3, count4;
 // time_t *tp;
     char       multstr[10];
     char       endian_str[10];
@@ -833,7 +834,7 @@ Read_Metadata(char          *metafile,
     // Open and read file
     if ((mf = fopen(metafile, "r")) == NULL) {
         fprintf(stderr, "Error opening %s.\n", metafile);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     varcount = 0;
@@ -933,7 +934,7 @@ Read_Metadata(char          *metafile,
                         stderr,
                         "Error: variable %s is listed as having a dependence on z dimension, but NLEVELS is set to %d in the metadata file %s\n",
                         var_atts[varcount].name, NLEVELS, metafile);
-                    exit(1);
+                    exit(EXIT_FAILURE);
                 }
                 (!strcasecmp(var_atts[varcount].z_dep,
                              "FALSE")) ? count3++ : count4++;
@@ -1001,7 +1002,7 @@ Read_Metadata(char          *metafile,
     if (!time_units_match) {
         fprintf(stderr, "Error: given time units (%s) are invalid\n",
                 time_units);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     // Adjust data end time to be the final second before the next record (which is not in the data set)
@@ -1036,17 +1037,17 @@ Read_Gridfile(char *gridfile)
 {
     FILE            *fg;
     char             linestr[MAXSTRING];
-    int              g, i, j, k;
+    int              k;
     int              cellid, row, col;
     int              row_adj, col_adj;
-    float            lat, lon, minlat, maxlat, minlon, maxlon;
+    float            lat, lon;
     int              first_time;
     struct GridInfo *grid;
 
     // Open gridfile
     if ((fg = fopen(gridfile, "r")) == NULL) {
         fprintf(stderr, "Error opening %s.\n", gridfile);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     // Get dimensions of grid
@@ -1109,7 +1110,7 @@ Read_Gridfile(char *gridfile)
     // Open gridfile again
     if ((fg = fopen(gridfile, "r")) == NULL) {
         fprintf(stderr, "Error opening %s.\n", gridfile);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     // Now store data in grid structure
@@ -1152,7 +1153,7 @@ Calc_Grid(char *inpath,
     DIR             *dp;
     struct dirent   *filep;
     int              k, first_time;
-    char             tmpstr[MAXSTRING], *latstr, *lonstr;
+    char             tmpstr[MAXSTRING];
     char           **latlonstr;
     float            lat, lon, minlat, maxlat, minlon, maxlon, delta_lat,
                      delta_lon, temp;
@@ -1161,14 +1162,11 @@ Calc_Grid(char *inpath,
     struct GridInfo *grid;
     int              i, n;
     char            *tok;
-    float            tmpfloat;
-    int              tmpint;
-    double           tmpdouble;
 
     // Open inpath
     if ((dp = opendir(inpath)) == NULL) {
         fprintf(stderr, "Error opening %s.\n", inpath);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     // Get dimensions of grid
@@ -1240,7 +1238,7 @@ Calc_Grid(char *inpath,
     // Open inpath again
     if ((dp = opendir(inpath)) == NULL) {
         fprintf(stderr, "Error opening %s.\n", inpath);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     // Get lats and lons
@@ -1440,7 +1438,7 @@ Check_VIC_Files(char            *inpath,
                 struct GridInfo *grid,
                 FILE           **infilehandle)
 {
-    int  i, j, k;
+    int  k;
     char filename[150];
 
     // Loop over all points.
@@ -1521,7 +1519,6 @@ Compute_File_Time_Properties(char      *timespan,
                              struct tm *file_end_time,
                              struct tm *last_rec_time)
 {
-    int       i;
     long      ndays;
     long long dsec;
     long long tmp;
@@ -1646,10 +1643,8 @@ Read_VIC(struct GridInfo *grid,
          float          **var3d,
          float         ***var4d)
 {
-    int            i, j, k, t, v, l, f;
+    int            i, k, v, l;
     int            count3, count4;
-    float          tempfloat;
-    char          *tempstr;
     int            my_endian;
     signed short   stmp;
     unsigned short ustmp;
@@ -1819,7 +1814,7 @@ Open_NetCDF(char            *outfile,
             int             *timestepvaridp)
 {
     int    status;
-    int    i, j, k, t, l, v, g;
+    int    k, v, g;
     int    ncid;
     int    ydimid, xdimid, zdimid, landdimid, tstepdimid;
     int    rowvarid, colvarid, latvarid, lonvarid, levvarid, landvarid,
@@ -2507,8 +2502,7 @@ Write_NetCDF(int              ncid,
              float         ***var4d)
 {
     int    status;
-    int    i, j, k, t, l, v, g;
-    int    ndim, dims[MAXDIM];
+    int    k, l, v, g;
     float *temp_array_cmp;
     float *temp_array;
     int    varcount3, varcount4;
@@ -2810,7 +2804,7 @@ add_sec_date(struct tm  start_date,
     long ndays;
     int  jday;
     int  days_in_year, days_in_month, days_until_year_rollover,
-         days_until_month_rollover, mon;
+         days_until_month_rollover;
 
     // Initialize new_date
     new_date->tm_year = start_date.tm_year;
