@@ -1,0 +1,13 @@
+#!/bin/csh
+#
+#$ -cwd
+#$ -j y
+#$ -S /bin/csh
+#$ -q forecast.q
+#$ -M shrad@hydro.washington.edu,nijssen@hydro.washington.edu
+#$ -N NHPS_CLEAR_FORCINGS
+
+set BASIN = $1
+
+/raid8/forecast/proj/uswide/tools/run_clear_curr_forcings.pl $BASIN >&! /raid8/forecast/proj/uswide/tools/log.clear_curr_forcings.$BASIN
+

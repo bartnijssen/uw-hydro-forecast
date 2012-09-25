@@ -318,33 +318,6 @@ $stage++;
 
 }
 
-
-#--------------------------------------------------------------------------------
-# Clear out the current forcings again and replace with "dummy" record corresponding to start date 1 month later
-#--------------------------------------------------------------------------------
-if ($stage == 7) {
-
-#$cmd = "$TOOLS_DIR/clear_curr_forcings.pl $PROJECT $NewStartDate >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
-#`echo $cmd > $LogFile`;
-#if (system($cmd)!=0) {
-#  `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
-#  die "$0: ERROR: $cmd failed: $?\n";
-#}
-$cmd = "$TOOLS_DIR/clear_curr_forcings.pl $PROJECT $NewStartDate >& $LogFile.tmp";
-print "$cmd\n";
-(system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
-$cmd = "cat $LogFile.tmp >> $LogFile";
-print "$cmd\n";
-(system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
-$cmd = "rm -f $LogFile.tmp";
-print "$cmd\n";
-(system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
-
-$stage++;
-
-}
-
-
 #--------------------------------------------------------------------------------
 # Announce completion of state advancement
 #--------------------------------------------------------------------------------

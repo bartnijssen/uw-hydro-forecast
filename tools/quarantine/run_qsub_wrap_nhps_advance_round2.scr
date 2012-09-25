@@ -1,0 +1,9 @@
+#!/bin/csh 
+### This script runs NHPS Advance State each month for all basins
+set DATE = `date`
+set STAGE = 3
+foreach BASIN (feather gunnison)
+set script = "/raid8/forecast/proj/uswide/tools/qsub_advance_state.scr"
+qsub $script $BASIN $STAGE
+end 
+

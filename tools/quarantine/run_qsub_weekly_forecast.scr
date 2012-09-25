@@ -3,17 +3,22 @@
 set PATH = "/raid8/forecast/proj/uswide/tools" 
 set Template = "$PATH/qsub_weekly_forecast_template"
 set script = "$PATH/qsub_weekly_forecast"
-set project = "feather"
+
 set model = "vic"
 set ESP = 1
 set ROUTE = 1
-set C_YR = 2012
-set C_MON = 07
-set C_DAY = 25
+
+### Arguments
+set C_YR = $1
+set C_MON = $2
+set C_DAY = $3
+set project = "$4" ### Basin/project name
+
+
 set SENS   = 1960
 set EENS   = 2004
 set YR = $SENS
-set BATCH = 3
+set BATCH = 3 ### Number of years in each chunk for which this script runs on each processors. so 3 means it would run for 1960 to 1963 on one processor and 1974 to 1967 on other processors.. and so on
 
 ##### First Batch of Ensemble runs
 set NUM = 1
@@ -49,7 +54,6 @@ set YR = "$Nxt_Syr"
 sleep 30
 end
 
-mail shrad < done
 
 \rm done
 
