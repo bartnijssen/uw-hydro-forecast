@@ -1,5 +1,4 @@
 #!/usr/bin/env perl
-
 use warnings;
 
 # calculate values from anomalies given precalculated means
@@ -14,7 +13,6 @@ use warnings;
 # AWW-1104:  runs for just one basin, automatically, off args
 #            needs no args. removed functionality for longer datasets
 #            tailored for ps / pnw only
-
 #use Date::Calc qw(Delta_Days);
 use lib "<SYSTEM_PERL_LIB>";
 use UWTime;
@@ -22,23 +20,22 @@ use UWTime;
 # command-line arguments
 $tx_anom = shift;
 $tn_anom = shift;
-$avgs = shift;
-$tx_grd = shift;
-$tn_grd = shift;
-
+$avgs    = shift;
+$tx_grd  = shift;
+$tn_grd  = shift;
 print "$0: - Avgs file is $avgs\n";
 
 # open files
 open(TXANOM, "<$tx_anom") or die "$0: ERROR: Cannot open $tx_anom: $!\n";
 open(TNANOM, "<$tn_anom") or die "$0: ERROR: Cannot open $tn_anom: $!\n";
-open(AVGS, "<$avgs") or die "$0: ERROR: Cannot open $avgs: $!\n";
-open(TXGRD, ">$tx_grd") or die "$0: ERROR: Cannot open $tx_grd: $!\n";
-open(TNGRD, ">$tn_grd") or die "$0: ERROR: Cannot open $tn_grd: $!\n";
+open(AVGS,   "<$avgs")    or die "$0: ERROR: Cannot open $avgs: $!\n";
+open(TXGRD,  ">$tx_grd")  or die "$0: ERROR: Cannot open $tx_grd: $!\n";
+open(TNGRD,  ">$tn_grd")  or die "$0: ERROR: Cannot open $tn_grd: $!\n";
 
 # read averages ---------------------------------------
-$c=0;
+$c = 0;
 while (<AVGS>) {
-  ($name[$c],$junk,$txavg[$c],$tnavg[$c],$junk) = split;
+  ($name[$c], $junk, $txavg[$c], $tnavg[$c], $junk) = split;
   $c++;
 }
 close(AVGS);
@@ -49,13 +46,12 @@ $rec = 0;
 @txanom = @tnanom = ();
 while (<TXANOM>) {
   @tmp = split;
-  for($c=0;$c<@tmp;$c++) {
+  for ($c = 0 ; $c < @tmp ; $c++) {
     $txanom[$rec][$c] = $tmp[$c];
   }
-
-  $line= <TNANOM>;   # same length as TXANOM, or this wouldn't work
-  @tmp = split(" ",$line);
-  for($c=0;$c<@tmp;$c++) {
+  $line = <TNANOM>;         # same length as TXANOM, or this wouldn't work
+  @tmp = split(" ", $line);
+  for ($c = 0 ; $c < @tmp ; $c++) {
     $tnanom[$rec][$c] = $tmp[$c];
   }
   $rec++;
@@ -63,10 +59,10 @@ while (<TXANOM>) {
 
 # write out anomaly .grd files, handling voids (should be none)
 print "writing value .grd files\n";
-for($r=0;$r<$rec;$r++) {
-  for($c=0;$c<@name;$c++) {
-    printf TXGRD "%.2f ",$txanom[$r][$c]+$txavg[$c];
-    printf TNGRD "%.2f ",$tnanom[$r][$c]+$tnavg[$c];
+for ($r = 0 ; $r < $rec ; $r++) {
+  for ($c = 0 ; $c < @name ; $c++) {
+    printf TXGRD "%.2f ", $txanom[$r][$c] + $txavg[$c];
+    printf TNGRD "%.2f ", $tnanom[$r][$c] + $tnavg[$c];
   }
   printf TXGRD "\n";
   printf TNGRD "\n";

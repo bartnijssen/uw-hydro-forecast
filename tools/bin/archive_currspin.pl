@@ -1,5 +1,4 @@
 #!/usr/bin/env perl
-
 use warnings;
 
 # SGE directives
@@ -14,11 +13,10 @@ use warnings;
 # Author: Ted Bohn
 # $Id: $
 #-------------------------------------------------------------------------------
-
 #-------------------------------------------------------------------------------
-# Determine tool and config directories 
+# Determine tool and config directories
 #-------------------------------------------------------------------------------
-$TOOLS_DIR = "<SYSTEM_INSTALLDIR>/bin";
+$TOOLS_DIR  = "<SYSTEM_INSTALLDIR>/bin";
 $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 
 #-------------------------------------------------------------------------------
@@ -31,8 +29,7 @@ require "$TOOLS_DIR/simma_util.pl";
 # Command-line arguments
 #-------------------------------------------------------------------------------
 $PROJECT = shift;
-$MODEL = shift;
-
+$MODEL   = shift;
 if ($MODEL ne "vic") {
   exit(0);
 }
@@ -40,32 +37,34 @@ if ($MODEL ne "vic") {
 #-------------------------------------------------------------------------------
 # Set up constants
 #-------------------------------------------------------------------------------
-
 # Read project configuration info
-$ConfigProject = "$CONFIG_DIR/config.project.$PROJECT";
+$ConfigProject        = "$CONFIG_DIR/config.project.$PROJECT";
 $var_info_project_ref = &read_config($ConfigProject);
-%var_info_project = %{$var_info_project_ref};
+%var_info_project     = %{$var_info_project_ref};
 
 # Read model configuration info
-$ConfigModel = "$CONFIG_DIR/config.model.$MODEL";
+$ConfigModel        = "$CONFIG_DIR/config.model.$MODEL";
 $var_info_model_ref = &read_config($ConfigModel);
-%var_info_model = %{$var_info_model_ref};
+%var_info_model     = %{$var_info_model_ref};
 
 # Substitute model-specific information into project variables
 foreach $key_proj (keys(%var_info_project)) {
   foreach $key_model (keys(%var_info_model)) {
-    $var_info_project{$key_proj} =~ s/<$key_model>/$var_info_model{$key_model}/g;
+    $var_info_project{$key_proj} =~
+      s/<$key_model>/$var_info_model{$key_model}/g;
   }
 }
 
 # Substitute user-specified information into project and model variables
-$var_info_project{"RESULTS_MODEL_ASC_DIR"} =~ s/<RESULTS_SUBDIR>/$var_info_project{"CURR_SUBDIR"}/g;
+$var_info_project{"RESULTS_MODEL_ASC_DIR"} =~
+  s/<RESULTS_SUBDIR>/$var_info_project{"CURR_SUBDIR"}/g;
 
 # Save relevant project info in variables
 $ResultsModelAscDir = $var_info_project{"RESULTS_MODEL_ASC_DIR"};
+
 # The final processed model results will be stored in the ascii dir
 $ResultsModelFinalDir = $ResultsModelAscDir;
-$DepotDir        = $var_info_project{"PLOT_DEPOT_DIR"};
+$DepotDir             = $var_info_project{"PLOT_DEPOT_DIR"};
 
 # Check for directories; create if necessary & possible
 foreach $dir ($ResultsModelFinalDir, $DepotDir) {
@@ -76,24 +75,22 @@ foreach $dir ($ResultsModelFinalDir, $DepotDir) {
 foreach $dir ($DepotDir) {
   $status = &make_dir($dir);
 }
-
 $Archive = "curr_spinup.$PROJECT.$MODEL.tgz";
 
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # END settings
-#----------------------------------------------------------------------------------------------
-
+#-------------------------------------------------------------------------------
 # Archive results
 if (-e "$ResultsModelFinalDir/../$Archive") {
   $cmd = "rm -f $ResultsModelFinalDir/../$Archive";
   print "$cmd\n";
-  (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
+  (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
 }
 $cmd = "cd $ResultsModelFinalDir/..; tar -cvzf $Archive asc; cd -";
 print "$cmd\n";
-(system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
+(system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
 
 # Copy to depot
 $cmd = "cp $ResultsModelFinalDir/../$Archive $DepotDir/";
 print "$cmd\n";
-(system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
+(system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
