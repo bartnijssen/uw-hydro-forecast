@@ -1,4 +1,4 @@
-# conus Project Information
+# Feather Project Information
 #------------------------------------------------------------------------
 # Basic Info
 PROJECT_TYPE		real
@@ -32,6 +32,7 @@ CURR_SUBDIR	curr_spinup
 # For PARAMS_MODEL_DIR, MODEL_SUBDIR will be supplied by model config file
 PARAMS_MODEL_DIR	<PARAMS_DIR>/<MODEL_SUBDIR>
 PARAMS_ROUT_DIR		<PARAMS_DIR>/rout
+
 # Forcing subdirectories
 FORCING_STN_INFO_DIR	<FORCING_DIR>/acis/stn_info
 #FORCING_ACIS_RAW_DIR	<FORCING_DIR>/acis/raw_data
@@ -66,7 +67,7 @@ RESULTS_MODEL_DIST_DIR	<RESULTS_DIR>/<RESULTS_SUBDIR>/<MODEL_SUBDIR>/daily/asc.d
 ###### Variable added for routing #############################################
 SPINUP_MODEL_ASC_DIR    <RESULTS_DIR>/<FORCING_SUBDIR>/<MODEL_SUBDIR>/daily/asc       
 ROUT_MODEL_DIR 		<ROUT_DIR>/<RESULTS_SUBDIR>/<MODEL_SUBDIR>/
-#############################################################################
+
 # State subdirectories
 STATE_RETRO_DIR		<STATE_DIR>/<RETRO_SUBDIR>
 STATE_NEAR_RT_DIR	<STATE_DIR>/<NEAR_RT_SUBDIR>
