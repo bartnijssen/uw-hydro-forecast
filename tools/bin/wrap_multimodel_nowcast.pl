@@ -1,18 +1,18 @@
 #!/usr/bin/env perl
 # Wrapper script for complete multi-model nowcast
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 use warnings;
 
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Determine tools and config directories
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 $TOOLS_DIR = "<SYSTEM_INSTALLDIR>/bin";
 $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Include external modules
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Subroutine for reading config files
 require "$TOOLS_DIR/simma_util.pl";
 
@@ -29,16 +29,16 @@ use POSIX qw(strftime);
 fileparse($0, ".pl");
 ($scriptname, $path, $suffix) = fileparse($0, ".pl");
 
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Command-line arguments
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 $PROJECT = shift;
 # This next argument is optional
 $stage = shift;
 
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Set up constants
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 # Unique identifier for this job
 $JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
@@ -67,8 +67,8 @@ foreach $dir ($LogDir) {
   $status = &make_dir($dir);
 }
 
-# Stage can be defined in the config file. Precedence is:command-line, config file. 
-# It is 1 if it is not specified in either of those locations
+# Stage can be defined in the config file. Precedence is:command-line, config
+# file. It is 1 if it is not specified in either of those locations
 if (not defined $stage) {
   if (exists($var_info_project{"NOWCAST_STAGE"}) and 
       defined($var_info_project{"NOWCAST_STAGE"}) and 
@@ -79,16 +79,17 @@ if (not defined $stage) {
   }
 }
 
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # END settings
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
-#--------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Update ascii forcings
-#--------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 if ($stage == 1) {
 
-  $cmd = "$TOOLS_DIR/update_forcings_asc.pl $PROJECT >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+  $cmd = "$TOOLS_DIR/update_forcings_asc.pl $PROJECT >& $LogFile.tmp; " . 
+    "cat $LogFile.tmp >> $LogFile";
   print "$cmd\n";
   (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
   
@@ -109,7 +110,8 @@ if ($stage == 2) {
     $ModelType = $var_info_model{"MODEL_TYPE"};
     $ForcingType = $var_info_model{"FORCING_TYPE"};
     if ($ModelType eq "real" && $ForcingType ne "nc") {
-      $cmd = "$TOOLS_DIR/nowcast_model.pl $PROJECT $model >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+      $cmd = "$TOOLS_DIR/nowcast_model.pl $PROJECT $model >& $LogFile.tmp; " . 
+        "cat $LogFile.tmp >> $LogFile";
       print "$cmd\n";
       (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
     }
@@ -139,7 +141,8 @@ if ($stage == 3) {
   
   # Generate the netcdf forcings
   if ($need_netcdf) {
-    $cmd = "$TOOLS_DIR/update_forcings_nc.pl $PROJECT >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+    $cmd = "$TOOLS_DIR/update_forcings_nc.pl $PROJECT >& $LogFile.tmp; " .
+      "cat $LogFile.tmp >> $LogFile";
     print "$cmd\n";
     (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
   }
@@ -148,9 +151,9 @@ if ($stage == 3) {
   
 }
 
-#--------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Run nowcast for models that use netcdf forcings
-#--------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 if ($stage == 4) {
 
   foreach $model (@models) {
@@ -161,7 +164,8 @@ if ($stage == 4) {
     $ModelType = $var_info_model{"MODEL_TYPE"};
     $ForcingType = $var_info_model{"FORCING_TYPE"};
     if ($ModelType eq "real" && $ForcingType eq "nc") {
-      $cmd = "$TOOLS_DIR/nowcast_model.pl $PROJECT $model >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+      $cmd = "$TOOLS_DIR/nowcast_model.pl $PROJECT $model >& $LogFile.tmp; " .
+        "cat $LogFile.tmp >> $LogFile";
       print "$cmd\n";
       (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
     }
@@ -172,9 +176,9 @@ if ($stage == 4) {
 }
 
 
-#--------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Run nowcast for multi-model ensemble
-#--------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 if ($stage == 5) {
   
   foreach $model (@models) {
@@ -184,7 +188,8 @@ if ($stage == 5) {
     %var_info_model = %{$var_info_model_ref};
     $ModelType = $var_info_model{"MODEL_TYPE"};
     if ($ModelType eq "ensemble") {
-      $cmd = "$TOOLS_DIR/nowcast_model.pl $PROJECT $model >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+      $cmd = "$TOOLS_DIR/nowcast_model.pl $PROJECT $model >& $LogFile.tmp; " . 
+        "cat $LogFile.tmp >> $LogFile";
       print "$cmd\n";
       (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
     }
@@ -195,9 +200,9 @@ if ($stage == 5) {
 }
 
 
-#--------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Publish plots to web site
-#--------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 if ($stage == 6) {
 
   $cmd = "$TOOLS_DIR/publish_figs.pl $PROJECT";
@@ -209,9 +214,9 @@ if ($stage == 6) {
 }
 
 
-#--------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Announce completion of nowcast
-#--------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 ### This part is not active because emails are sent out through the qsub
 $subject = "\"[USWIDE] Nowcast $PROJECT complete\"";
 $addresses = join " ", @emails;
