@@ -1,50 +1,35 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
+use warnings;
 # Wrapper script that calls programs to convert ascii forcings to netcdf
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
-#----------------------------------------------------------------------------------------------
-# Determine tools, root, and config directories - assume this script lives in ROOT_DIR/tools/
-#----------------------------------------------------------------------------------------------
-if ($0 =~ /^(.+)\/[^\/]+$/) {
-  $TOOLS_DIR = $1;
-}
-elsif ($0 =~ /^[^\/]+$/) {
-  $TOOLS_DIR = ".";
-}
-else {
-  die "$0: ERROR: cannot determine tools directory\n";
-}
-if ($TOOLS_DIR =~ /^(.+)\/tools/i) {
-  $ROOT_DIR = $1;
-}
-else {
-  $ROOT_DIR = "$TOOLS_DIR/..";
-}
-$CONFIG_DIR = "$ROOT_DIR/config";
+#-------------------------------------------------------------------------------
+# Determine tools and config directories
+#-------------------------------------------------------------------------------
+$TOOLS_DIR = "<SYSTEM_INSTALLDIR>/bin";
+$CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Include external modules
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Subroutine for reading config files
 require "$TOOLS_DIR/simma_util.pl";
+use POSIX qw(strftime);
 
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Command-line arguments
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 $PROJECT = shift;
 # These next arguments are optional - can be omitted
 $currspin_start_date_override = shift;
 $currspin_end_date_override = shift;
 
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Set up constants
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 # Unique identifier for this job
-$JOB_ID = `date +%y%m%d-%H%M%S`;
-if ($JOB_ID =~ /(\S+)/) {
-  $JOB_ID = $1;
-}
+$JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
 
 # Configuration files
 $ConfigProject = "$CONFIG_DIR/config.project.$PROJECT";
@@ -52,6 +37,8 @@ $ConfigProject = "$CONFIG_DIR/config.project.$PROJECT";
 # Project configuration info
 $var_info_project_ref = &read_config($ConfigProject);
 %var_info_project = %{$var_info_project_ref};
+# HACK -- not sure why these hardwired paths are here - Bart
+# Should be moved to config Tue Sep 25 2012
 $ForcAscVicDir = $var_info_project{"FORCING_CURRSPIN_DIR"} . "/asc_vicinp";
 $ForcAscDisDir = $var_info_project{"FORCING_CURRSPIN_DIR"} . "/asc_disagg";
 $ForcNCDir     = $var_info_project{"FORCING_CURRSPIN_DIR"} . "/nc";
@@ -73,9 +60,9 @@ foreach $dir ($ForcAscDisDir, $ForcNCDir, $ControlDir, $LogDir) {
   $status = &make_dir($dir);
 }
 
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Read dates from files
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 # Date of beginning of current spinup forcings
 open (FILE, $CurrspinStartDateFile) or die "$0: ERROR: cannot open file $CurrspinStartDateFile\n";
@@ -107,22 +94,28 @@ if ($currspin_end_date_override) {
 $start_date_str = sprintf "%04d-%02d-%02d", $Syr, $Smon, $Sday;
 $end_date_str = sprintf "%04d-%02d-%02d", $Forc_Eyr, $Forc_Emon, $Forc_Eday;
 
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # END settings
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Conversion of Forcings
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 # Disaggregate forcings from daily to sub-daily
-$cmd = "$TOOLS_DIR/run_vicDisagg.pl $TOOLS_DIR $ParamsDir/vicDisagg $ControlDir/vicDisagg $ForcAscVicDir $ForcAscDisDir $start_date_str $end_date_str $start_date_str >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+$cmd = "$TOOLS_DIR/run_vicDisagg.pl $TOOLS_DIR $ParamsDir/vicDisagg " .
+  "$ControlDir/vicDisagg $ForcAscVicDir $ForcAscDisDir $start_date_str " .
+  "$end_date_str $start_date_str >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
 print "$cmd\n";
 (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
 
 # Convert sub-daily forcings to netcdf format
-$prefix = "full_data"; # Put this in config file?
-$cmd = "$TOOLS_DIR/run_vic2nc.pl $TOOLS_DIR $ParamsDir/vic2nc/metadata.forcing.template $ControlDir/vic2nc $ForcAscDisDir $ForcNCDir $start_date_str $end_date_str $prefix >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
+# Needs to go to config - Bart - Tue Sep 25 2012
+$prefix = "full_data";          # Put this in config file?
+$cmd = "$TOOLS_DIR/run_vic2nc.pl $TOOLS_DIR " .
+  "$ParamsDir/vic2nc/metadata.forcing.template $ControlDir/vic2nc " .
+  "$ForcAscDisDir $ForcNCDir $start_date_str $end_date_str $prefix " .
+  ">& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
 print "$cmd\n";
 (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
 

@@ -1,9 +1,11 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
+use warnings;
 # Script to run vic forcing disaggregation
 #
 # Author: Ted Bohn
 # $Id: $
 #-------------------------------------------------------------------------------
+use POSIX qw(strftime);
 
 # Command-line arguments
 $TOOLS_DIR = shift;
@@ -40,7 +42,8 @@ else {
 
 # Model parameters
 $PARAMS_TEMPLATE = "$PARAMS_DIR/input.template";
-open (PARAMS_TEMPLATE, $PARAMS_TEMPLATE) or die "$0: ERROR: cannot open parameter config file $PARAMS_TEMPLATE\n";
+open (PARAMS_TEMPLATE, $PARAMS_TEMPLATE)
+  or die "$0: ERROR: cannot open parameter config file $PARAMS_TEMPLATE\n";
 @params_template = <PARAMS_TEMPLATE>;
 close (PARAMS_TEMPLATE);
 
@@ -53,10 +56,7 @@ foreach $dir ($OutDir) {
 }
 
 # Unique identifier for this job
-$JOB_ID = `date +%y%m%d-%H%M%S`;
-if ($JOB_ID =~ /(\S+)/) {
-  $JOB_ID = $1;
-}
+$JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
 
 #-------------------------------------------------------------------------------
 # Model execution
@@ -88,4 +88,3 @@ close(CONTROLFILE);
 $cmd = "$TOOLS_DIR/vicDisagg -g $controlfile";
 print "$cmd\n";
 (system($cmd)==0) or die "$0: ERROR in $cmd: $?\n";
-
