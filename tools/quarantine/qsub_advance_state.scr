@@ -4,16 +4,21 @@
 #$ -j y
 #$ -S /bin/csh
 #$ -q forecast.q
-#$ -M shrad@hydro.washington.edu
+#$ -M shrad@hydro.washington.edu,nijssen@hydro.washington.edu
 #$ -N NHPS_ADVANCE_STATE
 
 set BASIN = $1
+set STAGE = 1
+if ( $#argv == 2 ) then
+    set STAGE = $2
+endif
+
 set NHPS_DIR = "/raid8/forecast/proj/uswide"
 
 echo "NHPS Advance State for $BASIN started" > $NHPS_DIR/tools/done_$BASIN
 mail shrad  < $NHPS_DIR/tools/done_$BASIN
 
-$NHPS_DIR/tools/advance_state.pl $BASIN >&! $NHPS_DIR/tools/log.advance.$BASIN
+$NHPS_DIR/tools/advance_state.pl $BASIN $STAGE >&! $NHPS_DIR/tools/log.advance.$BASIN
 
 echo "NHPS Advance State for $BASIN Ended" > $NHPS_DIR/tools/done_$BASIN
 mail shrad  < $NHPS_DIR/tools/done_$BASIN

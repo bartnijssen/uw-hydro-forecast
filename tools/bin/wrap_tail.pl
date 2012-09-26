@@ -1,10 +1,12 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
+use warnings;
 
 $indir = shift;
 $numrecs = shift;
 $outdir = shift;
 
-opendir(INDIR,$indir) or die "$0: ERROR: cannot open directory $indir for reading\n";
+opendir(INDIR,$indir) 
+  or die "$0: ERROR: cannot open directory $indir for reading\n";
 @filelist = grep !/^\./, readdir(INDIR);
 closedir(INDIR);
 

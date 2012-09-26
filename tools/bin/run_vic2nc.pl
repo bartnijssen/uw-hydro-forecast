@@ -1,9 +1,11 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
+use warnings;
 # Script to run the conversion tool vic2nc within SIMMA framework
 #
 # Author: Ted Bohn
 # $Id: $
 #-------------------------------------------------------------------------------
+use POSIX qw(strftime);
 
 # Command-line arguments
 $TOOLS_DIR = shift;
@@ -33,7 +35,8 @@ else {
 }
 
 # Model parameters
-open (PARAMS_TEMPLATE, $PARAMS_TEMPLATE) or die "$0: ERROR: cannot open parameter config file $PARAMS_TEMPLATE\n";
+open (PARAMS_TEMPLATE, $PARAMS_TEMPLATE) 
+  or die "$0: ERROR: cannot open parameter config file $PARAMS_TEMPLATE\n";
 @params_template = <PARAMS_TEMPLATE>;
 close (PARAMS_TEMPLATE);
 
@@ -46,10 +49,7 @@ foreach $dir ($OutDir) {
 }
 
 # Unique identifier for this job
-$JOB_ID = `date +%y%m%d-%H%M%S`;
-if ($JOB_ID =~ /(\S+)/) {
-  $JOB_ID = $1;
-}
+$JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
 
 #-------------------------------------------------------------------------------
 # Model execution
@@ -58,7 +58,8 @@ if ($JOB_ID =~ /(\S+)/) {
 # Create input file
 $status = &make_dir($CONTROL_DIR);
 $controlfile = "$CONTROL_DIR/inp.$JOB_ID";
-open (CONTROLFILE, ">$controlfile") or die "$0: ERROR: cannot open controlfile $controlfile\n";
+open (CONTROLFILE, ">$controlfile") 
+  or die "$0: ERROR: cannot open controlfile $controlfile\n";
 foreach (@params_template) {
   s/<FORCE_START_YEAR>/$start_year/g;
   s/<FORCE_START_MONTH>/$start_month/g;
@@ -71,9 +72,8 @@ foreach (@params_template) {
 close(CONTROLFILE);
 
 # Run the model
-#$cmd = "$TOOLS_DIR/vic2nc -i $InDir -p $prefix -m $controlfile -o $OutDir/$prefix -c -t m";
-$cmd = "$TOOLS_DIR/vic2nc -i $InDir -p $prefix -m $controlfile -o $OutDir/$prefix -t m";
+$cmd = "$TOOLS_DIR/vic2nc -i $InDir -p $prefix -m $controlfile " .
+  "-o $OutDir/$prefix -t m";
 print "$cmd\n";
-#(system($cmd)==0) or die "$0: ERROR in $cmd: $?\n";
-system($cmd);  # vic2nc always returns an error signal for some reason
+(system($cmd)==0) or die "$0: ERROR in $cmd: $?\n";
 
