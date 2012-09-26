@@ -43,8 +43,6 @@ $day = shift;
 #----------------------------------------------------------------------------------------------
 
 # Derived variables
-$MODEL_UC = $MODEL;
-$MODEL_UC =~ tr/a-z/A-Z/;
 $PROJECT_UC = $PROJECT;
 $PROJECT =~ tr/A-Z/a-z/;
 $PROJECT_UC =~ tr/a-z/A-Z/;
@@ -68,6 +66,9 @@ $var_info_project_ref = &read_config($ConfigProject);
 $ConfigModel = "$CONFIG_DIR/config.model.$MODEL";
 $var_info_model_ref = &read_config($ConfigModel);
 %var_info_model = %{$var_info_model_ref};
+$modelalias = $var_info_model_ref{MODEL_ALIAS};
+$MODEL_UC = $modelalias;
+$MODEL_UC =~ tr/a-z/A-Z/;
 
 # Substitute model-specific information into project variables
 foreach $key_proj (keys(%var_info_project)) {
@@ -107,7 +108,7 @@ foreach $dir ("$PLOT_DIR/$datenow") {
   $status = &make_dir($dir);
 }
 
-if ($MODEL =~ /vic/i && $PROJECT =~ /conus/i) {
+if ($modelalias =~ /vic/i && $PROJECT =~ /conus/i) {
   push @varnames, ("smDM","smw","smc","sme");
 }
 
@@ -165,13 +166,13 @@ foreach $varname (@varnames) {
 
     # First (and/or only) data file
     if ($varname eq "ro") {
-      $srcfile1 = "$XYZZ_DIR/$datenow/$varname.$PROJECT_UC.$MODEL.qnt.xyzz";
+      $srcfile1 = "$XYZZ_DIR/$datenow/$varname.$PROJECT_UC.$modelalias.qnt.xyzz";
     }
     elsif ($varname =~ /^sm(DM|w|c|e)$/) {
-      $srcfile1 = "$XYZZ_DIR/$datenow/sm.$PROJECT_UC.$MODEL.f-c_mean.a-m_anom.qnt.xyzz";
+      $srcfile1 = "$XYZZ_DIR/$datenow/sm.$PROJECT_UC.$modelalias.f-c_mean.a-m_anom.qnt.xyzz";
     }
     else {
-      $srcfile1 = "$XYZZ_DIR/$datenow/$varname.$PROJECT_UC.$MODEL.f-c_mean.a-m_anom.qnt.xyzz";
+      $srcfile1 = "$XYZZ_DIR/$datenow/$varname.$PROJECT_UC.$modelalias.f-c_mean.a-m_anom.qnt.xyzz";
     }
 
     # (optional) second data file
@@ -210,7 +211,7 @@ foreach $varname (@varnames) {
         die "$0: ERROR: unsupported period: $periods[$pidx]\n";
       }
       if (-e "$XYZZ_DIR/$otherdate") {
-        $srcfile2 = "$XYZZ_DIR/$otherdate/$varname.$PROJECT_UC.$MODEL.f-c_mean.a-m_anom.qnt.xyzz";
+        $srcfile2 = "$XYZZ_DIR/$otherdate/$varname.$PROJECT_UC.$modelalias.f-c_mean.a-m_anom.qnt.xyzz";
 	if (! -e $srcfile2) {
           print "$0: WARNING: $srcfile2 not found\n";
 	  next;
@@ -229,18 +230,18 @@ foreach $varname (@varnames) {
     else {
       $periodstr = "." . $periods[$pidx];
     }
-    $outfile = "$PLOT_DIR/$datenow/$PROJECT_UC.$MODEL." . $varname . "_qnt" . $periodstr . ".ps";
+    $outfile = "$PLOT_DIR/$datenow/$PROJECT_UC.$modelalias." . $varname . "_qnt" . $periodstr . ".ps";
     if ($varname eq "smw") {
-      $outfile = "$PLOT_DIR/$datenow/west.$MODEL.sm_qnt.ps";
+      $outfile = "$PLOT_DIR/$datenow/west.$modelalias.sm_qnt.ps";
     }
     elsif ($varname eq "smc") {
-      $outfile = "$PLOT_DIR/$datenow/cent.$MODEL.sm_qnt.ps";
+      $outfile = "$PLOT_DIR/$datenow/cent.$modelalias.sm_qnt.ps";
     }
     elsif ($varname eq "sme") {
-      $outfile = "$PLOT_DIR/$datenow/east.$MODEL.sm_qnt.ps";
+      $outfile = "$PLOT_DIR/$datenow/east.$modelalias.sm_qnt.ps";
     }
     elsif ($varname eq "smDM") {
-      $outfile = "$PLOT_DIR/$datenow/$PROJECT_UC.$MODEL.sm_qnt.DM.ps";
+      $outfile = "$PLOT_DIR/$datenow/$PROJECT_UC.$modelalias.sm_qnt.DM.ps";
     }
 
     # First title line
@@ -315,7 +316,7 @@ foreach $varname (@varnames) {
       }
     }
     elsif ($varname eq "swe") {
-      if ($MODEL =~ /multimodel/i) {
+      if ($modelalias =~ /multimodel/i) {
         $swe_thresh = 0;
       }
       if ($periods[$pidx] eq "" ) {
@@ -347,7 +348,7 @@ foreach $varname (@varnames) {
 
     # Call the generic plotting script
     $plot_scr = "$TOOLS_DIR/plot.var_qnt.scr";
-    $cmd = "$plot_scr $datafile $outfile $current_COORD $current_PROJ $current_ANNOT $current_XX $current_YY $current_SCALE_X \"$title1\" \"$title2\" $cptfile \"$cptlabel1\" \"$cptlabel2\" $polyfile1 $polyfile2 $PROJECT $MODEL";
+    $cmd = "$plot_scr $datafile $outfile $current_COORD $current_PROJ $current_ANNOT $current_XX $current_YY $current_SCALE_X \"$title1\" \"$title2\" $cptfile \"$cptlabel1\" \"$cptlabel2\" $polyfile1 $polyfile2 $PROJECT $modelalias";
     print "$cmd\n";
     (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
 

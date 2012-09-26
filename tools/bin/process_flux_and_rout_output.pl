@@ -54,6 +54,7 @@ $var_info_project_ref = &read_config($ConfigProject);
 $ConfigModel        = "$CONFIG_DIR/config.model.$MODEL";
 $var_info_model_ref = &read_config($ConfigModel);
 %var_info_model     = %{$var_info_model_ref};
+$modelalias         = $var_info_model{MODEL_ALIAS};
 
 # Substitute model-specific information into project variables
 foreach $key_proj (keys(%var_info_project)) {
@@ -66,7 +67,7 @@ foreach $key_proj (keys(%var_info_project)) {
 #-------------------------------------------------------------------------------
 # All of this directory business should be moved to the configuration file for
 # the project
-if ($MODEL eq "vic") {
+if ($modelalias eq "vic") {
   $Flist = $var_info_project{"FLUX_FLIST"};
 } else {
   $Flist = $var_info_project{"WB_FLIST"};
@@ -97,15 +98,15 @@ $ROUT_WEB_DIR  = "$ROUT_SAVED/$DATE/web";
 
 # 1: Processing rout forecast
 # ESP FLUXOUTPUT storage directory
-$ESP_XYZZ_DIR = "$ESP/$MODEL/$DATE/spatial";
+$ESP_XYZZ_DIR = "$ESP/$modelalias/$DATE/spatial";
 
 # For ESP Spatial plots
-$ESP_PLOT_DIR = "$ESP/$MODEL/$DATE/plots";
+$ESP_PLOT_DIR = "$ESP/$modelalias/$DATE/plots";
 $XYZZDir      = $var_info_project{"XYZZ_DIR"};
 $OBS_XYZZ_DIR = "$XYZZDir";
 
 ### Prefix of SM and SWE percentile files use for plotting.
-$XYZZFILE = "$PROJECT_UC.$MODEL.f-c_mean.a-m_anom.qnt.xyzz";
+$XYZZFILE = "$PROJECT_UC.$modelalias.f-c_mean.a-m_anom.qnt.xyzz";
 
 # Model parameters
 $Basin_control_file_Template = "$INPUTDIR/input_TEMPLATE.ctr";

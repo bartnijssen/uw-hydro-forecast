@@ -30,9 +30,6 @@ require "$TOOLS_DIR/simma_util.pl";
 #-------------------------------------------------------------------------------
 $PROJECT = shift;
 $MODEL   = shift;
-if ($MODEL ne "vic") {
-  exit(0);
-}
 
 #-------------------------------------------------------------------------------
 # Set up constants
@@ -46,6 +43,10 @@ $var_info_project_ref = &read_config($ConfigProject);
 $ConfigModel        = "$CONFIG_DIR/config.model.$MODEL";
 $var_info_model_ref = &read_config($ConfigModel);
 %var_info_model     = %{$var_info_model_ref};
+$modelalias         = $var_info_model{MODEL_ALIAS};
+if ($modelalias ne "vic") {
+  exit(0);
+}
 
 # Substitute model-specific information into project variables
 foreach $key_proj (keys(%var_info_project)) {
@@ -75,7 +76,7 @@ foreach $dir ($ResultsModelFinalDir, $DepotDir) {
 foreach $dir ($DepotDir) {
   $status = &make_dir($dir);
 }
-$Archive = "curr_spinup.$PROJECT.$MODEL.tgz";
+$Archive = "curr_spinup.$PROJECT.$modelalias.tgz";
 
 #-------------------------------------------------------------------------------
 # END settings

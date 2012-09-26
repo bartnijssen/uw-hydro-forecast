@@ -58,6 +58,7 @@ $var_info_project_ref = &read_config($ConfigProject);
 $ConfigModel        = "$CONFIG_DIR/config.model.$MODEL";
 $var_info_model_ref = &read_config($ConfigModel);
 %var_info_model     = %{$var_info_model_ref};
+$modelalias         = $var_info_model{MODEL_ALIAS};
 
 # Substitute model-specific information into project variables
 foreach $key_proj (keys(%var_info_project)) {
@@ -103,16 +104,16 @@ if ($results_subdir_override) {
 $HISTPATH = $ResultsModelFinalDir;
 $HISTPATH =~ s/<RESULTS_SUBDIR>/retro/g;
 $OUTD = "$XYZZDir/$DATE";
-if ($MODEL =~ /multimodel/i) {
+if ($modelalias =~ /multimodel/i) {
   $CURRPATH = $OUTD;
 }
-$SMFILE   = "$OUTD/$PROJECT_UC.$MODEL.sm.curr-srt_hist";
-$SWEFILE  = "$OUTD/$PROJECT_UC.$MODEL.swe.curr-srt_hist";
-$STOTFILE = "$OUTD/$PROJECT_UC.$MODEL.stot.curr-srt_hist";
-if ($MODEL =~ /vic/i) {
-  $SM1FILE = "$OUTD/$PROJECT_UC.$MODEL.sm1.curr-srt_hist";
-  $SM2FILE = "$OUTD/$PROJECT_UC.$MODEL.sm2.curr-srt_hist";
-  $SM3FILE = "$OUTD/$PROJECT_UC.$MODEL.sm3.curr-srt_hist";
+$SMFILE   = "$OUTD/$PROJECT_UC.$modelalias.sm.curr-srt_hist";
+$SWEFILE  = "$OUTD/$PROJECT_UC.$modelalias.swe.curr-srt_hist";
+$STOTFILE = "$OUTD/$PROJECT_UC.$modelalias.stot.curr-srt_hist";
+if ($modelalias =~ /vic/i) {
+  $SM1FILE = "$OUTD/$PROJECT_UC.$modelalias.sm1.curr-srt_hist";
+  $SM2FILE = "$OUTD/$PROJECT_UC.$modelalias.sm2.curr-srt_hist";
+  $SM3FILE = "$OUTD/$PROJECT_UC.$modelalias.sm3.curr-srt_hist";
 }
 
 #-------------------------------------------------------------------------------
@@ -137,7 +138,7 @@ if (-e $SWEFILE) {
   $cmd = "rm -f $SWEFILE";
   (system($cmd) == 0) or die "$0: ERROR: cannot remove file $SWEFILE\n";
 }
-if ($MODEL =~ /vic/i) {
+if ($modelalias =~ /vic/i) {
   if (-e $SM1FILE) {
     $cmd = "rm -f $SM1FILE";
     (system($cmd) == 0) or die "$0: ERROR: cannot remove file $SM1FILE\n";
@@ -185,7 +186,7 @@ open(SWEFILE, ">$SWEFILE") or
   die "$0: ERROR: cannot open file $SWEFILE for writing\n";
 open(STOTFILE, ">$STOTFILE") or
   die "$0: ERROR: cannot open file $STOTFILE for writing\n";
-if ($MODEL =~ /vic/i) {
+if ($modelalias =~ /vic/i) {
   open(SM1FILE, ">$SM1FILE") or
     die "$0: ERROR: cannot open file $SM1FILE for writing\n";
   open(SM2FILE, ">$SM2FILE") or
@@ -199,7 +200,7 @@ if ($MODEL =~ /vic/i) {
 #-------------------------------------------------------------------------------
 # For multimodel, current values are average of other models' pctls;
 # Pctls have different format than model results
-if ($MODEL =~ /multimodel/i) {
+if ($modelalias =~ /multimodel/i) {
   $first = 1;
   foreach $ens_model (@ENS_MODELS) {
     $PCTL_FILE = "$OUTD/sm.$PROJECT_UC.$ens_model.f-c_mean.a-m_anom.qnt.xyzz";
@@ -292,7 +293,7 @@ foreach $F (<FLIST>) {
 
   # Current day's values
   # For individual models, read ascii model results
-  if ($MODEL !~ /multimodel/i) {
+  if ($modelalias !~ /multimodel/i) {
     $CurrSoilMoist  = -1;
     $CurrSoilMoist1 = -1;
     $CurrSoilMoist2 = -1;
@@ -311,7 +312,7 @@ foreach $F (<FLIST>) {
         foreach $col (@SMCols) {
           $CurrSoilMoist += $fields[$col];
         }
-        if ($MODEL =~ /vic/i) {
+        if ($modelalias =~ /vic/i) {
           $CurrSoilMoist1 = $fields[8];
           $CurrSoilMoist2 = $fields[9];
           $CurrSoilMoist3 = $fields[10];
@@ -379,13 +380,13 @@ foreach $F (<FLIST>) {
       foreach $col (@SMCols) {
         $HistSoilMoist[$i] += $fields[$col];
       }
-      if ($MODEL =~ /vic/i) {
+      if ($modelalias =~ /vic/i) {
         $HistSoilMoist1[$i] = $fields[8];
         $HistSoilMoist2[$i] = $fields[9];
         $HistSoilMoist3[$i] = $fields[10];
       }
       $HistSWE[$i] = $fields[$SWECol];
-      if ($MODEL !~ /multimodel/i) {
+      if ($modelalias !~ /multimodel/i) {
         $HistSTOT[$i] = $HistSoilMoist[$i] + $HistSWE[$i];
       } else {
         $HistSTOT[$i] = $fields[$STOTCol];
@@ -397,7 +398,7 @@ foreach $F (<FLIST>) {
 
   # Sort the distributions
   @HistSoilMoistSorted = sort {$a <=> $b;} @HistSoilMoist;
-  if ($MODEL =~ /vic/i) {
+  if ($modelalias =~ /vic/i) {
     @HistSoilMoist1Sorted = sort {$a <=> $b;} @HistSoilMoist1;
     @HistSoilMoist2Sorted = sort {$a <=> $b;} @HistSoilMoist2;
     @HistSoilMoist3Sorted = sort {$a <=> $b;} @HistSoilMoist3;
@@ -428,7 +429,7 @@ foreach $F (<FLIST>) {
   print STOTFILE "\n";
 
   # Layer-specific SoilMoist
-  if ($MODEL =~ /vic/i) {
+  if ($modelalias =~ /vic/i) {
     print SM1FILE "$CurrSoilMoist1";
     foreach (@HistSoilMoist1Sorted) {
       print SM1FILE " $_";
@@ -450,7 +451,7 @@ close(FLIST);
 close(SMFILE);
 close(SWEFILE);
 close(STOTFILE);
-if ($MODEL =~ /vic/i) {
+if ($modelalias =~ /vic/i) {
   close(SM1FILE);
   close(SM2FILE);
   close(SM3FILE);
@@ -458,59 +459,65 @@ if ($MODEL =~ /vic/i) {
 
 # Find percentiles, anomalies
 # SM
-$cmd = "$TOOLS_DIR/fcst_stats.pl $SMFILE $OUTD/sm.$PROJECT_UC.$MODEL.stats";
+$cmd =
+  "$TOOLS_DIR/fcst_stats.pl $SMFILE $OUTD/sm.$PROJECT_UC.$modelalias.stats";
 print "$cmd\n";
 (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
 $cmd =
-  "/usr/bin/paste $LONLAT $OUTD/sm.$PROJECT_UC.$MODEL.stats > " .
-  "$OUTD/sm.$PROJECT_UC.$MODEL.f-c_mean.a-m_anom.qnt.xyzz";
+  "/usr/bin/paste $LONLAT $OUTD/sm.$PROJECT_UC.$modelalias.stats > " .
+  "$OUTD/sm.$PROJECT_UC.$modelalias.f-c_mean.a-m_anom.qnt.xyzz";
 print "$cmd\n";
 (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
 
 # SWE
-$cmd = "$TOOLS_DIR/fcst_stats.pl $SWEFILE $OUTD/swe.$PROJECT_UC.$MODEL.stats";
+$cmd =
+  "$TOOLS_DIR/fcst_stats.pl $SWEFILE $OUTD/swe.$PROJECT_UC.$modelalias.stats";
 print "$cmd\n";
 (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
 $cmd =
-  "/usr/bin/paste $LONLAT $OUTD/swe.$PROJECT_UC.$MODEL.stats > " .
-  "$OUTD/swe.$PROJECT_UC.$MODEL.f-c_mean.a-m_anom.qnt.xyzz";
+  "/usr/bin/paste $LONLAT $OUTD/swe.$PROJECT_UC.$modelalias.stats > " .
+  "$OUTD/swe.$PROJECT_UC.$modelalias.f-c_mean.a-m_anom.qnt.xyzz";
 print "$cmd\n";
 (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
 
 # STOT
-$cmd = "$TOOLS_DIR/fcst_stats.pl $STOTFILE $OUTD/stot.$PROJECT_UC.$MODEL.stats";
+$cmd =
+  "$TOOLS_DIR/fcst_stats.pl $STOTFILE $OUTD/stot.$PROJECT_UC.$modelalias.stats";
 print "$cmd\n";
 (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
 $cmd =
-  "/usr/bin/paste $LONLAT $OUTD/stot.$PROJECT_UC.$MODEL.stats > " .
-  "$OUTD/stot.$PROJECT_UC.$MODEL.f-c_mean.a-m_anom.qnt.xyzz";
+  "/usr/bin/paste $LONLAT $OUTD/stot.$PROJECT_UC.$modelalias.stats > " .
+  "$OUTD/stot.$PROJECT_UC.$modelalias.f-c_mean.a-m_anom.qnt.xyzz";
 print "$cmd\n";
 (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
 
 # Layer-specific SoilMoist
-if ($MODEL =~ /vic/i) {
-  $cmd = "$TOOLS_DIR/fcst_stats.pl $SM1FILE $OUTD/sm1.$PROJECT_UC.$MODEL.stats";
+if ($modelalias =~ /vic/i) {
+  $cmd =
+    "$TOOLS_DIR/fcst_stats.pl $SM1FILE $OUTD/sm1.$PROJECT_UC.$modelalias.stats";
   print "$cmd\n";
   (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
   $cmd =
-    "/usr/bin/paste $LONLAT $OUTD/sm1.$PROJECT_UC.$MODEL.stats > " .
-    "$OUTD/sm1.$PROJECT_UC.$MODEL.f-c_mean.a-m_anom.qnt.xyzz";
-  print "$cmd\n";
-  (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
-  $cmd = "$TOOLS_DIR/fcst_stats.pl $SM2FILE $OUTD/sm2.$PROJECT_UC.$MODEL.stats";
+    "/usr/bin/paste $LONLAT $OUTD/sm1.$PROJECT_UC.$modelalias.stats > " .
+    "$OUTD/sm1.$PROJECT_UC.$modelalias.f-c_mean.a-m_anom.qnt.xyzz";
   print "$cmd\n";
   (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
   $cmd =
-    "/usr/bin/paste $LONLAT $OUTD/sm2.$PROJECT_UC.$MODEL.stats > " .
-    "$OUTD/sm2.$PROJECT_UC.$MODEL.f-c_mean.a-m_anom.qnt.xyzz";
-  print "$cmd\n";
-  (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
-  $cmd = "$TOOLS_DIR/fcst_stats.pl $SM3FILE $OUTD/sm3.$PROJECT_UC.$MODEL.stats";
+    "$TOOLS_DIR/fcst_stats.pl $SM2FILE $OUTD/sm2.$PROJECT_UC.$modelalias.stats";
   print "$cmd\n";
   (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
   $cmd =
-    "/usr/bin/paste $LONLAT $OUTD/sm3.$PROJECT_UC.$MODEL.stats > " .
-    "$OUTD/sm3.$PROJECT_UC.$MODEL.f-c_mean.a-m_anom.qnt.xyzz";
+    "/usr/bin/paste $LONLAT $OUTD/sm2.$PROJECT_UC.$modelalias.stats > " .
+    "$OUTD/sm2.$PROJECT_UC.$modelalias.f-c_mean.a-m_anom.qnt.xyzz";
+  print "$cmd\n";
+  (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+  $cmd =
+    "$TOOLS_DIR/fcst_stats.pl $SM3FILE $OUTD/sm3.$PROJECT_UC.$modelalias.stats";
+  print "$cmd\n";
+  (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+  $cmd =
+    "/usr/bin/paste $LONLAT $OUTD/sm3.$PROJECT_UC.$modelalias.stats > " .
+    "$OUTD/sm3.$PROJECT_UC.$modelalias.f-c_mean.a-m_anom.qnt.xyzz";
   print "$cmd\n";
   (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
 }
@@ -538,7 +545,7 @@ $cmd = "gzip $STOTFILE";
 (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
 
 # Layer-specific SoilMoist
-if ($MODEL =~ /vic/i) {
+if ($modelalias =~ /vic/i) {
   $cmd = "\\rm -f $SM1FILE.gz";
   (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
   $cmd = "gzip $SM1FILE";

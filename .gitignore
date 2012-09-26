@@ -19,3 +19,5 @@ make*log
 Makefile.make
 #any GLOBS
 GLOB*
+# perltidy backup files
+*.bak

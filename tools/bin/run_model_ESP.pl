@@ -193,6 +193,7 @@ $var_info_project_ref = &read_config($ConfigProject);
 $ConfigModel        = "$CONFIG_DIR/config.model.$MODEL_NAME";
 $var_info_model_ref = &read_config($ConfigModel);
 %var_info_model     = %{$var_info_model_ref};
+$modelalias         = $var_info_model{MODEL_ALIAS};
 
 # Substitute model-specific information into project variables
 foreach $key_proj (keys(%var_info_project)) {
@@ -245,7 +246,7 @@ $ForcingNCPrefix      = $var_info_project{"FORCING_NC_PREFIX"};
 $ESP = $var_info_project{"ESP"};
 
 # ESP FLUXOUTPUT storage directory
-$STORDIR = "$ESP/$MODEL_NAME/$FCST_DATE";
+$STORDIR = "$ESP/$modelalias/$FCST_DATE";
 print "STORE dir is $STORDIR\n";
 
 # Save relevant model info in variables
@@ -371,7 +372,7 @@ if ($local_storage) {
 }
 
 # Override initial state file if specified on command line
-if ($MODEL_NAME eq "vic") {
+if ($modelalias eq "vic") {
   $init_file = "state_$DATE";
 } else {
   $init_file = "state.$DATE.nc";
@@ -395,10 +396,7 @@ if ($init_file) {
 if ($model_specific) {
   $model_specific =~ s/"//g;
 }
-$func_name = "wrap_run_" . $MODEL_NAME;
-if ($MODEL_NAME eq "noah_2.8") {
-  $func_name = "wrap_run_noah";
-}
+$func_name = "wrap_run_" . $modelalias;
 &{$func_name}($model_specific);
 if (!-e $STORDIR) {
   $status = &make_dir($STORDIR);

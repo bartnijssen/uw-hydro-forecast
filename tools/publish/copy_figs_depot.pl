@@ -34,11 +34,7 @@ $day = shift;
 #----------------------------------------------------------------------------------------------
 
 # Derived variables
-$MODEL_UC = $MODEL;
-$MODEL_UC =~ tr/a-z/A-Z/;
-$PROJECT_UC = $PROJECT;
 $PROJECT =~ tr/A-Z/a-z/;
-$PROJECT_UC =~ tr/a-z/A-Z/;
 $datenow = sprintf("%04d%02d%02d", $yr, $mon, $day);
 
 # Unique identifier for this job
@@ -56,6 +52,7 @@ $var_info_project_ref = &read_config($ConfigProject);
 $ConfigModel = "$CONFIG_DIR/config.model.$MODEL";
 $var_info_model_ref = &read_config($ConfigModel);
 %var_info_model = %{$var_info_model_ref};
+$modelalias = $var_info_model{MODEL_ALIAS};
 
 # Substitute model-specific information into project variables
 foreach $key_proj (keys(%var_info_project)) {
@@ -84,21 +81,21 @@ foreach $dir ($DepotDir) {
 }
 
 # Copy stats
-if ($MODEL eq "all") {
+if ($modelalias eq "all") {
   $cmd = "cp $XYZZDir/* $DepotDir/";
 }
 else {
-  $cmd = "cp $XYZZDir/*$MODEL* $DepotDir/";
+  $cmd = "cp $XYZZDir/*${modelalias}* $DepotDir/";
 }
 print "$cmd\n";
 (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
 
 # Copy plots
-if ($MODEL eq "all") {
+if ($modelalias eq "all") {
   $cmd = "cp $PlotDir/* $DepotDir/";
 }
 else {
-  $cmd = "cp $PlotDir/*$MODEL* $DepotDir/";
+  $cmd = "cp $PlotDir/*${modelalias}* $DepotDir/";
 }
 print "$cmd\n";
 (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
