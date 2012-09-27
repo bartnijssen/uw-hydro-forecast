@@ -9,7 +9,8 @@ CFLAGS = <MAKE_CFLAGS>
 CC = <MAKE_CC>
 RM = /bin/rm -f
 LIBRARY = <MAKE_LIBS>
-OBJS = tools.c fcst_sflow.c
+OBJS = tools.o fcst_sflow.o
+SRCS = $(OBJS:%.o=%.c)
 
 default: $(EXECUTABLE)
 
@@ -18,7 +19,7 @@ all: $(EXECUTABLE) install
 clean :
 	$(RM) *.o core log *~
 
-nc2vic: $(OBJS)
+$(EXECUTABLE): $(OBJS)
 	$(CC) $(CFLAGS) -o $(EXECUTABLE) $(OBJS) $(LIBRARY) $(HDRS)
 
 # --------------------------------------------------------------------
