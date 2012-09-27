@@ -1,75 +1,69 @@
 #!/usr/bin/env perl
 # copy_figs.pl: Script to copy model results plots to web site
-
 use warnings;
 
 # 2008-05-22 Generalized for multimodel sw monitor.	TJB
 # $Id: $
 #-------------------------------------------------------------------------------
-
-#----------------------------------------------------------------------------------------------
-# Determine tools, root, and config directories - assume this script lives in TOOLS_DIR/
-#----------------------------------------------------------------------------------------------
-$TOOLS_DIR = "<SYSTEM_INSTALLDIR>/bin";
+#-------------------------------------------------------------------------------
+# Determine tools and config directories
+#-------------------------------------------------------------------------------
+$TOOLS_DIR  = "<SYSTEM_INSTALLDIR>/bin";
 $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Include external modules
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Subroutine for reading config files
 require "$TOOLS_DIR/simma_util.pl";
+use POSIX qw(strftime);
 
 #-------------------------------------------------------------------------------
 # Parse the command line
 #-------------------------------------------------------------------------------
+$PROJECT = shift;  # project name, e.g. conus mexico
+$MODEL   = shift;  # model name, e.g. vic noah sac clm multimodel all
+$yr      = shift;
+$mon     = shift;
+$day     = shift;
 
-$PROJECT = shift; # project name, e.g. conus mexico
-$MODEL = shift; # model name, e.g. vic noah sac clm multimodel all
-$yr = shift;
-$mon = shift;
-$day = shift;
-
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Set up constants
-#----------------------------------------------------------------------------------------------
-
+#-------------------------------------------------------------------------------
 # Derived variables
 $PROJECT =~ tr/A-Z/a-z/;
 $datenow = sprintf("%04d%02d%02d", $yr, $mon, $day);
 
 # Unique identifier for this job
-$JOB_ID = `date +%y%m%d-%H%M%S`;
-if ($JOB_ID =~ /(\S+)/) {
-  $JOB_ID = $1;
-}
+$JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
 
 # Read project configuration info
-$ConfigProject = "$CONFIG_DIR/config.project.$PROJECT";
+$ConfigProject        = "$CONFIG_DIR/config.project.$PROJECT";
 $var_info_project_ref = &read_config($ConfigProject);
-%var_info_project = %{$var_info_project_ref};
+%var_info_project     = %{$var_info_project_ref};
 
 # Read model configuration info
-$ConfigModel = "$CONFIG_DIR/config.model.$MODEL";
+$ConfigModel        = "$CONFIG_DIR/config.model.$MODEL";
 $var_info_model_ref = &read_config($ConfigModel);
-%var_info_model = %{$var_info_model_ref};
-$modelalias = $var_info_model{MODEL_ALIAS};
+%var_info_model     = %{$var_info_model_ref};
+$modelalias         = $var_info_model{MODEL_ALIAS};
 
 # Substitute model-specific information into project variables
 foreach $key_proj (keys(%var_info_project)) {
   foreach $key_model (keys(%var_info_model)) {
-    $var_info_project{$key_proj} =~ s/<$key_model>/$var_info_model{$key_model}/g;
+    $var_info_project{$key_proj} =~
+      s/<$key_model>/$var_info_model{$key_model}/g;
   }
 }
 
 # Save relevant project info in variables
-$XYZZDir         = $var_info_project{"XYZZ_DIR"} . "/$datenow";
-$PlotDir         = $var_info_project{"PLOT_DIR"} . "/$datenow";
-$DepotDir        = $var_info_project{"PLOT_DEPOT_DIR"};
+$XYZZDir  = $var_info_project{"XYZZ_DIR"} . "/$datenow";
+$PlotDir  = $var_info_project{"PLOT_DIR"} . "/$datenow";
+$DepotDir = $var_info_project{"PLOT_DEPOT_DIR"};
 
-#----------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # END settings
-#----------------------------------------------------------------------------------------------
-
+#-------------------------------------------------------------------------------
 # Check for directories; create if necessary & possible
 foreach $dir ($XYZZDir, $PlotDir, $DepotDir) {
   if (!-d $dir) {
@@ -83,20 +77,17 @@ foreach $dir ($DepotDir) {
 # Copy stats
 if ($modelalias eq "all") {
   $cmd = "cp $XYZZDir/* $DepotDir/";
-}
-else {
+} else {
   $cmd = "cp $XYZZDir/*${modelalias}* $DepotDir/";
 }
 print "$cmd\n";
-(system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
+(system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
 
 # Copy plots
 if ($modelalias eq "all") {
   $cmd = "cp $PlotDir/* $DepotDir/";
-}
-else {
+} else {
   $cmd = "cp $PlotDir/*${modelalias}* $DepotDir/";
 }
 print "$cmd\n";
-(system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
-
+(system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
