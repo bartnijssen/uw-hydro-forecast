@@ -109,10 +109,9 @@ XYZZ_DIR	<SPATIAL_DIR>/xyzz.all
 ESP 		<FCST_DIR>/esp
 ROUT            <FCST_DIR>/rout
 NDXES_DIR       <SPATIAL_DIR>/ndxes.all
-ESP 		<SPATIAL_DIR>/esp
 PLOT_DIR	<SPATIAL_DIR>/plots
 PLOT_DEPOT_DIR	<SPATIAL_DIR>/plots/depot
-
+PLOT_VARS     none
 ### Route FCST
 
 ROUT_XYZZ_DIR   <ROUT>/xyzz.all/<MODEL_SUBDIR>
