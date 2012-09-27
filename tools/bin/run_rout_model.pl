@@ -189,6 +189,7 @@ $var_info_project_ref = &read_config($ConfigProject);
 $ConfigModel        = "$CONFIG_DIR/config.model.$MODEL_NAME";
 $var_info_model_ref = &read_config($ConfigModel);
 %var_info_model     = %{$var_info_model_ref};
+$modelalias         = $var_info_model{MODEL_ALIAS};
 
 # Read routing model info
 $ConfigRoute        = "$CONFIG_DIR/config.model.$var_info_project{ROUT_MODEL}";
@@ -249,9 +250,9 @@ $ESP                  = $var_info_project{
   "ESP"};  #### Directory where ESP outputs are saved ## Shrad added this
 $ROUT = $var_info_project{"ROUT"};  #### Directory where ROUT outputs are saved
 $STORDIR =
-  "$ESP/$MODEL_NAME/$FCST_DATE/dly_flux";  #### ESP FLUXOUTPUT storage directory
+  "$ESP/$modelalias/$FCST_DATE/dly_flux";  #### ESP FLUXOUTPUT storage directory
 $STOR_ROUT_DIR =
-  "$ROUT/$MODEL_NAME/$FCST_DATE/sflow";    #### ESP Rout storage directory
+  "$ROUT/$modelalias/$FCST_DATE/sflow";    #### ESP Rout storage directory
 
 # Save relevant model info in variables
 $ROUTE_SRC_DIR  = $var_info_route{"MODEL_SRC_DIR"};
