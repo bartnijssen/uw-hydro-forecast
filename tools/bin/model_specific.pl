@@ -4,6 +4,9 @@
 #                     NOTE: these routines assume that several variables
 #                     have been defined globally in the parent script.
 #-------------------------------------------------------------------------------
+use File::Temp qw(tempfile tempdir);
+$cleanup = 1;
+
 #-------------------------------------------------------------------------------
 # VIC routines
 #-------------------------------------------------------------------------------
@@ -11,12 +14,17 @@
 # wrap_run_vic - runs the VIC model for the simulation period
 #-------------------------------------------------------------------------------
 sub wrap_run_vic {
-
+  my %scale_factors;
   if ($var_info_project{RESCALE_FORCINGS} =~ /true/i) {
-    die "We're gonna rescale some forcings baby using " .
-      $var_info_project{RESCALE_FILE} . "!";
-  } else {
-    die "No rescaling for you!";
+    read_rescale_file($var_info_project{RESCALE_FILE}, \%scale_factors);
+
+    # create tmp directory and use CLEANUP flag to automatically clean the
+    # directory when the script exits ($cleanup == 1 or not $cleanup == 0)
+    my $tmpdir = tempdir('scaled_forcings_XXXXXX', CLEANUP => $cleanup);
+    apply_scale_factors($ForcingModelDir, $tmpdir,
+                        $var_info_project{FORCING_ASC_VIC_PREFIX},
+                        \%scale_factors);
+    $ForcingModelDir = $tmpdir;
   }
 
   # Set state file date
@@ -543,6 +551,57 @@ sub run_clm {
     $end_year, $end_month, $end_day;
   $cmd = "mv $old_state_file_name $new_state_file_name";
   (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+}
+
+############################# apply_scale_factors ##############################
+sub apply_scale_factors {
+  my ($srcdir, $destdir, $prefix, $href) = @_;
+  opendir(my $dh, $srcdir) or die "Error: Cannot open directory $srcdir: $!";
+  my @datafiles = grep {/^$prefix/ && -f "$srcdir/$_"} readdir($dh);
+  closedir $dh;
+  for my $filename (@datafiles) {
+    my ($key = $filename) =~ s/${prefix}_//;
+    die "Error: no scaling factor for $filename\n" if not exists $href->{$key};
+    my $infile  = $srcdir . "/" . $filename;
+    my $outfile = $destdir . "/" . $filename;
+    open IN,  "<$infile"  or die "Error: Cannot open $infile: $!\n";
+    open OUT, ">$outfile" or die "Error: Cannot open $outfile: $!\n";
+    my @contents = <IN>;
+    close IN or warn "Warning: Cannot close $infile\n";
+    @contents = trim(@contents);
+    my @scaledcontents = ();
+
+    for my $line (@contents) {
+      @fields = split /\s+/, $line;
+      @fields[0] /= $href->{$key};
+      push @scaled_contents, join(' ', @fields) . "\n";
+    }
+    print OUT @scaled_contents;
+    close OUT or warn "Warning: Cannot close $outfile\n";
+  }
+}
+
+############################### read_rescale_file ##############################
+sub read_rescale_file {
+  my ($infile, $href) = @_;
+  open IN, "<$infile" or die "Error: Cannot open $infile: $!\n";
+  my @contents = <IN>;
+  close IN or warn "Warning: Cannot close $dirfile\n";
+  @contents = trim(@contents);
+  for my $line (@contents) {
+    my @fields = split /\s+/, $line;
+    $href{ $fields[1] . "_" . $fields[0] } = $fields[2];
+  }
+}
+
+##################################### trim #####################################
+sub trim {
+  my @out = @_;
+  foreach (@out) {
+    s/^\s+//;
+    s/\s+$//;
+  }
+  return wantarray ? @out : $out[0];
 }
 
 #-------------------------------------------------------------------------------
