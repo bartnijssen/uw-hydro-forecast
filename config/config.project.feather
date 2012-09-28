@@ -54,6 +54,10 @@ FORCING_ASC_VIC_PREFIX	data
 FORCING_ASC_DIS_PREFIX	full_data
 FORCING_NC_PREFIX	full_data
 
+# rescale the forcings <true | false>. if true , then RESCALE_FILE in PARAMS_DIR
+# needs to be specified
+RESCALE_FORCINGS false
+
 # Results subdirectories
 RESULTS_RETRO_DIR	<RESULTS_DIR>/<RETRO_SUBDIR>
 RESULTS_NEAR_RT_DIR	<RESULTS_DIR>/<NEAR_RT_SUBDIR>

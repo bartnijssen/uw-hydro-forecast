@@ -12,6 +12,13 @@
 #-------------------------------------------------------------------------------
 sub wrap_run_vic {
 
+  if ($var_info_project{RESCALE_FORCINGS} =~ /true/i) {
+    die "We're gonna rescale some forcings baby using " .
+      $var_info_project{RESCALE_FILE} . "!";
+  } else {
+    die "No rescaling for you!";
+  }
+
   # Set state file date
   ($state_year, $state_month, $state_day) = ($end_year, $end_month, $end_day);
 
@@ -21,7 +28,7 @@ sub wrap_run_vic {
   }
 
   # Run the model
-  &run_vic;
+  &run_vic();
 
   #  # Optional post-processing
   #  foreach $cmd (@POSTPROC) {
