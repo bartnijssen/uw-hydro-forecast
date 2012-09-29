@@ -4,8 +4,8 @@
 PROJECT_TYPE		real
 
 # Directories
-PROJECT_DIR		<SYSTEM_ROOT>/nijssen/forecast/proj/uswide/data/gunnison
-LOCAL_PROJECT_DIR	<SYSTEM_LOCAL_ROOT>/nijssen/forecast/uswide/data/gunnison
+PROJECT_DIR		<SYSTEM_ROOT>/nijssen/forecast/proj/uswide/data/gunnison_rescale
+LOCAL_PROJECT_DIR	<SYSTEM_LOCAL_ROOT>/nijssen/forecast/uswide/data/gunnison_rescale
 WEB_PUB_DIR	<SYSTEM_ROOT>/nijssen/forecast/proj/uswide/www
 
 # Subdirectories

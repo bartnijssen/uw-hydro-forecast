@@ -566,11 +566,11 @@ sub apply_scale_factors {
     my @contents = <IN>;
     close IN or warn "Warning: Cannot close $infile\n";
     @contents = trim(@contents);
-    my @scaledcontents = ();
+    my @scaled_contents = ();
 
     for my $line (@contents) {
-      @fields = split /\s+/, $line;
-      @fields[0] /= $href->{$key};
+      my @fields = split /\s+/, $line;
+      $fields[0] = sprintf "%.2f", $fields[0] / $href->{$key};
       push @scaled_contents, join(' ', @fields) . "\n";
     }
     print OUT @scaled_contents;
@@ -587,7 +587,7 @@ sub read_rescale_file {
   @contents = trim(@contents);
   for my $line (@contents) {
     my @fields = split /\s+/, $line;
-    $href{ $fields[1] . "_" . $fields[0] } = $fields[2];
+    $href->{ $fields[1] . "_" . $fields[0] } = $fields[2];
   }
 }
 
