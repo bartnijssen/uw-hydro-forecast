@@ -556,16 +556,13 @@ sub run_clm {
 ############################# apply_scale_factors ##############################
 sub apply_scale_factors {
   my ($srcdir, $destdir, $prefix, $href) = @_;
-  opendir(my $dh, $srcdir) or die "Error: Cannot open directory $srcdir: $!";
-  my @datafiles = grep {/^$prefix/ && -f "$srcdir/$_"} readdir($dh);
-  closedir $dh;
-  for my $filename (@datafiles) {
-    my ($key = $filename) =~ s/${prefix}_//;
-    die "Error: no scaling factor for $filename\n" if not exists $href->{$key};
-    my $infile  = $srcdir . "/" . $filename;
-    my $outfile = $destdir . "/" . $filename;
-    open IN,  "<$infile"  or die "Error: Cannot open $infile: $!\n";
-    open OUT, ">$outfile" or die "Error: Cannot open $outfile: $!\n";
+  for my $key (keys %$href) {
+    my $infile  = $srcdir . "/" . $prefix . "_" . $key;
+    my $outfile = $destdir . "/" . $prefix . "_" . $key;
+    open IN, "<$infile" or
+      die "Error: Scaling failed - cannot open $infile: $!\n";
+    open OUT, ">$outfile" or
+      die "Error: Scaling failed - cannot open $outfile: $!\n";
     my @contents = <IN>;
     close IN or warn "Warning: Cannot close $infile\n";
     @contents = trim(@contents);
