@@ -4,8 +4,8 @@
 PROJECT_TYPE		real
 
 # Directories
-PROJECT_DIR		<SYSTEM_ROOT>/nijssen/forecast/proj/uswide/data/gunnison
-LOCAL_PROJECT_DIR	<SYSTEM_LOCAL_ROOT>/nijssen/forecast/uswide/data/gunnison
+PROJECT_DIR		<SYSTEM_ROOT>/nijssen/forecast/proj/uswide/data/gunnison_rescale
+LOCAL_PROJECT_DIR	<SYSTEM_LOCAL_ROOT>/nijssen/forecast/uswide/data/gunnison_rescale
 WEB_PUB_DIR	<SYSTEM_ROOT>/nijssen/forecast/proj/uswide/www
 
 # Subdirectories
@@ -56,7 +56,8 @@ FORCING_NC_PREFIX	full_data
 
 # rescale the forcings <true | false>. if true , then RESCALE_FILE in PARAMS_DIR
 # needs to be specified
-RESCALE_FORCINGS false
+RESCALE_FORCINGS true
+RESCALE_FILE <PARAMS_DIR>/gunnison.rescale
 
 # Results subdirectories
 RESULTS_RETRO_DIR	<RESULTS_DIR>/<RETRO_SUBDIR>

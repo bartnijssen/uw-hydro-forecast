@@ -4,6 +4,9 @@
 #                     NOTE: these routines assume that several variables
 #                     have been defined globally in the parent script.
 #-------------------------------------------------------------------------------
+use File::Temp qw(tempfile tempdir);
+$cleanup = 1;
+
 #-------------------------------------------------------------------------------
 # VIC routines
 #-------------------------------------------------------------------------------
@@ -11,6 +14,18 @@
 # wrap_run_vic - runs the VIC model for the simulation period
 #-------------------------------------------------------------------------------
 sub wrap_run_vic {
+  my %scale_factors;
+  if ($var_info_project{RESCALE_FORCINGS} =~ /true/i) {
+    read_rescale_file($var_info_project{RESCALE_FILE}, \%scale_factors);
+
+    # create tmp directory and use CLEANUP flag to automatically clean the
+    # directory when the script exits ($cleanup == 1 or not $cleanup == 0)
+    my $tmpdir = tempdir('scaled_forcings_XXXXXX', CLEANUP => $cleanup);
+    apply_scale_factors($ForcingModelDir, $tmpdir,
+                        $var_info_project{FORCING_ASC_VIC_PREFIX},
+                        \%scale_factors);
+    $ForcingModelDir = $tmpdir;
+  }
 
   # Set state file date
   ($state_year, $state_month, $state_day) = ($end_year, $end_month, $end_day);
@@ -21,7 +36,7 @@ sub wrap_run_vic {
   }
 
   # Run the model
-  &run_vic;
+  &run_vic();
 
   #  # Optional post-processing
   #  foreach $cmd (@POSTPROC) {
@@ -536,6 +551,54 @@ sub run_clm {
     $end_year, $end_month, $end_day;
   $cmd = "mv $old_state_file_name $new_state_file_name";
   (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+}
+
+############################# apply_scale_factors ##############################
+sub apply_scale_factors {
+  my ($srcdir, $destdir, $prefix, $href) = @_;
+  for my $key (keys %$href) {
+    my $infile  = $srcdir . "/" . $prefix . "_" . $key;
+    my $outfile = $destdir . "/" . $prefix . "_" . $key;
+    open IN, "<$infile" or
+      die "Error: Scaling failed - cannot open $infile: $!\n";
+    open OUT, ">$outfile" or
+      die "Error: Scaling failed - cannot open $outfile: $!\n";
+    my @contents = <IN>;
+    close IN or warn "Warning: Cannot close $infile\n";
+    @contents = trim(@contents);
+    my @scaled_contents = ();
+
+    for my $line (@contents) {
+      my @fields = split /\s+/, $line;
+      $fields[0] = sprintf "%.2f", $fields[0] / $href->{$key};
+      push @scaled_contents, join(' ', @fields) . "\n";
+    }
+    print OUT @scaled_contents;
+    close OUT or warn "Warning: Cannot close $outfile\n";
+  }
+}
+
+############################### read_rescale_file ##############################
+sub read_rescale_file {
+  my ($infile, $href) = @_;
+  open IN, "<$infile" or die "Error: Cannot open $infile: $!\n";
+  my @contents = <IN>;
+  close IN or warn "Warning: Cannot close $dirfile\n";
+  @contents = trim(@contents);
+  for my $line (@contents) {
+    my @fields = split /\s+/, $line;
+    $href->{ $fields[1] . "_" . $fields[0] } = $fields[2];
+  }
+}
+
+##################################### trim #####################################
+sub trim {
+  my @out = @_;
+  foreach (@out) {
+    s/^\s+//;
+    s/\s+$//;
+  }
+  return wantarray ? @out : $out[0];
 }
 
 #-------------------------------------------------------------------------------
