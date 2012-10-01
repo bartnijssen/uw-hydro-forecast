@@ -1,0 +1,15 @@
+# System Information
+#------------------------------------------------------------------------
+SYSTEM_NAME pnnl_test
+SYSTEM_ROOT /projects/waterpower/forecast
+SYSTEM_BASEDIR	<SYSTEM_ROOT>/uw-hydro-forecast
+SYSTEM_INSTALLDIR <SYSTEM_ROOT>/<SYSTEM_NAME>
+SYSTEM_COMMONDIR <SYSTEM_ROOT>/common
+SYSTEM_SITEPERL_LIB /projects/waterpower/assim/perl/lib/site_perl/5.12.2
+SYSTEM_PERL_LIB /projects/waterpower/forecast/proj/ncast/src/lib
+SYSTEM_NETCDF_INC /usr/software/netcdf/include
+SYSTEM_NETCDF_LIB  /usr/software/netcdf/lib
+SYSTEM_LOCAL_ROOT /state/partition1
+SYSTEM_LOCAL_ROOT1 /state/partition1
+SYSTEM_LOCAL_ROOT2 /state/partition2
+SYSTEM_NCO_DIR /home/nijs900/apps/bin
