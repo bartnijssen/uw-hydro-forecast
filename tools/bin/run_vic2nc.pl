@@ -18,8 +18,9 @@ $start_date      = shift;
 $end_date        = shift;
 $prefix          = shift;
 
+use lib "<SYSTEM_SITEPERL_LIB>";
 # Utility subroutines
-require "$TOOLS_DIR/simma_util.pl";
+use simma_util;
 
 # Parse & validate start/end dates
 if ($start_date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/) {

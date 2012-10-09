@@ -469,23 +469,35 @@ sub setup_system {
   print "Setting up system: $system ...\n" if $quiet;
   my %info = read_configuration("$basepath/config/config.system.$system");
 
-  # Create SYSTEM_INSTALLDIR/bin and SYSTEM_INSTALLDIR/config
+  # Create SYSTEM_INSTALLDIR/bin, SYSTEM_INSTALLDIR/lib and 
+  # SYSTEM_INSTALLDIR/config
   my $runtime = $info{SYSTEM_INSTALLDIR};
-  if (not -d "$runtime/config") {
-    make_path("$runtime/config", { verbose => $verbose, mode => 0755 }) or
-      die "Cannot make path $runtime/config: $!";
-  }
-  if (not -d "$runtime/bin") {
-    make_path("$runtime/bin", { verbose => $verbose, mode => 0755 }) or
-      die "Cannot make path $runtime/bin: $!";
+  my @subdirs = qw(bin config lib);
+  for my $dir (@subdirs) {
+    if (not -d "$runtime/$dir") {
+      make_path("$runtime/$dir", { verbose => $verbose, mode => 0755 }) or
+        die "Cannot make path $runtime/$dir: $!";
+    }
   }
   my %tags = get_tags("$basepath/config/config.system.$system", "SYSTEM");
-
+  
   # Get listing of executable files
   my @filelist;
   my %files;
   my @dirlist = ("$basepath/tools/bin", "$basepath/tools/publish");
   my $targetdir = "$runtime/bin";
+  for my $srcdir (@dirlist) {
+    opendir(DIR, $srcdir) or die "Cannot opendir $srcdir: $!";
+    @filelist = grep !/^\./, readdir(DIR);
+    closedir(DIR);
+    for my $file (@filelist) {
+      $files{"$srcdir/$file"} = "$targetdir/$file";
+    }
+  }
+
+  # Get listing of library files
+  @dirlist = ("$basepath/tools/lib");
+  $targetdir = "$runtime/lib";
   for my $srcdir (@dirlist) {
     opendir(DIR, $srcdir) or die "Cannot opendir $srcdir: $!";
     @filelist = grep !/^\./, readdir(DIR);
@@ -505,6 +517,7 @@ sub setup_system {
         die "Cannot copy $srcfile ==> $targetfile: $!\n";
     }
   }
+
   my $srcfile    = "$basepath/config/config.system.$system";
   my $targetfile = "$runtime/config/config.system.$system";
   copy($srcfile, $targetfile) or

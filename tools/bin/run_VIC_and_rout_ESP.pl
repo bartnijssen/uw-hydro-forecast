@@ -4,11 +4,6 @@ use warnings;
 # A. Wood August 2007
 # run a set of ESP forecasts, given existing state files & forcings, etc.
 # this version:  for SW Monitor, on sere, in aww dirs
-use lib "<SYSTEM_SITEPERL_LIB>";
-use Date::Calc qw(leap_year Days_in_Month Delta_Days Add_Delta_Days
-  Add_Delta_YM);
-use Statistics::Lite qw(mean);
-use POSIX qw(strftime);
 
 #-------------------------------------------------------------------------------
 # Determine tools and config directories
@@ -19,8 +14,13 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 #-------------------------------------------------------------------------------
 # Include external modules
 #-------------------------------------------------------------------------------
+use lib "<SYSTEM_SITEPERL_LIB>";
 # Subroutine for reading config files
-require "$TOOLS_DIR/simma_util.pl";
+use simma_util;
+use Date::Calc qw(leap_year Days_in_Month Delta_Days Add_Delta_Days
+  Add_Delta_YM);
+use Statistics::Lite qw(mean);
+use POSIX qw(strftime);
 
 #-------------------------------------------------------------------------------
 # Command-line arguments

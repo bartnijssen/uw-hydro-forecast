@@ -1,5 +1,22 @@
+package simma_util;
+
+use strict;
+
+use vars qw(@ISA @EXPORT $VERSION);
+
+use Exporter;
+$VERSION = 0.99;		
+@ISA = qw(Exporter);
+
+# symbols to autoexport (:DEFAULT tag)
+@EXPORT = qw(read_config
+             make_dir
+             shell_cmd);
+
+
+
 #-------------------------------------------------------------------------------
-# simma_util.pl - utility subroutines for use in the SIMMA framework.
+# simma_util.pm - utility subroutines for use in the SIMMA framework.
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 # read_config - reads a config file and returns a hash containing the key-value

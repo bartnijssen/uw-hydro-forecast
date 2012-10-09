@@ -12,8 +12,9 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 #-------------------------------------------------------------------------------
 # Include external modules
 #-------------------------------------------------------------------------------
+use lib "<SYSTEM_SITEPERL_LIB>";
 # Subroutine for reading config files
-require "$TOOLS_DIR/simma_util.pl";
+use simma_util;
 
 # Date computation
 use Date::Calc qw(Days_in_Month Delta_Days Add_Delta_Days);

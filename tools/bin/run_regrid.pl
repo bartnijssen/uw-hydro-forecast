@@ -12,8 +12,9 @@ $DEM           = shift;
 $FmtFile       = shift;
 $GrdFile       = shift;
 
+use lib "<SYSTEM_SITEPERL_LIB>";
 # Subroutine for reading config files
-require "$TOOLS_DIR/simma_util.pl";
+use simma_util;
 
 # Regrid configuration info
 $var_info_regrid_ref = &read_config($CONFIG_REGRID);

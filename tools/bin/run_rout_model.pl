@@ -22,8 +22,9 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 #-------------------------------------------------------------------------------
 # Include external modules
 #-------------------------------------------------------------------------------
+use lib "<SYSTEM_SITEPERL_LIB>";
 # Subroutine for reading config files
-require "$TOOLS_DIR/simma_util.pl";
+use simma_util;
 
 # This allows us to use sophisticated command-line argument parsing
 use Getopt::Long;

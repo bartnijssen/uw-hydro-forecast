@@ -1,6 +1,4 @@
 #!/usr/bin/env perl
-use warnings;
-
 # SGE directives
 #$ -cwd
 #$ -j y
@@ -13,6 +11,8 @@ use warnings;
 # Author: Ted Bohn
 # $Id: $
 #-------------------------------------------------------------------------------
+use warnings;
+
 #-------------------------------------------------------------------------------
 # Determine tools and config directories
 #-------------------------------------------------------------------------------
@@ -22,8 +22,9 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 #-------------------------------------------------------------------------------
 # Include external modules
 #-------------------------------------------------------------------------------
+use lib "<SYSTEM_SITEPERL_LIB>";
 # Subroutine for reading config files
-require "$TOOLS_DIR/simma_util.pl";
+use simma_util;
 
 # This allows us to use sophisticated command-line argument parsing
 use Getopt::Long;

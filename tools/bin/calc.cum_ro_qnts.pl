@@ -25,11 +25,11 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 #-------------------------------------------------------------------------------
 # Include external modules
 #-------------------------------------------------------------------------------
+use lib "<SYSTEM_SITEPERL_LIB>";
 # Subroutine for reading config files
-require "$TOOLS_DIR/simma_util.pl";
+use simma_util;
 
 # Perl statistics package
-use lib "<SYSTEM_SITEPERL_LIB>";
 use Statistics::Lite ("mean");
 use POSIX qw(strftime);
 
