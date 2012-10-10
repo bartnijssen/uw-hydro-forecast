@@ -1,0 +1,30 @@
+# vic Model Information
+#------------------------------------------------------------------------
+MODEL_TYPE	real
+MODEL_SRC_DIR	<SYSTEM_BASEDIR>/models/vic/VIC_4.0.5
+MODEL_EXE_DIR	<SYSTEM_INSTALLDIR>/bin
+MODEL_EXE_NAME	vic
+MODEL_ALIAS vic
+MODEL_VER	4.0.5
+MODEL_SUBDIR	vic
+MODEL_SRCMOD_DEFINE_NO_REWIND \s*\#define\s*NO_REWIND.* XXX #define NO_REWIND TRUE
+FORCING_TYPE	asc_vicinp
+RESULTS_TYPE	asc
+OUTPUT_PREFIX	fluxes
+SMCOL		8,9,10
+SWECOL		11
+STOTCOL		NULL
+ROCOL           5,6
+STAT_VARS	sm,swe,stot
+PLOT_VARS	sm,swe,stot
+ESP_PLOT_VARS   sm,ro
+ESP_PLOT_TYPE   qnt,prob
+ESP_PLOT_LEAD   1,2,3
+ENS_TYPE        full
+# make settings
+MAKE_SHELL /bin/sh
+MAKE_CC gcc
+MAKE_INSTALLDIR <MODEL_EXE_DIR>
+MAKE_EXECUTABLE <MODEL_EXE_NAME>
+MAKE_CFLAGS -I. -O3 -Wall -Wno-unused
+MAKE_LIBS -lm

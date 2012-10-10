@@ -1,0 +1,15 @@
+# Routing Model Information
+#------------------------------------------------------------------------
+MODEL_TYPE	real
+MODEL_SRC_DIR	<SYSTEM_BASEDIR>/models/route/src
+MODEL_EXE_DIR	<SYSTEM_INSTALLDIR>/bin
+MODEL_EXE_NAME	route
+MODEL_ALIAS route
+MODEL_VER unknown
+# make settings
+MAKE_SHELL /bin/sh
+MAKE_CC gcc
+MAKE_INSTALLDIR <MODEL_EXE_DIR>
+MAKE_EXECUTABLE <MODEL_EXE_NAME>
+MAKE_CFLAGS -I. -O3 -Wall -Wno-unused
+MAKE_LIBS -lm

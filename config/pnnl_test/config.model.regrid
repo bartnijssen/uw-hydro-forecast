@@ -1,0 +1,14 @@
+# regrid Model Information
+#------------------------------------------------------------------------
+MODEL_TYPE	real
+MODEL_SRC_DIR	<SYSTEM_BASEDIR>/tools/src/regrid
+MODEL_EXE_DIR	<SYSTEM_INSTALLDIR>/bin
+MODEL_EXE_NAME	regrid
+MODEL_ALIAS     regrid
+gMODEL_SUBDIR	regrid
+INPUT_FILE	<MODEL_EXE_DIR>/regrid.runfile
+# make settings
+MAKE_FORTRAN f77
+MAKE_INSTALLDIR <MODEL_EXE_DIR>
+MAKE_EXECUTABLE <MODEL_EXE_NAME>
+MAKE_FFLAGS -O

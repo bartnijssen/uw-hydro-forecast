@@ -21,10 +21,13 @@ setup.pl
 
 =head1 SYSTEM
 
-A forecast project is identified by a file config.system.<name> where <name> is
-the identifier passed on the command-line.
+A forecast project is identified by a file config.system.<name> in the
+subdirectory <name> in the config directory where <name> is the identifier
+passed on the command-line. All teh configuration files associated with a
+particular forecast system are in this same subdirectory (config/<name>).
 
- * Create a file config.system.<name> in config (user is responsible for this)
+ * Create a file config.system.<name> in config/<name> (user is responsible for
+   this) 
  * Run setup/setup.pl --system=<name>
 
 The forecast system consists of the code that allows the production of
@@ -39,6 +42,9 @@ Configuration of a forecast system involves the following steps:
  * Compilation and installation of hydrological and routing models
  * Changing of file mode to ensure that scripts are executable by the system
  * Checking of paths
+ * All the configuration files for a specific system are installed in the config
+   subdirectory of the operational system. These are the files that are read at
+   runtime
 
 At this point, much of the setup is still manual. For example, the user will
 need to ensure that the crontab is in place. However, the setup script will at a
@@ -364,10 +370,12 @@ sub sed_file {
 sub setup_model {
   my ($system, $model) = @_;
   print "Setting up model: $model in $system ...\n" if $quiet;
-  my %sysinfo    = read_configuration("$basepath/config/config.system.$system");
-  my %systags    = get_tags("$basepath/config/config.system.$system", "SYSTEM");
+  my %sysinfo    =
+    read_configuration("$basepath/config/$system/config.system.$system");
+  my %systags    = 
+    get_tags("$basepath/config/$system/config.system.$system", "SYSTEM");
   my $runtime    = $sysinfo{SYSTEM_INSTALLDIR};
-  my $srcfile    = "$basepath/config/config.model.$model";
+  my $srcfile    = "$basepath/config/$system/config.model.$model";
   my $targetfile = "$runtime/config/config.model.$model";
   sed_file($srcfile, $targetfile, \%systags);
   my %info = read_configuration("$runtime/config/config.model.$model");
@@ -399,10 +407,12 @@ sub setup_project {
   my ($system, $project) = @_;
   my $result;
   print "Setting up project: $project in $system ...\n" if $quiet;
-  my %sysinfo    = read_configuration("$basepath/config/config.system.$system");
-  my %systags    = get_tags("$basepath/config/config.system.$system", "SYSTEM");
+  my %sysinfo    =
+    read_configuration("$basepath/config/$system/config.system.$system");
+  my %systags    = 
+    get_tags("$basepath/config/$system/config.system.$system", "SYSTEM");
   my $runtime    = $sysinfo{SYSTEM_INSTALLDIR};
-  my $srcfile    = "$basepath/config/config.project.$project";
+  my $srcfile    = "$basepath/config/$system/config.project.$project";
   my $targetfile = "$runtime/config/config.project.$project";
   sed_file($srcfile, $targetfile, \%systags);
   my %info = read_configuration("$runtime/config/config.project.$project");
@@ -436,10 +446,12 @@ sub setup_project {
 sub setup_tool {
   my ($system, $tool) = @_;
   print "Setting up tool: $tool in $system ...\n" if $quiet;
-  my %sysinfo    = read_configuration("$basepath/config/config.system.$system");
-  my %systags    = get_tags("$basepath/config/config.system.$system", "SYSTEM");
+  my %sysinfo    = 
+    read_configuration("$basepath/config/$system/config.system.$system");
+  my %systags    = 
+    get_tags("$basepath/config/$system/config.system.$system", "SYSTEM");
   my $runtime    = $sysinfo{SYSTEM_INSTALLDIR};
-  my $srcfile    = "$basepath/config/config.tool.$tool";
+  my $srcfile    = "$basepath/config/$system/config.tool.$tool";
   my $targetfile = "$runtime/config/config.tool.$tool";
   sed_file($srcfile, $targetfile, \%systags);
   my %info = read_configuration("$runtime/config/config.tool.$tool");
@@ -470,7 +482,8 @@ sub setup_tool {
 sub setup_system {
   my ($system) = @_;
   print "Setting up system: $system ...\n" if $quiet;
-  my %info = read_configuration("$basepath/config/config.system.$system");
+  my %info = 
+    read_configuration("$basepath/config/$system/config.system.$system");
 
   # Create SYSTEM_INSTALLDIR/bin, SYSTEM_INSTALLDIR/lib and 
   # SYSTEM_INSTALLDIR/config
@@ -482,7 +495,8 @@ sub setup_system {
         die "Cannot make path $runtime/$dir: $!";
     }
   }
-  my %tags = get_tags("$basepath/config/config.system.$system", "SYSTEM");
+  my %tags = 
+    get_tags("$basepath/config/$system/config.system.$system", "SYSTEM");
   
   # Get listing of executable files
   my @filelist;
@@ -521,7 +535,7 @@ sub setup_system {
     }
   }
 
-  my $srcfile    = "$basepath/config/config.system.$system";
+  my $srcfile    = "$basepath/config/$system/config.system.$system";
   my $targetfile = "$runtime/config/config.system.$system";
   copy($srcfile, $targetfile) or
     die "Cannot copy $srcfile ==> $targetfile: $!\n";
@@ -529,7 +543,7 @@ sub setup_system {
 
   # setup tools
   print "Setting up tools ...\n" if $quiet;
-  my $dirname = "$basepath/config";
+  my $dirname = "$basepath/config/$system";
   opendir(DIR, "$dirname") or die "Cannot opendir $dirname: $!";
   my @toollist = grep /^config\.tool/, readdir(DIR);
   closedir(DIR);
@@ -539,7 +553,7 @@ sub setup_system {
 
   # setup models
   print "Setting up models ...\n" if $quiet;
-  $dirname = "$basepath/config";
+  $dirname = "$basepath/config/$system";
   opendir(DIR, "$dirname") or die "Cannot opendir $dirname: $!";
   my @modellist = grep /^config\.model/, readdir(DIR);
   closedir(DIR);

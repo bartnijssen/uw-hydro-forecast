@@ -1,0 +1,15 @@
+# System Information
+#------------------------------------------------------------------------
+SYSTEM_NAME     hydra_test
+SYSTEM_ROOT /raid2
+SYSTEM_BASEDIR	<SYSTEM_ROOT>/nijssen/forecast/uw-hydro-forecast
+SYSTEM_INSTALLDIR <SYSTEM_ROOT>/nijssen/forecast/hydra_test
+SYSTEM_COMMONDIR /raid8/forecast/common
+SYSTEM_SITEPERL_LIB /usr/lib/perl5/site_perl/5.6.1
+SYSTEM_PERL_LIB <SYSTEM_INSTALL_DIR>/lib
+SYSTEM_NETCDF_INC /home/nijssen/apps/include
+SYSTEM_NETCDF_LIB  /home/nijssen/apps/lib
+SYSTEM_LOCAL_ROOT /state/partition1
+SYSTEM_LOCAL_ROOT1 /state/partition1
+SYSTEM_LOCAL_ROOT2 /state/partition2
+SYSTEM_NCO_DIR /home/nijssen/apps/bin

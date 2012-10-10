@@ -1,0 +1,14 @@
+# vic2nc tool information
+#------------------------------------------------------------------------
+TOOL_TYPE	real
+TOOL_SRC_DIR	<SYSTEM_BASEDIR>/tools/src/fcst_sflow
+TOOL_INSTALLDIR	<SYSTEM_INSTALLDIR>/bin
+TOOL_EXE_DIR <TOOL_INSTALLDIR>
+TOOL_EXECUTABLE	fcst_sflow
+TOOL_EXE_NAME <TOOL_EXECUTABLE>
+# make settings
+MAKE_CC gcc
+MAKE_INSTALLDIR <TOOL_EXE_DIR>
+MAKE_EXECUTABLE <TOOL_EXE_NAME>
+MAKE_CFLAGS -I. -O3 -Wall -Wno-unused
+MAKE_LIBS -lm
