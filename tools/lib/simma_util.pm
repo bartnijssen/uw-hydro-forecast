@@ -37,6 +37,8 @@ sub read_config {
   my @fields;
   my %var_info;
   my $key;
+  my $tmp_key;
+  my $value;
 
   # Get config file name
   $config_file = $_[0];
@@ -99,7 +101,7 @@ sub make_dir {
     if ($subdir ne "") {
       $path_so_far = $path_so_far . "/" . $subdir;
       if (!-e $path_so_far) {
-        @args = ("mkdir", $path_so_far);
+        my @args = ("mkdir", $path_so_far);
         if (system(@args) != 0) {
           $exit_code = $?;
           printf STDERR "$0: ERROR: cannot create $path_so_far: $exit_code\n";

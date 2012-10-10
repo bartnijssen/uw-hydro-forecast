@@ -121,19 +121,22 @@ my $srcmodtoken = 'XXX';
 my $quiet       = 0;     # not quite silent, just some progress messages
 my $verbose     = 0;     # highest verbosity level
 my $scriptname;          # name of this script
-my $basepath;            # base path for the forecast system
+our $basepath;            # base path for the forecast system
+our $suffix;
+our $path;
+BEGIN {
+  ($scriptname, $path, $suffix) = fileparse($0, ".pl");
+  $basepath = abs_path($path);
+  $basepath =~ s/\/setup$//;
+}
+use lib "$basepath/tools/lib";
+use simma_util;
 
 ################################################################################
 #                                     MAIN                                     #
 ################################################################################
 {
-  my $suffix;
-  my $path;
   my ($system, $project, $model, $tool) = processcommandline();
-  ($scriptname, $path, $suffix) = fileparse($0, ".pl");
-  $basepath = abs_path($path);
-  $basepath =~ s/\/setup$//;
-  require "$basepath/tools/bin/simma_util.pl";
   if (defined $project) {
     setup_project($system, $project);
   } elsif (defined $model) {
