@@ -4,8 +4,8 @@ SYSTEM_NAME     mac
 SYSTEM_ROOT /Users
 SYSTEM_BASEDIR	<SYSTEM_ROOT>/nijssen/Dropbox/github/uw-hydro-forecast
 SYSTEM_INSTALLDIR <SYSTEM_ROOT>/nijssen/junk/mac/runtime
-SYSTEM_SITEPERL_LIB /opt/local/lib/perl5/site_perl/5.12.4
-SYSTEM_PERL_LIB <SYSTEM_INSTALLDIR>/lib
+SYSTEM_SITEPERL_LIB <SYSTEM_INSTALLDIR>/lib
+SYSTEM_PERL_LIB /opt/local/lib/perl5/site_perl/5.12.4
 SYSTEM_NETCDF_INC /opt/local/include
 SYSTEM_NETCDF_LIB  /opt/local/lib
 SYSTEM_LOCAL_ROOT /state/partition1
