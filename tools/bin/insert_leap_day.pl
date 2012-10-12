@@ -1,6 +1,4 @@
-#!/usr/bin/env perl
-use warnings;
-
+#!<SYSTEM_PERL_EXE> -w
 # This script takes an ascii-format data file and inserts leap days.
 # The files are expected to have the format YYYY MM DD data1 data2 ...
 # The leap day is inserted by taking the record of Feb 28 from a leap year

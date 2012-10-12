@@ -1,9 +1,8 @@
-#!/usr/bin/env perl
-use warnings;
-
+#!<SYSTEM_PERL_EXE> -w
 # Wrapper for the regrid program.  This runs the regrid program to regrid
 # station data to a user-specified mask.
 # Get command-line arguments
+use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 $TOOLS_DIR     = shift;
 $CONFIG_REGRID = shift;
 $template      = shift;
@@ -12,7 +11,6 @@ $DEM           = shift;
 $FmtFile       = shift;
 $GrdFile       = shift;
 
-use lib "<SYSTEM_SITEPERL_LIB>";
 # Subroutine for reading config files
 use simma_util;
 

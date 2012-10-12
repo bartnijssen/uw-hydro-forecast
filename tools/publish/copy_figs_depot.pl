@@ -1,10 +1,10 @@
-#!/usr/bin/env perl
+#!<SYSTEM_PERL_EXE> -w
 # copy_figs.pl: Script to copy model results plots to web site
-use warnings;
-
 # 2008-05-22 Generalized for multimodel sw monitor.	TJB
 # $Id: $
 #-------------------------------------------------------------------------------
+use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+
 #-------------------------------------------------------------------------------
 # Determine tools and config directories
 #-------------------------------------------------------------------------------
@@ -15,7 +15,7 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 # Include external modules
 #-------------------------------------------------------------------------------
 # Subroutine for reading config files
-require "$TOOLS_DIR/simma_util.pl";
+use simma_util;
 use POSIX qw(strftime);
 
 #-------------------------------------------------------------------------------

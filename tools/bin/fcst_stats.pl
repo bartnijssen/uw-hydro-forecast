@@ -1,6 +1,4 @@
-#!/usr/bin/env perl
-use warnings;
-
+#!<SYSTEM_PERL_EXE> -w
 # AWW-112103
 # take a SORTED row of data and find interpolated weibull plotting
 # position of an input value in it, assigning fixed value when it is
@@ -12,7 +10,7 @@ use warnings;
 #  <target val> <sorted distribution vals, lowest to highest>
 # output fmt: each row has
 #  <percentile><additive anom><multiplicative anom>
-use lib "<SYSTEM_SITEPERL_LIB>";
+use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 use Statistics::Lite ("mean");
 
 # read in filenames

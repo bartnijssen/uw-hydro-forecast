@@ -1,6 +1,4 @@
-#!/usr/bin/env perl
-use warnings;
-
+#!<SYSTEM_PERL_EXE> -w
 #
 # update_fmt.pl: Script that examines current station observations, computes
 # number of usable days of data, and creates "fmt" file for input to gridding

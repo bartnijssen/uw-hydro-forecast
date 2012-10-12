@@ -1,16 +1,13 @@
-#!/usr/bin/env perl
+#!<SYSTEM_PERL_EXE> -w
 # AWW-1104
-use warnings;
-
 # from the recent daily station fmt (spinup period),
 # make a format (.fmt) file of precip percentiles
 # this output file will be either for 1 or 2 periods:
 #   if 2, the first is one month long, second varies
 #   if 1, the period is combined
-use lib "<SYSTEM_SITEPERL_LIB>";
+use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 use Date::Calc qw(Add_Delta_YM);
 use Statistics::Lite ("mean");
-use lib "<SYSTEM_PERL_LIB>";
 use UWTime;  # Use this for Days_In_Month
 
 # ---------- ARGS / SETTINGS ------------------------------

@@ -1,11 +1,10 @@
-#!/usr/bin/env perl
-use warnings;
-
+#!<SYSTEM_PERL_EXE> -w
 # Script to run the conversion tool vic2nc within SIMMA framework
 #
 # Author: Ted Bohn
 # $Id: $
 #-------------------------------------------------------------------------------
+use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 use POSIX qw(strftime);
 
 # Command-line arguments
@@ -18,7 +17,6 @@ $start_date      = shift;
 $end_date        = shift;
 $prefix          = shift;
 
-use lib "<SYSTEM_SITEPERL_LIB>";
 # Utility subroutines
 use simma_util;
 

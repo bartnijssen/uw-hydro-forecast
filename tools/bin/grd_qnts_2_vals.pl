@@ -1,6 +1,4 @@
-#!/usr/bin/env perl
-use warnings;
-
+#!<SYSTEM_PERL_EXE> -w
 # AWW-1104
 # transforming gridded MONTHLY quantiles to gridded values
 # using existing 1/8-degree daily archive of forcings each grid cell
@@ -11,7 +9,7 @@ use warnings;
 #          note, this is transposed relative to the input qnt grid
 # note, last month may be partial, so need to account for that AWW-013104
 #use Date::Calc qw(Days_in_Month Delta_Days Add_Delta_Days leap_year);
-use "<SYSTEM_PERL_LIB>";
+use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 use UWTime;  # Use this for Days_In_Month
 use Date::Manip;
 

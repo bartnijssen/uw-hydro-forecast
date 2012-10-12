@@ -1,5 +1,4 @@
-#!/usr/bin/env perl
-use warnings;
+#!<SYSTEM_PERL_EXE> -w
 use Date::Calc qw(Days_in_Month Delta_Days Add_Delta_Days);
 
 # This script takes gridded forcings (image mode, i.e., for each time step,

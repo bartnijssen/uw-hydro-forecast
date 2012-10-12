@@ -1,6 +1,4 @@
-#!/usr/bin/env perl
-use warnings;
-
+#!<SYSTEM_PERL_EXE> -w
 # This script creates fmt file from the all time series of station obs between
 # the given dates.
 # This script assumes that a) no records are missing from the time series and b)

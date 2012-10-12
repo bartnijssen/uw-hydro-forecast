@@ -1,6 +1,4 @@
-#!/usr/bin/env perl
-use warnings;
-
+#!<SYSTEM_PERL_EXE> -w
 # A. Wood
 # transforming gridded MONTHLY amounts to gridded daily amounts
 # - proceed one month at a time, since data inputs are very large
@@ -17,7 +15,7 @@ use warnings;
 # AWW-1104:  modified to run using flexible periods rather than months
 #            and to run off ARGS only
 #use Date::Calc qw(Days_in_Month Delta_Days);
-use lib "<SYSTEM_PERL_LIB>";
+use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 use UWTime;
 use Date::Manip;
 

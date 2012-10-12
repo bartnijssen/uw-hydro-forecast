@@ -1,10 +1,10 @@
-#!/usr/bin/env perl
-use warnings;
-
+#!<SYSTEM_PERL_EXE> -w
 # Script for merging the model output statistics from a list of project domains
 # into one larger domain.
 #
 #-------------------------------------------------------------------------------
+use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+
 #-------------------------------------------------------------------------------
 # Determine tools config directories
 #-------------------------------------------------------------------------------
@@ -14,7 +14,6 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 #-------------------------------------------------------------------------------
 # Include external modules
 #-------------------------------------------------------------------------------
-use lib "<SYSTEM_SITEPERL_LIB>";
 # Subroutine for reading config files
 use simma_util;
 

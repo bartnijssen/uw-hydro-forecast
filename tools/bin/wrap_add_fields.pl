@@ -1,6 +1,4 @@
-#!/usr/bin/env perl
-use warnings;
-
+#!<SYSTEM_PERL_EXE> -w
 # Tools Directory - Edit this to reflect location of your SIMMA installation
 $TOOLS_DIR = "<SYSTEM_INSTALLDIR>/bin";
 

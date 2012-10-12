@@ -1,9 +1,9 @@
-#!/usr/bin/env perl
-use warnings;
-
+#!<SYSTEM_PERL_EXE> -w
 # Wrapper script for advancing the trusted state for the multi-model nowcast
 # system
 #-------------------------------------------------------------------------------
+use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+
 #-------------------------------------------------------------------------------
 # Determine tools and config directories
 #-------------------------------------------------------------------------------
@@ -13,7 +13,6 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 #-------------------------------------------------------------------------------
 # Include external modules
 #-------------------------------------------------------------------------------
-use lib "<SYSTEM_SITEPERL_LIB>";
 # Subroutine for reading config files
 use simma_util;
 

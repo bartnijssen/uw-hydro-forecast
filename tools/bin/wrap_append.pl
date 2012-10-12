@@ -1,5 +1,4 @@
-#!/usr/bin/env perl
-use warnings;
+#!<SYSTEM_PERL_EXE> -w
 $indir  = shift;
 $outdir = shift;
 $prefix = shift; # If omitted, all files in the input directory will be appended

@@ -1,12 +1,12 @@
-#!/usr/bin/env perl
+#!<SYSTEM_PERL_EXE> -w
 # plot_qnts.pl: Script to plot model results
-use warnings;
-
 # Ali Akanda, 041805, 050505
 # A.Wood, jul07, modified to make runoff plots too
 # 2008-05-22 Generalized for multimodel sw monitor.	TJB
 # $Id: $
 #-------------------------------------------------------------------------------
+use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+
 #-------------------------------------------------------------------------------
 # Determine tools, config, and common directories
 #-------------------------------------------------------------------------------
@@ -18,7 +18,7 @@ $COMMON_DIR = "<SYSTEM_COMMONDIR>";
 # Include external modules
 #-------------------------------------------------------------------------------
 # Subroutine for reading config files
-require "$TOOLS_DIR/simma_util.pl";
+use simma_util;
 
 # Date arithmetic
 use Date::Calc qw(Add_Delta_YM Add_Delta_Days Days_in_Month Delta_Days);

@@ -1,6 +1,4 @@
-#!/usr/bin/env perl
-use warnings;
-
+#!<SYSTEM_PERL_EXE> -w
 # calculate values from anomalies given precalculated means
 # inputs:  .grd file with anomalies in same column order as
 #        .info/.xyz type file with desired averages to apply
@@ -14,7 +12,7 @@ use warnings;
 #            needs no args. removed functionality for longer datasets
 #            tailored for ps / pnw only
 #use Date::Calc qw(Delta_Days);
-use lib "<SYSTEM_PERL_LIB>";
+use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 use UWTime;
 
 # command-line arguments

@@ -1,6 +1,4 @@
-#!/usr/bin/env perl
-use warnings;
-
+#!<SYSTEM_PERL_EXE> -w
 # This script multiplies ascii text file columns by a factor.
 # Usage:
 # add_fields.pl filename ndate col1,col2,col3,... factor

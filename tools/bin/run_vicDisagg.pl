@@ -1,11 +1,10 @@
-#!/usr/bin/env perl
-use warnings;
-
+#!<SYSTEM_PERL_EXE> -w
 # Script to run vic forcing disaggregation
 #
 # Author: Ted Bohn
 # $Id: $
 #-------------------------------------------------------------------------------
+use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 use POSIX qw(strftime);
 
 # Command-line arguments
@@ -18,7 +17,6 @@ $start_date      = shift;
 $end_date        = shift;
 $forc_start_date = shift;
 
-use lib "<SYSTEM_SITEPERL_LIB>";
 # Utility subroutines
 use simma_util;
 

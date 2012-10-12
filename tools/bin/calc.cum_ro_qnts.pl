@@ -1,6 +1,4 @@
-#!/usr/bin/env perl
-use warnings;
-
+#!<SYSTEM_PERL_EXE> -w
 # calculate cumulative variable percentile for a variety of cumulation periods
 #   taken prior to the current (latest) day, for all cells in a basin
 # output format:  one row per cell
@@ -16,6 +14,8 @@ use warnings;
 #         Ted Bohn Sep 2008
 # $Id: $
 #-------------------------------------------------------------------------------
+use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+
 #-------------------------------------------------------------------------------
 # Determine tools and config directories
 #-------------------------------------------------------------------------------
@@ -25,7 +25,6 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 #-------------------------------------------------------------------------------
 # Include external modules
 #-------------------------------------------------------------------------------
-use lib "<SYSTEM_SITEPERL_LIB>";
 # Subroutine for reading config files
 use simma_util;
 

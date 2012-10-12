@@ -1,10 +1,10 @@
-#!/usr/bin/env perl
-use warnings;
-
+#!<SYSTEM_PERL_EXE> -w
 # Script that shifts data from the current spinup area to the near-real-time
 # archive.
 #
 #-------------------------------------------------------------------------------
+use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+
 #-------------------------------------------------------------------------------
 # Determine tools, root, and config directories - assume this script lives in
 # ROOT_DIR/tools/
@@ -15,7 +15,6 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 #-------------------------------------------------------------------------------
 # Include external modules
 #-------------------------------------------------------------------------------
-use lib "<SYSTEM_SITEPERL_LIB>";
 # Subroutine for reading config files
 use simma_util;
 

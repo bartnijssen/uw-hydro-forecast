@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!<SYSTEM_PERL_EXE> -w
 
 =pod
 
@@ -43,8 +43,8 @@ and libraries in that same system to run. This means that the script does
 necessarily work as a standalone program.
 
 =cut
-use warnings;
-use lib "<SYSTEM_SITEPERL_LIB>";
+
+use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 use Getopt::Long;
 use Pod::Usage;
 use Date::Calc qw(Delta_Days Add_Delta_YMD);
@@ -63,8 +63,6 @@ my $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 #-------------------------------------------------------------------------------
 # Include external modules
 #-------------------------------------------------------------------------------
-use lib "<SYSTEM_SITEPERL_LIB>";
-
 # Subroutine for reading config files
 use simma_util;
 use GenUtils;
@@ -213,7 +211,6 @@ print "$cmd\n";
 $cmd = "rm -f $LogFile.tmp";
 print "$cmd\n";
 (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
-
 
 # Cleanup: $cleanup = 1 doesn't remove the tempfile, because it was overwritten
 # I presume. So we will do it ourselves

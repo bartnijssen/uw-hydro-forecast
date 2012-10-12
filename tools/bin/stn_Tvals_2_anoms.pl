@@ -1,6 +1,4 @@
-#!/usr/bin/env perl
-use warnings;
-
+#!<SYSTEM_PERL_EXE> -w
 # AWW-12-29-02
 # calculate anomalies from values given precalculated means
 # inputs:  .fmt file with values in same column order as

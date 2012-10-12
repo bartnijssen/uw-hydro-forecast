@@ -1,9 +1,8 @@
-#!/usr/bin/env perl
-use warnings;
-
+#!<SYSTEM_PERL_EXE> -w
 # A. Wood August 2007
 # run a set of ESP forecasts, given existing state files & forcings, etc.
 # this version:  for SW Monitor, on sere, in aww dirs
+use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 
 #-------------------------------------------------------------------------------
 # Determine tools and config directories
@@ -14,7 +13,6 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 #-------------------------------------------------------------------------------
 # Include external modules
 #-------------------------------------------------------------------------------
-use lib "<SYSTEM_SITEPERL_LIB>";
 # Subroutine for reading config files
 use simma_util;
 use Date::Calc qw(leap_year Days_in_Month Delta_Days Add_Delta_Days

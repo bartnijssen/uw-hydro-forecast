@@ -1,6 +1,4 @@
-#!/usr/bin/env perl
-use warnings;
-
+#!<SYSTEM_PERL_EXE> -w
 # Tools directory
 $TOOLS_DIR = "<SYSTEM_INSTALLDIR>/bin";
 
