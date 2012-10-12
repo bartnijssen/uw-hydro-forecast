@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+
 =pod
 
 =head1 NAME
@@ -15,6 +16,7 @@ create_retro_run.pl
     --man|info                  full documentation
     --verbose|v                 increase verbosity
     --route|r                   route the flows
+    --local|l                   use local storage in a cluster environment
 
  Required:
     --model|m=model             model to run
@@ -41,15 +43,16 @@ and libraries in that same system to run. This means that the script does
 necessarily work as a standalone program.
 
 =cut
-
 use warnings;
 use lib "<SYSTEM_SITEPERL_LIB>";
 use Getopt::Long;
 use Pod::Usage;
-use Date::Calc qw(leap_year Days_in_Month Delta_Days Add_Delta_Days
-                  Add_Delta_YM);
+use Date::Calc qw(Delta_Days Add_Delta_YMD);
 use POSIX qw(strftime);
-use strict;                     # sanity!!
+use File::Temp qw(tempfile);
+use File::Copy qw(move);
+use strict;  # sanity!!
+my $cleanup = 1;
 
 #-------------------------------------------------------------------------------
 # Determine tools and config directories
@@ -61,8 +64,10 @@ my $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 # Include external modules
 #-------------------------------------------------------------------------------
 use lib "<SYSTEM_SITEPERL_LIB>";
+
 # Subroutine for reading config files
 use simma_util;
+use GenUtils;
 
 #-------------------------------------------------------------------------------
 # Parse the command-line arguments
@@ -79,14 +84,17 @@ my $local_storage;
 my $verbose = 0;
 
 # Hash used in GetOptions function
-my $status = GetOptions("help|h|?"    => \$help,
+my $status = GetOptions(
+                        "help|h|?"    => \$help,
                         "man|info"    => \$man,
                         "verbose|v"   => \$verbose,
-                        "model|m"     => \$model,
-                        "project|p"   => \$project,
-                        "start|s"     => \$start_date,
-                        "end|e"       => \$end_date,
-                        "route|r"     => \$routeflows);
+                        "model|m=s"   => \$model,
+                        "project|p=s" => \$project,
+                        "start|s=s"   => \$start_date,
+                        "end|e=s"     => \$end_date,
+                        "route|r"     => \$routeflows,
+                        "local|l"     => \$local_storage
+                       );
 
 #-------------------------------------------------------------------------------
 # Validate the command-line arguments
@@ -94,9 +102,11 @@ my $status = GetOptions("help|h|?"    => \$help,
 # Help option
 pod2usage(-verbose => 2, -exitstatus => 0) if $man;
 pod2usage(-verbose => 2, -exitstatus => 0) if $help;
-pod2usage(-verbose => 1, -exitstatus => 1) 
-  if not defined $model or not defined $project or not defined $start_date or 
-  not defined $end_date;
+pod2usage(-verbose => 1, -exitstatus => 1)
+  if not defined $model or
+    not defined $project    or
+    not defined $start_date or
+    not defined $end_date;
 
 # Parse & validate start/end dates
 my @startdate = parse_yyyymmdd($start_date, "-");
@@ -105,9 +115,8 @@ isdate(@startdate) or die "Not a valid start date: $start_date\n";
 my @enddate = parse_yyyymmdd($end_date, "-");
 @enddate == 3 or die "$0: ERROR: end date must have format YYYY-MM-DD.\n";
 isdate(@enddate) or die "Not a valid end date: $end_date\n";
-
-Delta_Days(@enddate, @startdate) > 0
-  or die "$0: ERROR: start date is later than end date.\n";
+Delta_Days(@startdate, @enddate) > 0 or
+  die "$0: ERROR: start date is later than end date.\n";
 
 # Unique identifier for this job
 my $JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
@@ -129,8 +138,7 @@ foreach my $key_proj (keys(%var_info_project)) {
       s/<$key_model>/$var_info_model{$key_model}/g;
   }
 }
-
-$var_info_project{"LOGS_MODEL_DIR"} =~ s/<LOGS_SUBDIR>/esp/g;
+$var_info_project{"LOGS_MODEL_DIR"} =~ s/<LOGS_SUBDIR>/retro/g;
 my $LogDir = $var_info_project{"LOGS_MODEL_DIR"};
 foreach my $dir ($LogDir) {
   $status = &make_dir($dir);
@@ -138,15 +146,12 @@ foreach my $dir ($LogDir) {
     die "Error: Failed to create $dir\n";
   }
 }
-
 my $LogFile = "$LogDir/log.$project.$model.create_retro_run.pl.$JOB_ID";
 
-# See https://github.com/bartnijssen/uw-hydro-forecast/wiki/Creating-a-retrospective-run
 # First pass through: cold start for full period
 my $cmd =
   "$TOOLS_DIR/run_model.pl -m $model -p $project -f retro " .
-  "-s $start_date -e $end_date" .
-  ">& $LogFile.tmp";
+  "-s $start_date -e $end_date " . ">& $LogFile.tmp";
 print "$cmd\n";
 (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
 $cmd = "cat $LogFile.tmp >> $LogFile";
@@ -157,18 +162,28 @@ print "$cmd\n";
 (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
 
 # Recycle model state from end of run and run for a single year 10 times
-my $state_subdir = $var_info_project{STATE_DIR} . '/' . 
-  $var_info_project{RETRO_SUBDIR} . '/' . $var_info_model{MODEL_ALIAS};
-my $initdatestr = sprintf("%04d%02d%02d", @enddate);
-my @enddate_oneyear = Add_Delta_YM(@enddate, 1, 0);
+my $state_subdir =
+  $var_info_project{STATE_DIR} . '/' . $var_info_project{RETRO_SUBDIR} . '/' .
+  $var_info_model{MODEL_ALIAS};
+my $initfile =
+  $state_subdir . '/' . 'state_' . sprintf("%04d%02d%02d", @enddate);
+my @enddate_oneyear = Add_Delta_YMD(@startdate, 1, 0, -1);
 my $enddate_oneyear = sprintf("%04d-%02d-%02d", @enddate_oneyear);
 
-for (my $i = 0; $i < 10; $i++) {
+# Create a temporary state file to store the state we're reading so that
+# it is not overwritten by the state we are writing
+my ($tmpfh, $tmpfilename) =
+  tempfile(
+           'tempstate_XXXXXX',
+           DIR     => $state_subdir,
+           CLEANUP => $cleanup
+          );
+for (my $i = 0 ; $i < 10 ; $i++) {
   $cmd =
     "$TOOLS_DIR/run_model.pl -m $model -p $project -f retro " .
-      "-s $start_date -e $enddate_oneyear -i $initdatestr";
+    "-s $start_date -e $enddate_oneyear -i $initfile";
   $cmd .= " -l" if ($local_storage);
-  $cmd .= ">& $LogFile.tmp";
+  $cmd .= " >& $LogFile.tmp";
   print "$cmd\n";
   (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
   $cmd = "cat $LogFile.tmp >> $LogFile";
@@ -177,15 +192,19 @@ for (my $i = 0; $i < 10; $i++) {
   $cmd = "rm -f $LogFile.tmp";
   print "$cmd\n";
   (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
-  $initdatestr = sprintf("%04d%02d%02d", @enddate_oneyear);
+  $initfile =
+    $state_subdir . '/' . 'state_' . sprintf("%04d%02d%02d", @enddate_oneyear);
+  move($initfile, $tmpfilename) or
+    die "Error: Cannot move $initfile to $tmpfilename: $!\n";
+  $initfile = $tmpfilename;
 }
 
 # Run the model once more for the full period.
 $cmd =
   "$TOOLS_DIR/run_model.pl -m $model -p $project -f retro " .
-  "-s $start_date -e $end_date -i $initdatestr" .
+  "-s $start_date -e $end_date -i $initfile";
 $cmd .= " -l" if ($local_storage);
-$cmd .= ">& $LogFile.tmp";
+$cmd .= " >& $LogFile.tmp";
 print "$cmd\n";
 (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
 $cmd = "cat $LogFile.tmp >> $LogFile";
@@ -195,8 +214,9 @@ $cmd = "rm -f $LogFile.tmp";
 print "$cmd\n";
 (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
 
-# Remove the statefile at the end of the first year
-my $initfile = $state_subdir . '/' . 'state_' . 
-  sprintf("%04d%02d%02d", @enddate_oneyear);
-unlink $initfile or warn "Warning: cannot remove $initfile\n";
 
+# Cleanup: $cleanup = 1 doesn't remove the tempfile, because it was overwritten
+# I presume. So we will do it ourselves
+if ($cleanup and -e $tmpfilename) {
+  unlink $tmpfilename or warn "Warning: Cannot remove $tmpfilename: $!\n";
+}
