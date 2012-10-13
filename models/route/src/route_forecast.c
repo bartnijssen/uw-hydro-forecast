@@ -140,11 +140,11 @@ int main (int argc, char *argv[])
   DATE spinup_start, spinup_stop, inp_start, inp_stop, out_start, out_stop; 
                     // start and stop date of spinpup, input flux data, and output route data;
 
-  char filename[100];
-  char spinuppath[100];
-  char inpath[100];
-  char outpath[100];
-  char name[100];
+  char filename[MAXSTRING];
+  char spinuppath[MAXSTRING];
+  char inpath[MAXSTRING];
+  char outpath[MAXSTRING];
+  char name[MAXSTRING];
   char uhstring[MAXSTNS][MIDSTRING]; //name of uhfile (or "NONE")
   char dummy[MAXSTRING];
   char none[5]="NONE";
