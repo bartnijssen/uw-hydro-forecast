@@ -1,9 +1,9 @@
 # System Information
 #------------------------------------------------------------------------
 SYSTEM_NAME     hydra_test
-SYSTEM_ROOT /raid2/nijssen
-SYSTEM_BASEDIR	<SYSTEM_ROOT>/forecast/uw-hydro-forecast
-SYSTEM_INSTALLDIR <SYSTEM_ROOT>/forecast/hydra_test
+SYSTEM_ROOT /raid2
+SYSTEM_BASEDIR	<SYSTEM_ROOT>/nijssen/forecast/uw-hydro-forecast
+SYSTEM_INSTALLDIR <SYSTEM_ROOT>/nijssen/forecast/hydra_test
 SYSTEM_COMMONDIR /raid8/forecast/common
 SYSTEM_PERL_EXE /usr/bin/perl
 SYSTEM_PERL_LIBS /usr/lib/perl5/site_perl/5.6.1
