@@ -26,7 +26,7 @@ use Date::Calc qw(Days_in_Month Delta_Days Add_Delta_Days);
 # Filename parsing
 use File::Basename;
 use POSIX qw(strftime);
-($scriptname, $path, $suffix) = fileparse($0, ".pl");
+($scriptname) = fileparse($0);
 
 #-------------------------------------------------------------------------------
 # Command-line arguments
@@ -77,7 +77,7 @@ $CurrspinEndDateFile   = $var_info_project{"FORCING_CURRSPIN_END_DATE_FILE"};
 $LogDir                = $var_info_project{"LOGS_MODEL_DIR"};
 $LogDir =~ s/<LOGS_SUBDIR>/curr_spinup/;
 $VarList = $var_info_model{"PLOT_VARS"};
-$LogFile = "$LogDir/log.$scriptname$suffix.$JOB_ID";
+$LogFile = "$LogDir/log.$scriptname.$JOB_ID";
 
 # Get info for each subproject in the list
 for ($proj_idx = 0 ; $proj_idx < @SubProjects ; $proj_idx++) {
@@ -102,7 +102,7 @@ for ($proj_idx = 0 ; $proj_idx < @SubProjects ; $proj_idx++) {
 
 # Check for directories; create if necessary & appropriate
 foreach $dir ($LogDir) {
-  $status = &make_dir($dir);
+  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
 }
 
 # Parse the step list
@@ -204,8 +204,6 @@ if ($fcast_date_override) {
 $start_date = sprintf "%04d-%02d-%02d", $Syr, $Smon, $Sday;
 $fcast_date = sprintf "%04d-%02d-%02d", $Fyr, $Fmon, $Fday;
 
-#$start_date = sprintf "%04d-%d-%d", $Syr, $Smon, $Sday;
-#$fcast_date = sprintf "%04d-%d-%d", $Fyr, $Fmon, $Fday;
 #-------------------------------------------------------------------------------
 # END settings
 #-------------------------------------------------------------------------------
@@ -234,16 +232,6 @@ if ($var_info_model{"MODEL_TYPE"} eq "real") {
     }
 
     # Run Model
-    # $cmd = "$TOOLS_DIR/run_model.pl -m $MODEL -p $PROJECT -f curr_spinup " .
-    #   "-s $start_date -e $fcast_date -i $init_state_file >& $LogFile.tmp; " .
-    #   "cat $LogFile.tmp >> $LogFile";
-    # print "$cmd\n";
-    # (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
-    # `echo $cmd > $LogFile`;
-    #    if (system($cmd)!=0) {
-    #      `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
-    #      die "$0: ERROR: $cmd failed: $?\n";
-    #    }
     $cmd =
       "$TOOLS_DIR/run_model.pl -m $MODEL -p $PROJECT -f curr_spinup " .
       "-s $start_date -e $fcast_date -i $init_state_file >& $LogFile.tmp";
@@ -259,15 +247,6 @@ if ($var_info_model{"MODEL_TYPE"} eq "real") {
   if ($do_archive) {
 
     # Archive results and post to web site
-    # $cmd = "$TOOLS_DIR/archive_currspin.pl $MODEL $PROJECT >& " .
-    #   "$LogFile.tmp; cat $LogFile.tmp >> $LogFile";
-    # print "$cmd\n";
-    # (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
-    # `echo $cmd > $LogFile`;
-    # if (system($cmd)!=0) {
-    #   `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
-    #   die "$0: ERROR: $cmd failed: $?\n";
-    # }
     $cmd = "$TOOLS_DIR/archive_currspin.pl $PROJECT $MODEL >& $LogFile.tmp";
     print "$cmd\n";
     (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
@@ -288,15 +267,6 @@ if ($do_stats) {
 
     # Stats for this project will consist of merged stats files from other
     # "sub-projects".
-    # $cmd = "$TOOLS_DIR/merge_project_stats.pl $PROJECT $MODEL " .
-    #   "$Fyr $Fmon $Fday >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
-    # print "$cmd\n";
-    # (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
-    # `echo $cmd >> $LogFile`;
-    # if (system($cmd)!=0) {
-    #   `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
-    #   die "$0: ERROR: $cmd failed: $?\n";
-    # }
     $cmd =
       "$TOOLS_DIR/merge_project_stats.pl $PROJECT $MODEL " .
       "$Fyr $Fmon $Fday >& $LogFile.tmp";
@@ -311,15 +281,6 @@ if ($do_stats) {
   } else {
 
     # Compute percentiles of model results (but not runoff)
-    # $cmd = "$TOOLS_DIR/get_stats.pl $MODEL $PROJECT $Fyr $Fmon $Fday " .
-    #   ">& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
-    # print "$cmd\n";
-    # (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
-    # `echo $cmd >> $LogFile`;
-    # if (system($cmd)!=0) {
-    #   `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
-    #   die "$0: ERROR: $cmd failed: $?\n";
-    # }
     $cmd =
       "$TOOLS_DIR/get_stats.pl $MODEL $PROJECT $Fyr $Fmon $Fday >& " .
       "$LogFile.tmp";
@@ -334,16 +295,6 @@ if ($do_stats) {
 
     # Compute percentiles of model runoff - not all models
     if (grep /ro/, $VarList) {
-
-      # $cmd = "$TOOLS_DIR/calc.cum_ro_qnts.pl $MODEL $PROJECT " .
-      #   "$Fyr $Fmon $Fday >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
-      # print "$cmd\n";
-      # (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
-      # `echo $cmd >> $LogFile`;
-      # if (system($cmd)!=0) {
-      #   `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
-      #    die "$0: ERROR: $cmd failed: $?\n";
-      # }
       $cmd =
         "$TOOLS_DIR/calc.cum_ro_qnts.pl $MODEL $PROJECT " .
         "$Fyr $Fmon $Fday >& $LogFile.tmp";
@@ -364,15 +315,6 @@ if ($do_stats) {
 #-------------------------------------------------------------------------------
 if ($do_plots) {
 
-  # $cmd = "$TOOLS_DIR/publish/plot_qnts.pl $PROJECT $MODEL " .
-  #   "$Fyr $Fmon $Fday >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
-  # print "$cmd\n";
-  # (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
-  # `echo $cmd >> $LogFile`;
-  # if (system($cmd)!=0) {
-  #   `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
-  #   die "$0: ERROR: $cmd failed: $?\n";
-  # }
   $cmd =
     "$TOOLS_DIR/plot_qnts.pl $PROJECT $MODEL $Fyr $Fmon $Fday >& " .
     "$LogFile.tmp; cat $LogFile.tmp >> $LogFile";
@@ -391,15 +333,6 @@ if ($do_plots) {
 #-------------------------------------------------------------------------------
 if ($do_depot) {
 
-  # $cmd = "$TOOLS_DIR/publish/copy_figs_depot.pl $PROJECT $MODEL " .
-  #   "$Fyr $Fmon $Fday >& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";
-  # print "$cmd\n";
-  # (system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
-  # `echo $cmd >> $LogFile`;
-  # if (system($cmd)!=0) {
-  #   `echo $0: ERROR: $cmd failed: $? >> $LogFile`;
-  #   die "$0: ERROR: $cmd failed: $?\n";
-  # }
   $cmd =
     "$TOOLS_DIR/copy_figs_depot.pl $PROJECT $MODEL $Fyr $Fmon $Fday " .
     ">& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";

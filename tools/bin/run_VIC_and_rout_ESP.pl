@@ -66,10 +66,7 @@ $ResultsModelAscDir = $var_info_project{"RESULTS_MODEL_ASC_DIR"};
 $var_info_project{"LOGS_MODEL_DIR"} =~ s/<LOGS_SUBDIR>/esp/g;
 $LogDir = $var_info_project{"LOGS_MODEL_DIR"};
 foreach $dir ($LogDir) {
-  $status = &make_dir($dir);
-  if ($status != 0) {
-    die "Error: Failed to create $dir\n";
-  }
+  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
 }
 
 # The final processed model results will be stored in the ascii dir

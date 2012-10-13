@@ -15,17 +15,10 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 # Subroutine for reading config files
 use simma_util;
 
-# Date computation
-use Date::Calc qw(Days_in_Month Delta_Days Add_Delta_Days);
-
-# Access to environment variables
-use Env;
-
 # Filename parsing
 use File::Basename;
 use POSIX qw(strftime);
-fileparse($0, ".pl");
-($scriptname, $path, $suffix) = fileparse($0, ".pl");
+($scriptname) = fileparse($0);
 
 #-------------------------------------------------------------------------------
 # Command-line arguments
@@ -57,11 +50,11 @@ $ModelList            = $var_info_project{"MODEL_LIST"};
 $EmailList            = $var_info_project{"EMAIL_LIST"};
 @emails               = split /,/, $EmailList;
 $LogDir  = $var_info_project{"LOGS_CURRSPIN_DIR"} . "/" . $scriptname;
-$LogFile = "$LogDir/log.$scriptname$suffix.$JOB_ID";
+$LogFile = "$LogDir/log.$scriptname.$JOB_ID";
 
 # Check for directories; create if necessary & appropriate
 foreach $dir ($LogDir) {
-  $status = &make_dir($dir);
+  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
 }
 
 # Stage can be defined in the config file. Precedence is:command-line, config

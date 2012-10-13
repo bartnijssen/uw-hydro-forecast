@@ -8,7 +8,6 @@ use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 #-------------------------------------------------------------------------------
 # Determine tools config directories
 #-------------------------------------------------------------------------------
-$TOOLS_DIR  = "<SYSTEM_INSTALLDIR>/bin";
 $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 
 #-------------------------------------------------------------------------------
@@ -16,10 +15,6 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 #-------------------------------------------------------------------------------
 # Subroutine for reading config files
 use simma_util;
-
-# Date arithmetic
-use Date::Calc qw(Days_in_Month Delta_Days Add_Delta_Days);
-use POSIX qw(strftime);
 
 #-------------------------------------------------------------------------------
 # Command-line arguments
@@ -40,9 +35,6 @@ if (!$fyear || !$fmonth || !$fday) {
 #-------------------------------------------------------------------------------
 # Set up constants
 #-------------------------------------------------------------------------------
-# Unique identifier for this job
-$JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
-
 # Derived variables
 $PROJECT_UC = $PROJECT;
 $PROJECT    =~ tr/A-Z/a-z/;
@@ -73,8 +65,7 @@ if ($ProjectType =~ /merge/i) {
   $SubProjectList = $var_info_project{"PROJECT_MERGE_LIST"};
   @SubProjects = split /,/, $SubProjectList;
 }
-$CurrspinEndDateFile = $var_info_project{"FORCING_CURRSPIN_END_DATE_FILE"};
-$XYZZDir             = $var_info_project{"XYZZ_DIR"};
+$XYZZDir = $var_info_project{"XYZZ_DIR"};
 
 ########### $LogDir = $var_info_project{"LOGS_MODEL_DIR"};
 ########### $LogDir =~ s/<LOGS_SUBDIR>/curr_spinup/;
@@ -95,11 +86,6 @@ INNER_LOOP: foreach $varname (@varnames) {
   }
 }
 
-########### $LogFile = "$LogDir/log.nowcast_model.pl.$JOB_ID";
-########### # Check for directories; create if necessary & appropriate
-########### foreach $dir ($LogDir) {
-###########   $status = &make_dir($dir);
-########### }
 # Get info for each subproject in the list
 for ($proj_idx = 0 ; $proj_idx < @SubProjects ; $proj_idx++) {
 
@@ -122,12 +108,6 @@ for ($proj_idx = 0 ; $proj_idx < @SubProjects ; $proj_idx++) {
   $XYZZDirSub[$proj_idx]       = $var_info_project{"XYZZ_DIR"};
   $MergeDepotDirSub[$proj_idx] = $var_info_project{"MERGE_DEPOT_DIR"};
 
-  #  $LogDir = $var_info_project{"LOGS_MODEL_DIR"};
-  #  $LogDir =~ s/<LOGS_SUBDIR>/curr_spinup/;
-  # Check for directories; create if necessary & appropriate
-  #  foreach $dir ($LogDir) {
-  #    $status = &make_dir($dir);
-  #  }
   $SubProjectUC[$proj_idx] = $SubProjects[$proj_idx];
   $SubProjectUC[$proj_idx] =~ tr/a-z/A-Z/;
 }
@@ -143,8 +123,8 @@ for ($proj_idx = 0 ; $proj_idx < @SubProjects ; $proj_idx++) {
     die "$0: ERROR: input directory $IND[$proj_idx] not found\n";
   }
 }
-$OUTD   = "$XYZZDir/$DateOut";
-$status = &make_dir($OUTD);
+$OUTD = "$XYZZDir/$DateOut";
+(&make_dir($OUTD) == 0) or die "$0: ERROR: Cannot create path $OUTD: $!\n";
 
 #-------------------------------------------------------------------------------
 # END settings

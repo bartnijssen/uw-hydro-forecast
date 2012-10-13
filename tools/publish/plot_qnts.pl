@@ -21,11 +21,10 @@ $COMMON_DIR = "<SYSTEM_COMMONDIR>";
 use simma_util;
 
 # Date arithmetic
-use Date::Calc qw(Add_Delta_YM Add_Delta_Days Days_in_Month Delta_Days);
+use Date::Calc qw(Add_Delta_Days);
 
 # Other
 use LWP::Simple;
-use POSIX qw(strftime);
 
 #-------------------------------------------------------------------------------
 # Parse the command line
@@ -44,9 +43,6 @@ $PROJECT_UC = $PROJECT;
 $PROJECT    =~ tr/A-Z/a-z/;
 $PROJECT_UC =~ tr/a-z/A-Z/;
 $datenow = sprintf("%04d%02d%02d", $yr, $mon, $day);
-
-# Unique identifier for this job
-$JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
 
 # Miscellaneous
 @month_days = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
@@ -99,7 +95,7 @@ foreach $dir ("$XYZZ_DIR/$datenow") {
   }
 }
 foreach $dir ("$PLOT_DIR/$datenow") {
-  $status = &make_dir($dir);
+  &make_dir($dir) or die "$0: ERROR: Cannot create path $dir: $!\n";
 }
 if ($modelalias =~ /vic/i && $PROJECT =~ /conus/i) {
   push @varnames, ("smDM", "smw", "smc", "sme");

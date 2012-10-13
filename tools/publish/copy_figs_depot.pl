@@ -8,7 +8,6 @@ use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 #-------------------------------------------------------------------------------
 # Determine tools and config directories
 #-------------------------------------------------------------------------------
-$TOOLS_DIR  = "<SYSTEM_INSTALLDIR>/bin";
 $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 
 #-------------------------------------------------------------------------------
@@ -16,7 +15,6 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 #-------------------------------------------------------------------------------
 # Subroutine for reading config files
 use simma_util;
-use POSIX qw(strftime);
 
 #-------------------------------------------------------------------------------
 # Parse the command line
@@ -33,9 +31,6 @@ $day     = shift;
 # Derived variables
 $PROJECT =~ tr/A-Z/a-z/;
 $datenow = sprintf("%04d%02d%02d", $yr, $mon, $day);
-
-# Unique identifier for this job
-$JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
 
 # Read project configuration info
 $ConfigProject        = "$CONFIG_DIR/config.project.$PROJECT";
@@ -71,7 +66,7 @@ foreach $dir ($XYZZDir, $PlotDir, $DepotDir) {
   }
 }
 foreach $dir ($DepotDir) {
-  $status = &make_dir($dir);
+  &make_dir($dir) or die "$0: ERROR: Cannot create path $dir: $!\n";
 }
 
 # Copy stats

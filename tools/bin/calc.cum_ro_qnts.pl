@@ -19,7 +19,6 @@ use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 #-------------------------------------------------------------------------------
 # Determine tools and config directories
 #-------------------------------------------------------------------------------
-$TOOLS_DIR  = "<SYSTEM_INSTALLDIR>/bin";
 $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 
 #-------------------------------------------------------------------------------
@@ -28,13 +27,8 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 # Subroutine for reading config files
 use simma_util;
 
-# Perl statistics package
-use Statistics::Lite ("mean");
-use POSIX qw(strftime);
-
 # Date arithmetic
-use Date::Calc qw(leap_year Days_in_Month Delta_Days Add_Delta_Days
-  Add_Delta_YM);
+use Date::Calc qw(Delta_Days Add_Delta_Days Add_Delta_YM);
 
 #-------------------------------------------------------------------------------
 # Parse the command line
@@ -56,11 +50,7 @@ $PROJECT    =~ tr/A-Z/a-z/;
 $PROJECT_UC =~ tr/a-z/A-Z/;
 $DATE = sprintf "%04d%02d%02d", $Cyr, $Cmon, $Cday;
 
-# Unique identifier for this job
-$JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
-
 # Miscellaneous
-@month_days = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
 @PER = (1, 2, 3, 6, 9, 12, 18, 24, 36, 48, 60);  # in months
 
 # also reserve one final slot for time since beginning of WY
@@ -85,7 +75,6 @@ foreach $key_proj (keys(%var_info_project)) {
 # Save relevant project info in variables
 $ResultsModelAscDir = $var_info_project{"RESULTS_MODEL_ASC_DIR"};
 $XYZZDir            = $var_info_project{"XYZZ_DIR"};
-$LONLAT             = $var_info_project{"LONLAT_LIST"};
 $Flist              = $var_info_project{"FLUX_FLIST"};
 $Clim_Syr = $var_info_project{"RO_CLIM_START_YR"};  # Climatology start year
 $Clim_Eyr = $var_info_project{"RO_CLIM_END_YR"};    # Climatology end year
@@ -96,15 +85,6 @@ $ResultsModelFinalDir = $ResultsModelAscDir;
 # Save relevant model info in variables
 $OutputPrefixList = $var_info_model{"OUTPUT_PREFIX"};
 ($OutputPrefix, $tmp) = split /,/, $OutputPrefixList;
-if ($var_info_model{"ENS_MODEL_LIST"}) {
-  $ENS_MODEL_LIST = $var_info_model{"ENS_MODEL_LIST"};
-  @ENS_MODELS     = split /,/, $ENS_MODEL_LIST;
-  $nModels        = @ENS_MODELS;
-}
-$SMCOL_LIST = $var_info_model{"SMCOL"};
-@SMCols     = split /,/, $SMCOL_LIST;
-$SWECol     = $var_info_model{"SWECOL"};
-$STOTCol    = $var_info_model{"STOTCOL"};
 
 # Directories and files
 $RetroDir = $ResultsModelFinalDir;
@@ -130,7 +110,7 @@ foreach $dir ($RTDir, $NearRTDir, $RetroDir) {
   }
 }
 foreach $dir ($OUTD) {
-  $status = &make_dir($dir);
+  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
 }
 
 # read file/station list ----------------------

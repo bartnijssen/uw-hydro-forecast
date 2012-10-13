@@ -1,35 +1,62 @@
 #!<SYSTEM_PERL_EXE> -w
-# SGE directives
-#$ -cwd
-#$ -j y
-#$ -S <SYSTEM_PERL_EXE>
-#
-# run_model.pl: Script to run a model within SIMMA framework
-#
-# usage: see usage() function below
-#
-# Author: Ted Bohn
-# $Id: $
+
+=pod
+
+=head1 NAME
+
+add_fields.pl
+
+=head1 SYNOPSIS
+
+archive_currspin.pl [options] project model
+
+ Options:
+    --help|h|?                  brief help message
+    --man|info                  full documentation
+
+ Required:
+    project
+    model
+
+=head1 DESCRIPTION
+
+This script archives the flux files from the curr_spin directory for the defined
+project and model combination (each must have a config file). The archived files
+are put into the PLOT_DEPOT_DIR as defined in the config.project.<project> file.
+
+=cut
+
 #-------------------------------------------------------------------------------
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 
 #-------------------------------------------------------------------------------
 # Determine tool and config directories
 #-------------------------------------------------------------------------------
-$TOOLS_DIR  = "<SYSTEM_INSTALLDIR>/bin";
 $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 
 #-------------------------------------------------------------------------------
 # Include external modules
 #-------------------------------------------------------------------------------
+use Pod::Usage;
+use Getopt::Long;
+
 # Subroutine for reading config files
 use simma_util;
 
 #-------------------------------------------------------------------------------
 # Command-line arguments
 #-------------------------------------------------------------------------------
+my $result = GetOptions("help|h|?"    => \$help,
+                        "man|info"    => \$man);
+
+pod2usage(-verbose => 2, -exitstatus => 0) if $man;
+pod2usage(-verbose => 2, -exitstatus => 0) if $help;
+
 $PROJECT = shift;
 $MODEL   = shift;
+
+pod2usage(-verbose => 1, -exitstatus => 1) 
+  if not defined($PROJECT) or not defined($MODEL);
 
 #-------------------------------------------------------------------------------
 # Set up constants
@@ -74,7 +101,7 @@ foreach $dir ($ResultsModelFinalDir, $DepotDir) {
   }
 }
 foreach $dir ($DepotDir) {
-  $status = &make_dir($dir);
+  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
 }
 $Archive = "curr_spinup.$PROJECT.$modelalias.tgz";
 

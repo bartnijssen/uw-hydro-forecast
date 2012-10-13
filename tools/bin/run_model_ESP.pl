@@ -1,17 +1,155 @@
 #!<SYSTEM_PERL_EXE> -w
-# SGE directives
-#$ -cwd
-#$ -j y
-#$ -S <SYSTEM_PERL_EXE>
-#
-# run_model.pl: Script to run a model within SIMMA framework
-#
-# usage: see usage() function below
-#
-# Author: Ted Bohn
-# $Id: $
+=pod
+
+=head1 NAME
+
+run_model_ESP.pl
+
+=head1 SYNOPSIS
+
+run_model_ESP.pl
+ [options] -m <model> -p <project> -s <start_date> -e <end_date>
+
+ Options:
+    --help|h|?                  brief help message
+    --man|info                  full documentation
+    -uncmp                      do not compress output
+    -l                          use local storage in cluster environment
+    -z                          zip and store ESP results
+    -f <forcing_subdir>         forcing subdirectory
+    -r <results_subdir>         results subdirectory
+    -i <init_file>              state file for startup
+    -st <state_subdir>          state subdirectory
+    -x <varnames>               extract variables from netcdf
+    -mspc <model-specific parameters>
+                                model-specific parameters
+
+ Required
+    -m <model>                  model
+    -p <project>                project
+    -s <start_date>             simulation start (YYYY-MM-DD)
+    -e <end_date>               simulation end (YYYY-MM-DD)
+
+=head1 DESCRIPTION
+
+Script to run a model within the forecast system.
+
+Given ALMA-compliant forcings in NetCDF format, runs a model over the specified
+simulation period and produces ALMA-compliant output files in NetCDF format.
+
+The forcing files are each assumed to contain 1 month of data.
+
+The files are assumed to have names of the form:
+    prefix.YYYYMM.nc
+where
+    prefix = some alphanumeric string
+    YYYY   = 4-digit year
+    MM     = 2-digit month
+
+The model output files will each contain 1 month of data aggregated to daily
+intervals, and will have names following the same convention as the forcing
+files. The prefixes on these files are defined in the model configuration file.
+
+Arguments:
+
+-m <model>
+
+   Name of model to run.
+
+-p <project> 
+
+   Name of project or basin to simulate.  This script will look for
+   project-specific parameters, including \$PROJECT_DIR, in the file
+   <SYSTEM_INSTALLDIR>/config/config.<project>.
+
+-f <forcing_subdir>
+
+   (optional) subdirectory, under $PROJECT_DIR/forcing, where forcing file tree
+   starts. Default: forcing file tree is directly under $PROJECT_DIR/forcing.
+
+-s <start_date>
+
+   Start date of the simulation. Format: YYYY-MM-DD.
+
+-e <end_date>
+
+   End date of the simulation. Format: YYYY-MM-DD.
+
+-r <results_subdir>
+
+   (optional) Specify the subdirectory, under $PROJECT_DIR/results, where
+   results file tree starts.  <results_subdir> = subdirectory name.  Default: If
+   forcing_subdir has been specified and results_subdir has not, then
+   results_subdir = forcing_subdir (i.e. results file tree starts under
+   $PROJECT_DIR/results/\$forcing_subdir).
+
+-i <init_file>
+
+   (optional) Specify an initial state file.  This can be simply a file name, in
+   which case the file is assumed to be stored under
+   $PROJECT_DIR/state/<state_subdir> (see the -st option) or a complete path
+   and file name (the path is needed if you want this file to come from a
+   different location than where the output state files will be stored). This
+   option only works if the tag <INITIAL> is present in the model\'s
+   input.template file.  <init_file> = Initial state file name.  Default: model
+   starts from its default initial model state.
+
+-st <state_subdir>
+
+   (optional) Specify a subdirectory, under $PROJECT_DIR/state, where the state
+   file tree should start.  <state_subdir> = name of the subdirectory.  Default:
+   If results_subdir has been specified and state_subdir has not, then
+   state_subdir is set equal to the results_subdir (i.e. state file tree starts
+   under $PROJECT_DIR/state/\$results_subdir).  If neither results_subdir nor
+   state_subdir have been specified, but forcing_subdir has been specified, then
+   state_subdir = forcing_subdir
+
+-uncmp
+
+   (optional) If specified, results files will NOT be compressed by gathering;
+   i.e. cells will indexed by row and column, allowing space for cells that
+   aren\'t in the land mask (e.g.  ocean cells or cells outside the catchment).
+   Default: cells ARE compressed by gathering, i.e. they will be stored in a 1-D
+   array and cells not in the land mask will be skipped.
+
+-x <varnames>
+
+   (optional) Extract some set of variables from the netcdf- format model result
+   files and write them to vic-style ascii files.  These will be stored in the
+   \"/asc\" subdirectory of the results directory.  <varnames> = comma-separated
+   list of variable names to extract.  Default: If -x is NOT specified, the
+   variables listed in the model config file will be extracted to ascii. To skip
+   the extraction of variables to ascii, specify \"none\" for the list of
+   variable names (or remove the list from the model config file).
+
+-mspc <model-specific parameters>
+
+   (optional) Any parameters needed specifically for the model that you are
+   running. The entire set of parameters should be enclosed in double quotes
+   (\").  Example: for SAC model, need to specify the directory where pe files
+   are located, as: run_model.pl (blah blah) -mspc "-pe path_to_pe_files"
+
+-l 
+
+   (optional) If specified, input data will be copied to a drive that is local
+   to the node that the script is being run on; results will be written to this
+   local drive, and then the results will be copied to the central drive when
+   the run is finished. This reduces network traffic on the cluster and speeds
+   up performance dramatically.
+
+-z  
+
+   (optional) ZIP and move results directory into ESP storage directory when
+   specified
+
+=cut
+
 #-------------------------------------------------------------------------------
+no warnings qw(once);           # don't like this, but there are global
+                                # variables used by model_specific.pl
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Getopt::Long;
+use Pod::Usage;use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 
 #-------------------------------------------------------------------------------
 # Determine tools and config directories
@@ -53,99 +191,67 @@ $post_process   = "1";  ##### Post processing of ESP flux output
 
 # Hash used in GetOptions function
 # format: option => \$variable_to_set
-%options_hash = (
-                 h     => \$help,
-                 m     => \$MODEL_NAME,
-                 p     => \$PROJECT,
-                 f     => \$forcing_subdir,
-                 s     => \$start_date,
-                 e     => \$end_date,
-                 r     => \$results_subdir,
-                 i     => \$DATE,
-                 st    => \$state_subdir,
-                 uncmp => \$UNCOMP_OUTPUT,
-                 z     => \$esp_storage,
-                 l     => \$local_storage,
-                 x     => \$extract_vars,
-                 mspc  => \$model_specific,
-                );
-
-# This parses the command-line arguments and sets values for the variables in
-# %option_hash
-$status = &GetOptions(
-                      \%options_hash, "h",   "m=s",  "p=s",
-                      "f=s",          "s=s", "e=s",  "r=s",
-                      "i=s",          "z=i", "st=s", "uncmp",
-                      "l",            "x=s", "mspc=s"
-                     );
+my $result = GetOptions (
+                         "help|h|?"  => \$help,
+                         "man|info"  => \$man,
+                         "m=s"       => \$MODEL_NAME,
+                         "p=s"       => \$PROJECT,
+                         "f=s"       => \$forcing_subdir,
+                         "s=s"       => \$start_date,
+                         "e=s"       => \$end_date,
+                         "r=s"       => \$results_subdir,
+                         "i=s"       => \$DATE,
+                         "st=s"      => \$state_subdir,
+                         "uncmp"     => \$UNCOMP_OUTPUT,
+                         "z=i"       => \$esp_storage,
+                         "l"         => \$local_storage,
+                         "x=s"       => \$extract_vars,
+                         "mspc"      => \$model_specific,
+                        );
 
 #-------------------------------------------------------------------------------
 # Validate the command-line arguments
 #-------------------------------------------------------------------------------
-# Help option
-if ($help) {
-  usage("full");
-  exit(0);
-}
+pod2usage(-verbose => 2, -exitstatus => 0) if $man;
+pod2usage(-verbose => 2, -exitstatus => 0) if $help;
 
 # Validate required arguments
-if (!$MODEL_NAME) {
-  print STDERR "$0: ERROR: no model specified\n";
-  usage("short");
-  exit(-1);
-}
-if (!$PROJECT) {
-  print STDERR "$0: ERROR: no project specified\n";
-  usage("short");
-  exit(-1);
-}
-if (!$start_date) {
-  print STDERR "$0: ERROR: no simulation start date specified\n";
-  usage("short");
-  exit(-1);
-}
-if (!$end_date) {
-  print STDERR "$0: ERROR: no simulation end date specified\n";
-  usage("short");
-  exit(-1);
-}
+pod2usage(-verbose => 1, -exitstatus => -1) 
+  if not defined ($MODEL_NAME) or not define ($PROJECT) 
+  or not defined ($start_date) or not defined($end_date);
 
 # Parse & validate start/end dates
 if ($start_date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/) {
   ($start_year, $start_month, $start_day) = ($1, $2, $3);
 } else {
   print STDERR "$0: ERROR: start date must have format YYYY-MM-DD.\n";
-  usage("full");
-  exit(-1);
+  pod2usage(-verbose => 1, -exitstatus => -1);
 }
 if ($end_date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/) {
   ($end_year, $end_month, $end_day) = ($1, $2, $3);
 } else {
   print STDERR "$0: ERROR: end date must have format YYYY-MM-DD.\n";
-  usage("full");
-  exit(-1);
+  pod2usage(-verbose => 1, -exitstatus => -1);
 }
 if ($start_year > $end_year) {
-  print STDERR "$0: ERROR: start_date is later than end_date: start_year > " .
-    "end_year.\n";
-  usage("short");
-  exit(-1);
+  print STDERR "$0: ERROR: start_date is later than end_date: " .
+    "start_year > end_year.\n";
+  pod2usage(-verbose => 1, -exitstatus => -1);
 } elsif ($start_year == $end_year) {
   if ($start_month > $end_month) {
     print STDERR "$0: ERROR: start_date is later than end_date: " .
       "start_year == end_year and start_month > end_month.\n";
-    usage("short");
-    exit(-1);
+    pod2usage(-verbose => 1, -exitstatus => -1);
   } elsif ($start_month == $end_month) {
     if ($start_day > $end_day) {
       print STDERR "$0: ERROR: start_date is later than end_date: " .
-        "start_year == end_year, start_month == end_month, and " .
-        "start_day > end_day.\n";
-      usage("short");
-      exit(-1);
+        "start_year == end_year, start_month == end_month " .
+          "and start_day > end_day.\n";
+      pod2usage(-verbose => 1, -exitstatus => -1);
     }
   }
 }
+
 if ($DATE =~ /(\d\d\d\d)(\d\d)(\d\d)/) {
   ($STATE_YR, $STATE_MON, $STATE_DAY) = Add_Delta_Days($1, $2, $3, 0);
 
@@ -155,8 +261,7 @@ if ($DATE =~ /(\d\d\d\d)(\d\d)(\d\d)/) {
   $FCST_DATE = sprintf "%04d%02d%02d", $STATE_YR, $STATE_MON, $STATE_DAY;
 } else {
   print STDERR "$0: ERROR: State date must have format YYYYMMDD.\n";
-  usage("full");
-  exit(-1);
+  pod2usage(-verbose => 1, -exitstatus => -1);
 }
 
 # Default values of $results_subdir and $state_subdir
@@ -343,7 +448,7 @@ $LOGFILE =
   "$logs_dir/log.$PROJECT.$MODEL_NAME.ESP_run.$DATE." . "$start_year.$JOB_ID";
 $controlfile = "$control_dir/inp.ESP.$DATE.$start_year";
 foreach $dir ($logs_dir, $control_dir) {
-  $status = &make_dir($dir);
+  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
 }
 
 # Use local directories if specified
@@ -367,7 +472,7 @@ if ($local_storage) {
 
   # Create the directories
   foreach $dir ($LOCAL_RESULTS_DIR, $LOCAL_RESULTS_DIR_ASC) {
-    $status = &make_dir($dir);
+    (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
   }
 }
 
@@ -399,11 +504,12 @@ if ($model_specific) {
 $func_name = "wrap_run_" . $modelalias;
 &{$func_name}($model_specific);
 if (!-e $STORDIR) {
-  $status = &make_dir($STORDIR);
+  (&make_dir($STORDIR) == 0) or die "$0: ERROR: Cannot create path $STORDIR: $!\n";
 }  ### Creating Storage directory
 if (!-e "$STORDIR/monthly_flux") ### Creating Storage directory for monthly flux
 {
-  $status = &make_dir("$STORDIR/monthly_flux");
+  $dir = "$STORDIR/monthly_flux";
+  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
 }
 
 #-------------------------------------------------------------------------------
@@ -450,7 +556,8 @@ if ($post_process == 1) {
 #-------------------------------------------------------------------------------
 if ($esp_storage == 1) {
   if (!-e "$STORDIR/dly_flux") {
-    $status = &make_dir("$STORDIR/dly_flux");
+    $dir = "$STORDIR/dly_flux";
+    (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
   }
   $LOGFILE = "$logs_dir/log.$MODEL_NAME.ESP.$DATE.$start_year";
   $cmd =
@@ -478,137 +585,3 @@ if ($esp_storage == 1) {
   # or die "$0: ERROR: $cmd failed: $status\n";
 }
 exit(0);
-
-#-------------------------------------------------------------------------------
-# Usage
-#-------------------------------------------------------------------------------
-sub usage() {
-  print "\n";
-  print "$0: Script to run a model within the SIMMA framework\n";
-  print "\n";
-  print "usage:\n";
-  print "\t$0 [-h] -m <model> -p <project> [-f <forcing_subdir>]\n";
-  print "\t\t-s <start_date> -e <end_date> [-r <results_subdir>]\n";
-  print "\t\t[-i <init_file>] [-st <state_subdir>] [-uncmp] [-x <varnames>]\n";
-  print "\t\t[-mspc <model-specific parameters> ] [-l]\n";
-  print "\n";
-
-  if ($_[0] eq "full") {
-    print "Given ALMA-compliant forcings in NetCDF format, runs a model\n";
-    print "over the specified simulation period and produces ALMA-compliant\n";
-    print "output files in NetCDF format.\n";
-    print "\n";
-    print "The forcing files are each assumed to contain 1 month of data.\n";
-    print "The files are assumed to have names of the form:\n";
-    print "  prefix.YYYYMM.nc\n";
-    print "where\n";
-    print "  prefix = some alphanumeric string\n";
-    print "  YYYY   = 4-digit year\n";
-    print "  MM     = 2-digit month\n";
-    print "\n";
-    print "The model output files will each contain 1 month of data\n";
-    print "aggregated to daily intervals, and will have names following\n";
-    print "the same convention as the forcing files.  The prefixes on\n";
-    print "these files are defined in the model configuration file.\n";
-    print "\n";
-    print "Arguments:\n";
-    print "\n";
-    print "  -h\n";
-    print "    prints this usage message\n";
-    print "\n";
-    print "  -m <model>\n";
-    print "    <model>  = Name of model to run.\n";
-    print "\n";
-    print "  -p <project>\n";
-    print "    <project> = Name of project or basin to simulate.\n";
-    print "    This script will look for project-specific parameters,\n";
-    print "    including \$PROJECT_DIR, in the file\n";
-    print "    <SYSTEM_INSTALLDIR>/config/config.<project>.\n";
-    print "\n";
-    print "  -f <forcing_subdir>\n";
-    print "    <forcing_subdir> = (optional) subdirectory, under \n";
-    print "    \$PROJECT_DIR/forcing, where forcing file tree starts.\n";
-    print "    Default: forcing file tree is directly under \n";
-    print "    \$PROJECT_DIR/forcing.\n";
-    print "\n";
-    print "  -s <start_date>\n";
-    print "    <start_date> = Start date of the simulation.\n";
-    print "    Format: YYYY-MM-DD.\n";
-    print "\n";
-    print "  -e <end_date>\n";
-    print "    <end_date> = End date of the simulation.\n";
-    print "    Format: YYYY-MM-DD.\n";
-    print "\n";
-    print "  -r <results_subdir>\n";
-    print "    (optional) Specify the subdirectory, under\n";
-    print "    \$PROJECT_DIR/results, where results file tree starts.\n";
-    print "    <results_subdir>  = subdirectory name.\n";
-    print "    Default: If forcing_subdir has been specified and\n";
-    print "    results_subdir has not, then\n";
-    print "    results_subdir = forcing_subdir (i.e. results file tree\n";
-    print "    starts under \$PROJECT_DIR/results/\$forcing_subdir).\n";
-    print "\n";
-    print "  -i <init_file>\n";
-    print "    (optional) Specify an initial state file.\n";
-    print "    This can be simply a file name, in which case the file is\n";
-    print "    assumed to be stored under \$PROJECT_DIR/state/<state_subdir>\n";
-    print "    (see the -st option) or a complete path and file name (the\n";
-    print "    path is needed if you want this file to come from a different\n";
-    print "    location than where the output state files will be stored).\n";
-    print "    This option only works if the tag <INITIAL> is present in the\n";
-    print "    model\'s input.template file.\n";
-    print "    <init_file>  = Initial state file name.\n";
-    print "    Default: model starts from its default initial model state.\n";
-    print "\n";
-    print "  -st <state_subdir>\n";
-    print "    (optional) Specify a subdirectory, under \$PROJECT_DIR/state,\n";
-    print "    where the state file tree should start.\n";
-    print "    <state_subdir> = name of the subdirectory.\n";
-    print "    Default: If results_subdir has been specified and\n";
-    print "    state_subdir has not, then state_subdir is set equal to the\n";
-    print "    results_subdir (i.e. state file tree starts under \n";
-    print "    \$PROJECT_DIR/state/\$results_subdir).\n";
-    print "    If neither results_subdir nor state_subdir have been\n";
-    print "    specified, but forcing_subdir has been specified, then\n";
-    print "    state_subdir = forcing_subdir\n";
-    print "\n";
-    print "  -uncmp\n";
-    print "    (optional) If specified, results files will NOT be compressed\n";
-    print "    by gathering; i.e. cells will indexed by row and column,\n";
-    print "    allowing space for cells that aren\'t in the land mask (e.g.\n";
-    print "    ocean cells or cells outside the catchment).\n";
-    print "    Default: cells ARE compressed by gathering, i.e. they will be\n";
-    print "    stored in a 1-D array and cells not in the land mask will be\n";
-    print "    skipped.\n";
-    print "\n";
-    print "  -x <varnames>\n";
-    print "    (optional) Extract some set of variables from the netcdf-\n";
-    print "    format model result files and write them to vic-style ascii\n";
-    print "    files. These will be stored in the \"/asc\" subdirectory of\n";
-    print "    the results directory.\n";
-    print "    <varnames> = comma-separated list of variable names to\n";
-    print "    extract.\n";
-    print "    Default: If -x is NOT specified, the variables listed in the\n";
-    print "    model config file will be extracted to ascii.\n";
-    print "    To skip the extraction of variables to ascii, specify\n";
-    print "    \"none\" for the list of variable names (or remove the list\n";
-    print "    from the model config file).\n";
-    print "\n";
-    print "  -mspc \"<model-specific parameters>\"\n";
-    print "    (optional) Any parameters needed specifically for the model\n";
-    print "    that you are running. The entire set of parameters should be\n";
-    print "    enclosed in double quotes (\").\n";
-    print "    Example: for SAC model, need to specify the directory where\n";
-    print "    pe files are located, as:\n";
-    print "    run_model.pl (blah blah) -mspc \"-pe path_to_pe_files\"\n";
-    print "\n";
-    print "  -l\n";
-    print "    (optional) If specified, input data will be copied to a drive\n";
-    print "    that is local to the node that the script is being run on;\n";
-    print "    results will be written to this local drive, and then\n";
-    print "    the results will be copied to the central drive when the run\n";
-    print "    is finished.  This reduces network traffic on the cluster and\n";
-    print "    speeds up performance dramatically.\n";
-    print "\n";
-  }
-}

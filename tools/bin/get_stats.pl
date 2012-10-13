@@ -19,10 +19,6 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 # Subroutine for reading config files
 use simma_util;
 
-# Date arithmetic
-use Date::Calc qw(Days_in_Month Delta_Days Add_Delta_Days);
-use POSIX qw(strftime);
-
 #-------------------------------------------------------------------------------
 # Parse the command line
 #-------------------------------------------------------------------------------
@@ -42,9 +38,6 @@ $PROJECT_UC = $PROJECT;
 $PROJECT    =~ tr/A-Z/a-z/;
 $PROJECT_UC =~ tr/a-z/A-Z/;
 $DATE = sprintf "%04d%02d%02d", $fyear, $fmonth, $fday;
-
-# Unique identifier for this job
-$JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
 
 # Miscellaneous
 @month_days = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
@@ -83,7 +76,7 @@ $ResultsModelFinalDir = $ResultsModelAscDir;
 
 # Save relevant model info in variables
 $OutputPrefixList = $var_info_model{"OUTPUT_PREFIX"};
-($OutputPrefix, $tmp) = split /,/, $OutputPrefixList;
+($OutputPrefix) = split /,/, $OutputPrefixList;
 if ($var_info_model{"ENS_MODEL_LIST"}) {
   $ENS_MODEL_LIST = $var_info_model{"ENS_MODEL_LIST"};
   @ENS_MODELS     = split /,/, $ENS_MODEL_LIST;
@@ -126,7 +119,7 @@ foreach $dir ($CURRPATH, $HISTPATH) {
   }
 }
 foreach $dir ($OUTD) {
-  $status = &make_dir($dir);
+  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
 }
 
 # Remove old files
