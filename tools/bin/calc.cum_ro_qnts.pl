@@ -1,20 +1,55 @@
 #!<SYSTEM_PERL_EXE> -w
-# calculate cumulative variable percentile for a variety of cumulation periods
-#   taken prior to the current (latest) day, for all cells in a basin
-# output format:  one row per cell
-#   lon lat [percentile for various accumulations
-#   use avg runoff during the period
-#   if 1, the period is combined
-#
-#  NOTE:  supply climatology period for calculating percentiles.
-#    Set start of climatology period so that accumulation periods do not
-#    precede start of data.
-#
-# Author: A. Wood Aug 2007
-#         Ted Bohn Sep 2008
-# $Id: $
+
+=pod
+
+=head1 NAME
+
+calc.cum_ro_qnts.pl
+
+=head1 SYNOPSIS
+
+calc.cum_ro_qnts.pl [options] model project year month day [directory]
+
+ Options:
+    --help|h|?                  brief help message
+    --man|info                  full documentation
+
+ Required (in order):
+    model                model (must have config.model.<model> file)
+    project              project (must have config.project.<project> file)
+    year                 year
+    month                month
+    day                  day
+
+ Optional (last one):
+    directory            by default, results are taken from curr_spinup, but
+                         this can be overridden here
+
+=head1 DESCRIPTION
+
+calculate cumulative variable percentile for a variety of cumulation periods
+taken prior to the current (latest) day, for all cells in a basin
+
+output format:  one row per cell
+  lon lat [percentile for various accumulations
+  use avg runoff during the period
+  if 1, the period is combined
+
+NOTE:  supply climatology period for calculating percentiles.
+Set start of climatology period so that accumulation periods do not
+precede start of data.
+
+=head2 AUTHORS
+
+ A. Wood Aug 2007
+ Ted Bohn Sep 2008 
+ and others since then
+
+=cut
 #-------------------------------------------------------------------------------
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Pod::Usage;
+use Getopt::Long;
 
 #-------------------------------------------------------------------------------
 # Determine tools and config directories
@@ -33,6 +68,10 @@ use Date::Calc qw(Delta_Days Add_Delta_Days Add_Delta_YM);
 #-------------------------------------------------------------------------------
 # Parse the command line
 #-------------------------------------------------------------------------------
+my $result = GetOptions("help|h|?" => \$help,
+                        "man|info" => \$man);
+pod2usage(-verbose => 2, -exitstatus => 0) if $man;
+pod2usage(-verbose => 2, -exitstatus => 0) if $help;
 $MODEL                   = shift;
 $PROJECT                 = shift;
 $Cyr                     = shift;
@@ -40,6 +79,13 @@ $Cmon                    = shift;
 $Cday                    = shift;
 $results_subdir_override = shift; # By default, results are taken from
                                   # curr_spinup, but this can be overridden here
+pod2usage(-verbose => 1, -exitstatus => 1)
+  if not defined($MODEL) or
+    not defined($PROJECT) or
+    not defined($Cyr)     or
+    not defined($Cmon)    or
+    not defined
+    ($Cday);
 
 #-------------------------------------------------------------------------------
 # Set up constants

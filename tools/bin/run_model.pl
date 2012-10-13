@@ -1,4 +1,5 @@
 #!<SYSTEM_PERL_EXE> -w
+
 =pod
 
 =head1 NAME
@@ -137,10 +138,9 @@ Arguments:
    up performance dramatically.
 
 =cut
-
 #-------------------------------------------------------------------------------
-no warnings qw(once);           # don't like this, but there are global
-                                # variables used by model_specific.pl
+no warnings qw(once);  # don't like this, but there are global
+                       # variables used by model_specific.pl
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 use Getopt::Long;
 use Pod::Usage;
@@ -185,23 +185,21 @@ $local_storage  = 0;
 # Hash used in GetOptions function
 # format: option => \$variable_to_set
 my $result = GetOptions(
-                        "help|h|?"     => \$help,
-                        "man|info"     => \$man,
-                        "m=s"          => \$MODEL_NAME,
-                        "p=s"          => \$PROJECT,
-                        "f=s"          => \$forcing_subdir,
-                        "s=s"          => \$start_date,
-                        "e=s"          => \$end_date,
-                        "r=s"          => \$results_subdir,
-                        "i=s"          => \$init_file,
-                        "st=s"         => \$state_subdir,
-                        "uncmp"        => \$UNCOMP_OUTPUT,
-                        "l"            => \$local_storage,
-                        "x=s"          => \$extract_vars,
-                        "mspc=s"       => \$model_specific,
+                        "help|h|?" => \$help,
+                        "man|info" => \$man,
+                        "m=s"      => \$MODEL_NAME,
+                        "p=s"      => \$PROJECT,
+                        "f=s"      => \$forcing_subdir,
+                        "s=s"      => \$start_date,
+                        "e=s"      => \$end_date,
+                        "r=s"      => \$results_subdir,
+                        "i=s"      => \$init_file,
+                        "st=s"     => \$state_subdir,
+                        "uncmp"    => \$UNCOMP_OUTPUT,
+                        "l"        => \$local_storage,
+                        "x=s"      => \$extract_vars,
+                        "mspc=s"   => \$model_specific,
                        );
-
-
 
 #-------------------------------------------------------------------------------
 # Validate the command-line arguments
@@ -210,9 +208,12 @@ pod2usage(-verbose => 2, -exitstatus => 0) if $man;
 pod2usage(-verbose => 2, -exitstatus => 0) if $help;
 
 # Validate required arguments
-pod2usage(-verbose => 1, -exitstatus => -1) 
-  if not defined ($MODEL_NAME) or not defined ($PROJECT) 
-  or not defined ($start_date) or not defined($end_date);
+pod2usage(-verbose => 1, -exitstatus => -1)
+  if not defined($MODEL_NAME) or
+    not defined($PROJECT)    or
+    not defined($start_date) or
+    not defined
+    ($end_date);
 
 # Parse & validate start/end dates
 if ($start_date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/) {
@@ -240,12 +241,11 @@ if ($start_year > $end_year) {
     if ($start_day > $end_day) {
       print STDERR "$0: ERROR: start_date is later than end_date: " .
         "start_year == end_year, start_month == end_month " .
-          "and start_day > end_day.\n";
+        "and start_day > end_day.\n";
       pod2usage(-verbose => 1, -exitstatus => -1);
     }
   }
 }
-
 
 # Default values of $results_subdir and $state_subdir
 if ($forcing_subdir) {
@@ -490,7 +490,7 @@ if ($local_storage) {
   $STATE_DIR       = $StateModelDir;
   $CONTROL_DIR     = $ControlModelDir;
   $LOGS_DIR        = $LogsModelDir;
-  $cmd = "gzip $LOCAL_LOGS_DIR/*";
+  $cmd             = "gzip $LOCAL_LOGS_DIR/*";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
     die "$0: ERROR: $cmd failed: $status\n";
   foreach $prefix (@output_prefixes) {
@@ -516,4 +516,3 @@ if ($local_storage) {
     die "$0: ERROR: $cmd failed: $status\n";
 }
 exit(0);
-

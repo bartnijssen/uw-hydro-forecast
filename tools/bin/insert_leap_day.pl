@@ -1,14 +1,49 @@
 #!<SYSTEM_PERL_EXE> -w
-# This script takes an ascii-format data file and inserts leap days.
-# The files are expected to have the format YYYY MM DD data1 data2 ...
-# The leap day is inserted by taking the record of Feb 28 from a leap year
-# and repeating it.
+
+=pod
+
+=head1 NAME
+
+calc.cum_ro_qnts.pl
+
+=head1 SYNOPSIS
+
+calc.cum_ro_qnts.pl [options] model project year month day [directory]
+
+ Options:
+    --help|h|?                  brief help message
+    --man|info                  full documentation
+
+ Required (in order):
+    infile               input file
+    col1,...,coln        comma-separated list of columns to set to 0 in the
+                         repeated records; indexing starts at 0
+
+=head1 DESCRIPTION
+
+This script takes an ascii-format data file and inserts leap days.
+The files are expected to have the format YYYY MM DD data1 data2 ...
+The leap day is inserted by taking the record of Feb 28 from a leap year
+and repeating it.
+
+=cut
+
+use Pod::Usage;
+use Getopt::Long;
+my $result = GetOptions("help|h|?" => \$help,
+                        "man|info" => \$man);
+pod2usage(-verbose => 2, -exitstatus => 0) if $man;
+pod2usage(-verbose => 2, -exitstatus => 0) if $help;
 $file     = shift;
 $col_list = shift; # comma-separated list of columns to set to 0 in the repeated
                    # records; indexing starts at 0
-@month_days   = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
+pod2usage(-verbose => 1, -exitstatus => 1)
+  if not defined($file) or
+    not defined
+    ($col_list);
+@month_days = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
 @cols_to_zero = split /,/, $col_list;
-$delta_days   = 0;
+$delta_days = 0;
 open(FILE, $file) or die "$0: ERROR: cannot open $file for reading\n";
 
 foreach (<FILE>) {

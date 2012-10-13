@@ -1,8 +1,48 @@
 #!<SYSTEM_PERL_EXE> -w
-# A. Wood August 2007
-# run a set of ESP forecasts, given existing state files & forcings, etc.
-# this version:  for SW Monitor, on sere, in aww dirs
+
+=pod
+
+=head1 NAME
+
+run_VIC_and_rout_ESP.pl
+
+=head1 SYNOPSIS
+
+run_VIC_and_rout_ESP.pl
+ [options] project model run_esp run_rout year month day 
+ ensemble_start ensemble_end
+
+ Options:
+    --help|h|?                  brief help message
+    --man|info                  full documentation
+
+ Required (in order):
+    project              project (must have config.project.<project> file)
+    model                model (must have config.model.<model> file)
+    run_esp              <0|1> flag to indicate that whether esp forecast 
+                         should be run with the hydrology model
+    run_rout             <0|1> flag to indicate that whether esp forecast 
+                         should be run with the routing model
+    year                 forecast start year
+    month                forecast start month
+    day                  forecast start day
+    ensemble_start       start year from the past to be used for the esp run
+    ensemble_end         end year from the past to be used for the esp run
+
+=head1 DESCRIPTION
+
+Run a set of ESP forecasts, given existing state files & forcings, etc.
+
+=head2 Authors
+
+  A. Wood 2007
+  and others since then 
+
+=cut
+#-------------------------------------------------------------------------------
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Pod::Usage;
+use Getopt::Long;
 
 #-------------------------------------------------------------------------------
 # Determine tools and config directories
@@ -23,6 +63,11 @@ use POSIX qw(strftime);
 #-------------------------------------------------------------------------------
 # Command-line arguments
 #-------------------------------------------------------------------------------
+my $result = GetOptions("help|h|?" => \$help,
+                        "man|info" => \$man);
+pod2usage(-verbose => 2, -exitstatus => 0) if $man;
+pod2usage(-verbose => 2, -exitstatus => 0) if $help;
+
 # Get the Project name and Current date from nowcast_model.pl
 $PROJECT  = shift;
 $MODEL    = shift;
@@ -33,12 +78,23 @@ $Cmon     = shift;
 $Cday     = shift;
 $METYR    = shift;  ### Start of ensemble
 $FEYR     = shift;  ### End of ensemble
+pod2usage(-verbose => 1, -exitstatus => 1)
+  if not defined($MODEL) or
+    not defined($PROJECT)  or
+    not defined($RUN_ESP)  or
+    not defined($RUN_ROUT) or
+    not defined($Cyr)      or
+    not defined($Cmon)     or
+    not defined($Cday)     or
+    not defined($METYR)    or
+    not defined
+    ($FEYR);
 
 # Derived variables
 $PROJECT_UC = $PROJECT;
 $PROJECT    =~ tr/A-Z/a-z/;
 $PROJECT_UC =~ tr/a-z/A-Z/;
-$FLEN = 367;        ### Number of days to run the model for in future
+$FLEN = 367;  ### Number of days to run the model for in future
 
 # Unique identifier for this job
 $JOB_ID = strftime "%y%m%d-%H%M%S", localtime;

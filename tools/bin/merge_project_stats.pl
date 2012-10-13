@@ -1,9 +1,43 @@
 #!<SYSTEM_PERL_EXE> -w
-# Script for merging the model output statistics from a list of project domains
-# into one larger domain.
-#
+
+=pod
+
+=head1 NAME
+
+merge_project_stats.pl
+
+=head1 SYNOPSIS
+
+merge_project_stats.pl [options] model project year month day [directory]
+
+ Options:
+    --help|h|?                  brief help message
+    --man|info                  full documentation
+
+ Required (in order):
+    model                model (must have config.model.<model> file)
+    project              project (must have config.project.<project> file)
+    year                 output forecast year
+    month                output forecast month
+    day                  output forecast day
+
+ Optional (last one):
+    sourceflag           0 (or omitted) = get sub-project forecasts from
+                         "merge_depot"; 1 = get them from directories of the
+                         exact same date as the output forecast date directory
+                         by default, results are taken from curr_spinup, but
+                         this can be overridden here
+
+=head1 DESCRIPTION
+
+Script for merging the model output statistics from a list of project domains
+into one larger domain.
+
+=cut
 #-------------------------------------------------------------------------------
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Pod::Usage;
+use Getopt::Long;
 
 #-------------------------------------------------------------------------------
 # Determine tools config directories
@@ -19,6 +53,10 @@ use simma_util;
 #-------------------------------------------------------------------------------
 # Command-line arguments
 #-------------------------------------------------------------------------------
+my $result = GetOptions("help|h|?" => \$help,
+                        "man|info" => \$man);
+pod2usage(-verbose => 2, -exitstatus => 0) if $man;
+pod2usage(-verbose => 2, -exitstatus => 0) if $help;
 $PROJECT  = shift;
 $MODEL    = shift;
 $fyear    = shift;  # Output forecast date
@@ -27,10 +65,13 @@ $fday     = shift;  # Output forecast date
 $explicit = shift;  # 0 (or omitted) = get sub-project forecasts from
                     # "merge_depot"; 1 = get them from directories of the exact
                     # same date as the output forecast date
-if (!$fyear || !$fmonth || !$fday) {
-  die "$0: ERROR: forecast year, month, and day must be supplied as " .
-    "command-line arguments\n";
-}
+pod2usage(-verbose => 1, -exitstatus => 1)
+  if not defined($MODEL) or
+    not defined($PROJECT) or
+    not defined($fyear)   or
+    not defined($fmonth)  or
+    not defined
+    ($fday);
 
 #-------------------------------------------------------------------------------
 # Set up constants
@@ -107,8 +148,7 @@ for ($proj_idx = 0 ; $proj_idx < @SubProjects ; $proj_idx++) {
   # $var_info_project{"FORCING_CURRSPIN_END_DATE_FILE"};
   $XYZZDirSub[$proj_idx]       = $var_info_project{"XYZZ_DIR"};
   $MergeDepotDirSub[$proj_idx] = $var_info_project{"MERGE_DEPOT_DIR"};
-
-  $SubProjectUC[$proj_idx] = $SubProjects[$proj_idx];
+  $SubProjectUC[$proj_idx]     = $SubProjects[$proj_idx];
   $SubProjectUC[$proj_idx] =~ tr/a-z/A-Z/;
 }
 

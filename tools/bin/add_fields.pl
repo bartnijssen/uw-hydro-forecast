@@ -26,26 +26,23 @@ For example, to add columns 3,4,and 5 together, and to add columns 7 and 8
 together: add_fields.pl filename 3:4:5,7:8
 
 =cut
-
 use Pod::Usage;
 use Getopt::Long;
-
-my $result = GetOptions("help|h|?"    => \$help,
-                        "man|info"    => \$man);
-
+my $result = GetOptions("help|h|?" => \$help,
+                        "man|info" => \$man);
 pod2usage(-verbose => 2, -exitstatus => 0) if $man;
 pod2usage(-verbose => 2, -exitstatus => 0) if $help;
-
 $file  = shift;  # Input file name
 $ndate = shift;  # Number of leading date fields; these won't be processed
 $col_group_list = shift;  # format: col1_1:col1_2,col2_1:col2_2,...
-
-pod2usage(-verbose => 1, -exitstatus => 1) 
-  if not defined($file) or not defined($ndate) or not defined($col_group_list);
-
-
+pod2usage(-verbose => 1, -exitstatus => 1)
+  if not defined($file) or
+    not defined($ndate) or
+    not defined
+    ($col_group_list);
 @col_groups = split /,/, $col_group_list;
 open(FILE, "$file") or die "$0: ERROR: cannot open $file for reading\n";
+
 foreach (<FILE>) {
   chomp;
   @fields = split /\s+/;

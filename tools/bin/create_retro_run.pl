@@ -43,7 +43,6 @@ and libraries in that same system to run. This means that the script does
 necessarily work as a standalone program.
 
 =cut
-
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 use Getopt::Long;
 use Pod::Usage;

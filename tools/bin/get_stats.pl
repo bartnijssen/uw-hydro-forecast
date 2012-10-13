@@ -1,11 +1,44 @@
 #!<SYSTEM_PERL_EXE> -w
-# get_stats.pl: Script to convert model results into percentiles of model
-# climatology
-#
-# Author: Ted Bohn
-# $Id: $
+
+=pod
+
+=head1 NAME
+
+get_stats.pl
+
+=head1 SYNOPSIS
+
+get_stats.pl [options] model project year month day [directory]
+
+ Options:
+    --help|h|?                  brief help message
+    --man|info                  full documentation
+
+ Required (in order):
+    model                model (must have config.model.<model> file)
+    project              project (must have config.project.<project> file)
+    year                 year
+    month                month
+    day                  day
+
+ Optional (last one):
+    directory            by default, results are taken from curr_spinup, but
+                         this can be overridden here
+
+=head1 DESCRIPTION
+
+Script to convert model results into percentiles of model climatology
+
+=head2 AUTHORS
+
+ Ted Bohn 
+ and others since then
+
+=cut
 #-------------------------------------------------------------------------------
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Pod::Usage;
+use Getopt::Long;
 
 #-------------------------------------------------------------------------------
 # Determine tools and config directories
@@ -22,6 +55,10 @@ use simma_util;
 #-------------------------------------------------------------------------------
 # Parse the command line
 #-------------------------------------------------------------------------------
+my $result = GetOptions("help|h|?" => \$help,
+                        "man|info" => \$man);
+pod2usage(-verbose => 2, -exitstatus => 0) if $man;
+pod2usage(-verbose => 2, -exitstatus => 0) if $help;
 $MODEL                   = shift;
 $PROJECT                 = shift;
 $fyear                   = shift;
@@ -29,6 +66,13 @@ $fmonth                  = shift;
 $fday                    = shift;
 $results_subdir_override = shift; # By default, results are taken from
                                   # curr_spinup, but this can be overridden here
+pod2usage(-verbose => 1, -exitstatus => 1)
+  if not defined($MODEL) or
+    not defined($PROJECT) or
+    not defined($fyear)   or
+    not defined($fmonth)  or
+    not defined
+    ($fday);
 
 #-------------------------------------------------------------------------------
 # Set up constants

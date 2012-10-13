@@ -1,12 +1,42 @@
 #!<SYSTEM_PERL_EXE> -w
-# Wrapper script that makes a nowcast for a given model on a given day.  Does
-# the following:
-# 1. runs the model
-# 2. converts the output to percentiles of model climatology
-# 3. makes plots
-#
+
+=pod
+
+=head1 NAME
+
+nowcast_model.pl
+
+=head1 SYNOPSIS
+
+calc.cum_ro_qnts.pl [options] model project year month day [directory]
+
+ Options:
+    --help|h|?                  brief help message
+    --man|info                  full documentation
+
+ Required (in order):
+    project              project (must have config.project.<project> file)
+    model                model (must have config.model.<model> file)
+
+ Optional (in order):
+    steplist             either a comma-separated list of steps in the process
+                         to execute, or "all" to indicate all steps
+
+    currspin_start_date_override
+    fcast_date_override 
+
+=head1 DESCRIPTION
+
+Wrapper script that makes a nowcast for a given model on a given day.  Does
+the following:
+  1. runs the model
+  2. converts the output to percentiles of model climatology
+  3. makes plots
+=cut
 #-------------------------------------------------------------------------------
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Pod::Usage;
+use Getopt::Long;
 
 #-------------------------------------------------------------------------------
 # Determine tools and config directories
@@ -31,6 +61,10 @@ use POSIX qw(strftime);
 #-------------------------------------------------------------------------------
 # Command-line arguments
 #-------------------------------------------------------------------------------
+my $result = GetOptions("help|h|?" => \$help,
+                        "man|info" => \$man);
+pod2usage(-verbose => 2, -exitstatus => 0) if $man;
+pod2usage(-verbose => 2, -exitstatus => 0) if $help;
 $PROJECT = shift;
 $MODEL   = shift;
 
@@ -39,6 +73,10 @@ $StepList = shift;  # Either a comma-separated list of steps in the process to
                     # execute, or "all" to indicate all steps
 $currspin_start_date_override = shift;
 $fcast_date_override          = shift;
+pod2usage(-verbose => 1, -exitstatus => 1)
+  if not defined($MODEL) or
+    not defined
+    ($PROJECT);
 
 #-------------------------------------------------------------------------------
 # Set up constants
@@ -314,7 +352,6 @@ if ($do_stats) {
 # Make plots
 #-------------------------------------------------------------------------------
 if ($do_plots) {
-
   $cmd =
     "$TOOLS_DIR/plot_qnts.pl $PROJECT $MODEL $Fyr $Fmon $Fday >& " .
     "$LogFile.tmp; cat $LogFile.tmp >> $LogFile";
@@ -332,7 +369,6 @@ if ($do_plots) {
 # Copy plots to "depot"
 #-------------------------------------------------------------------------------
 if ($do_depot) {
-
   $cmd =
     "$TOOLS_DIR/copy_figs_depot.pl $PROJECT $MODEL $Fyr $Fmon $Fday " .
     ">& $LogFile.tmp; cat $LogFile.tmp >> $LogFile";

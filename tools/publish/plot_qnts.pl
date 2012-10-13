@@ -1,11 +1,36 @@
 #!<SYSTEM_PERL_EXE> -w
-# plot_qnts.pl: Script to plot model results
-# Ali Akanda, 041805, 050505
-# A.Wood, jul07, modified to make runoff plots too
-# 2008-05-22 Generalized for multimodel sw monitor.	TJB
-# $Id: $
+
+=pod
+
+=head1 NAME
+
+plot_qnts.pl
+
+=head1 SYNOPSIS
+
+plot_qnts.pl
+ [options] project model year month day
+
+ Options:
+    --help|h|?                  brief help message
+    --man|info                  full documentation
+
+ Required (in order):
+    project              project (must have config.project.<project> file)
+    model                model (must have config.model.<model> file)
+    year                 year
+    month                month
+    day                  day
+
+=head1 DESCRIPTION
+
+Script to plot model results
+
+=cut
 #-------------------------------------------------------------------------------
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Pod::Usage;
+use Getopt::Long;
 
 #-------------------------------------------------------------------------------
 # Determine tools, config, and common directories
@@ -29,11 +54,22 @@ use LWP::Simple;
 #-------------------------------------------------------------------------------
 # Parse the command line
 #-------------------------------------------------------------------------------
+my $result = GetOptions("help|h|?" => \$help,
+                        "man|info" => \$man);
+pod2usage(-verbose => 2, -exitstatus => 0) if $man;
+pod2usage(-verbose => 2, -exitstatus => 0) if $help;
 $PROJECT = shift;  # project name, e.g. conus mexico
 $MODEL   = shift;  # model name, e.g. vic noah sac clm multimodel
 $yr      = shift;
 $mon     = shift;
 $day     = shift;
+pod2usage(-verbose => 1, -exitstatus => 1)
+  if not defined($MODEL) or
+    not defined($PROJECT) or
+    not defined($yr)      or
+    not defined($mon)     or
+    not defined
+    ($day);
 
 #-------------------------------------------------------------------------------
 # Set up constants

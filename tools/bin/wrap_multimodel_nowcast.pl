@@ -1,7 +1,32 @@
 #!<SYSTEM_PERL_EXE> -w
-# Wrapper script for complete multi-model nowcast
+
+=pod
+
+=head1 NAME
+
+wrap_multimodel_nowcast.pl
+
+=head1 SYNOPSIS
+
+wrap_multimodel_nowcast.pl [options] project stage
+
+ Options:
+    --help|h|?         brief help message
+    --man|info         full documentation
+
+ All other fields have to be provided in order
+    project            project (must have config.project.<project> file)
+    stage              stage to start at (optional)
+
+=head1 DESCRIPTION
+
+Wrapper script for complete multi-model nowcast
+
+=cut
 #-------------------------------------------------------------------------------
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Pod::Usage;
+use Getopt::Long;
 
 #-------------------------------------------------------------------------------
 # Determine tools and config directories
@@ -23,10 +48,15 @@ use POSIX qw(strftime);
 #-------------------------------------------------------------------------------
 # Command-line arguments
 #-------------------------------------------------------------------------------
+my $result = GetOptions("help|h|?" => \$help,
+                        "man|info" => \$man);
+pod2usage(-verbose => 2, -exitstatus => 0) if $man;
+pod2usage(-verbose => 2, -exitstatus => 0) if $help;
 $PROJECT = shift;
 
 # This next argument is optional
 $stage = shift;
+pod2usage(-verbose => 1, -exitstatus => 1) if not defined($PROJECT);
 
 #-------------------------------------------------------------------------------
 # Set up constants

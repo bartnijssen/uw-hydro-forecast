@@ -1,4 +1,5 @@
 #!<SYSTEM_PERL_EXE> -w
+
 =pod
 
 =head1 NAME
@@ -142,10 +143,9 @@ Arguments:
    specified
 
 =cut
-
 #-------------------------------------------------------------------------------
-no warnings qw(once);           # don't like this, but there are global
-                                # variables used by model_specific.pl
+no warnings qw(once);  # don't like this, but there are global
+                       # variables used by model_specific.pl
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 use Getopt::Long;
 use Pod::Usage;
@@ -188,21 +188,21 @@ $rout_storage   = 1;
 # Hash used in GetOptions function
 # format: option => \$variable_to_set
 my $result = GetOptions(
-                        "help|h|?"  => \$help,
-                        "man|info"  => \$help,
-                        "m=s"       => \$MODEL_NAME,
-                        "p=s"       => \$PROJECT,
-                        "f=s"       => \$forcing_subdir,
-                        "s=s"       => \$start_date,
-                        "e=s"       => \$end_date,
-                        "r=s"       => \$results_subdir,
-                        "i=s"       => \$DATE,
-                        "en=i"      => \$ENS_YR,
-                        "z=i"       => \$esp_storage,
-                        "uncmp"     => \$UNCOMP_OUTPUT,
-                        "l"         => \$local_storage,
-                        "x=s"       => \$extract_vars,
-                        "mspc"      => \$model_specific,
+                        "help|h|?" => \$help,
+                        "man|info" => \$help,
+                        "m=s"      => \$MODEL_NAME,
+                        "p=s"      => \$PROJECT,
+                        "f=s"      => \$forcing_subdir,
+                        "s=s"      => \$start_date,
+                        "e=s"      => \$end_date,
+                        "r=s"      => \$results_subdir,
+                        "i=s"      => \$DATE,
+                        "en=i"     => \$ENS_YR,
+                        "z=i"      => \$esp_storage,
+                        "uncmp"    => \$UNCOMP_OUTPUT,
+                        "l"        => \$local_storage,
+                        "x=s"      => \$extract_vars,
+                        "mspc"     => \$model_specific,
                        );
 
 #-------------------------------------------------------------------------------
@@ -212,10 +212,14 @@ pod2usage(-verbose => 2, -exitstatus => 0) if $man;
 pod2usage(-verbose => 2, -exitstatus => 0) if $help;
 
 # Validate required arguments
-pod2usage(-verbose => 1, -exitstatus => -1) 
-  if not defined ($MODEL_NAME) or not defined ($PROJECT) 
-  or not defined ($start_date) or not defined($end_date) 
-  or not defined($ENS_YR) or not defined($DATE);
+pod2usage(-verbose => 1, -exitstatus => -1)
+  if not defined($MODEL_NAME) or
+    not defined($PROJECT)    or
+    not defined($start_date) or
+    not defined($end_date)   or
+    not defined($ENS_YR)     or
+    not defined
+    ($DATE);
 
 # Parse & validate start/end dates
 if ($start_date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/) {
@@ -243,7 +247,7 @@ if ($start_year > $end_year) {
     if ($start_day > $end_day) {
       print STDERR "$0: ERROR: start_date is later than end_date: " .
         "start_year == end_year, start_month == end_month " .
-          "and start_day > end_day.\n";
+        "and start_day > end_day.\n";
       pod2usage(-verbose => 1, -exitstatus => -1);
     }
   }
@@ -267,7 +271,8 @@ if ($DATE =~ /(\d\d\d\d)(\d\d)(\d\d)/) {
   #  and after
 } else {
   print STDERR "$0: ERROR: State date must have format YYYYMMDD.\n";
-  pod2usage(-verbose => 1, -exitstatus => -1);  usage("full");
+  pod2usage(-verbose => 1, -exitstatus => -1);
+  usage("full");
 }
 
 #-------------------------------------------------------------------------------
@@ -441,7 +446,7 @@ foreach $dir ($ParamsModelDir) {
 }
 foreach $dir (
               $ResultsModelRawDir,   $ResultsModelAscDir,
-              $ResultsModelFinalDir, $ControlModelDir,      
+              $ResultsModelFinalDir, $ControlModelDir,
               $LogsModelDir
   ) {
   (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";

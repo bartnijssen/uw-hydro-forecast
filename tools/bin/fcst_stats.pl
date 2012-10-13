@@ -1,23 +1,55 @@
 #!<SYSTEM_PERL_EXE> -w
-# AWW-112103
-# take a SORTED row of data and find interpolated weibull plotting
-# position of an input value in it, assigning fixed value when it is
-# beyond the bounds of the column.  program stops if not all rows have
-# have same number of columns as first row.  also find additive & multiplicative
-# anomalies wrt mean of distribution.
-# usage
-# input fmt:  each row of tabular file has
-#  <target val> <sorted distribution vals, lowest to highest>
-# output fmt: each row has
-#  <percentile><additive anom><multiplicative anom>
+
+=pod
+
+=head1 NAME
+
+fcst_stats.pl
+
+=head1 SYNOPSIS
+
+fcst_stats.pl [options] model project year month day [directory]
+
+ Options:
+    --help|h|?                  brief help message
+    --man|info                  full documentation
+
+ Required (in order):
+    infile               input file
+    outfile              output file
+
+=head1 DESCRIPTION
+
+Take a SORTED row of data and find interpolated weibull plotting
+position of an input value in it, assigning fixed value when it is
+beyond the bounds of the column.  program stops if not all rows have
+have same number of columns as first row.  also find additive & multiplicative
+anomalies wrt mean of distribution.
+
+ input format:  
+   each row of tabular input file has
+   <target val> <sorted distribution vals, lowest to highest>
+
+ output fmt: 
+   each row has <percentile> <additive anom> <multiplicative anom>
+
+=head2 AUTHORS
+
+ A. Wood Aug 2003
+ and others since then
+
+=cut
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
-use Statistics::Lite ("mean");
+use Pod::Usage;
+use Getopt::Long;
+use Statistics::Lite qw(mean);
+my $result = GetOptions("help|h|?" => \$help,
+                        "man|info" => \$man);
+pod2usage(-verbose => 2, -exitstatus => 0) if $man;
+pod2usage(-verbose => 2, -exitstatus => 0) if $help;
 
 # read in filenames
-if (@ARGV != 2) {
-  print @ARGV . " arguments found\n";
-  die "Usage: fcst_stats.pl <infile> <outfile>\n";
-}
+@ARGV == 2 or pod2usage(-verbose => 1, -exitstatus => 1);
 
 # open files
 open(INF, "<$ARGV[0]") or die "Can't open $ARGV[0]: $!\n";

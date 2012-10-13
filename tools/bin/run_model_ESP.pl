@@ -1,4 +1,5 @@
 #!<SYSTEM_PERL_EXE> -w
+
 =pod
 
 =head1 NAME
@@ -143,13 +144,13 @@ Arguments:
    specified
 
 =cut
-
 #-------------------------------------------------------------------------------
-no warnings qw(once);           # don't like this, but there are global
-                                # variables used by model_specific.pl
+no warnings qw(once);  # don't like this, but there are global
+                       # variables used by model_specific.pl
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 use Getopt::Long;
-use Pod::Usage;use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Pod::Usage;
+use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 
 #-------------------------------------------------------------------------------
 # Determine tools and config directories
@@ -191,23 +192,23 @@ $post_process   = "1";  ##### Post processing of ESP flux output
 
 # Hash used in GetOptions function
 # format: option => \$variable_to_set
-my $result = GetOptions (
-                         "help|h|?"  => \$help,
-                         "man|info"  => \$man,
-                         "m=s"       => \$MODEL_NAME,
-                         "p=s"       => \$PROJECT,
-                         "f=s"       => \$forcing_subdir,
-                         "s=s"       => \$start_date,
-                         "e=s"       => \$end_date,
-                         "r=s"       => \$results_subdir,
-                         "i=s"       => \$DATE,
-                         "st=s"      => \$state_subdir,
-                         "uncmp"     => \$UNCOMP_OUTPUT,
-                         "z=i"       => \$esp_storage,
-                         "l"         => \$local_storage,
-                         "x=s"       => \$extract_vars,
-                         "mspc"      => \$model_specific,
-                        );
+my $result = GetOptions(
+                        "help|h|?" => \$help,
+                        "man|info" => \$man,
+                        "m=s"      => \$MODEL_NAME,
+                        "p=s"      => \$PROJECT,
+                        "f=s"      => \$forcing_subdir,
+                        "s=s"      => \$start_date,
+                        "e=s"      => \$end_date,
+                        "r=s"      => \$results_subdir,
+                        "i=s"      => \$DATE,
+                        "st=s"     => \$state_subdir,
+                        "uncmp"    => \$UNCOMP_OUTPUT,
+                        "z=i"      => \$esp_storage,
+                        "l"        => \$local_storage,
+                        "x=s"      => \$extract_vars,
+                        "mspc"     => \$model_specific,
+                       );
 
 #-------------------------------------------------------------------------------
 # Validate the command-line arguments
@@ -216,9 +217,12 @@ pod2usage(-verbose => 2, -exitstatus => 0) if $man;
 pod2usage(-verbose => 2, -exitstatus => 0) if $help;
 
 # Validate required arguments
-pod2usage(-verbose => 1, -exitstatus => -1) 
-  if not defined ($MODEL_NAME) or not defined ($PROJECT) 
-  or not defined ($start_date) or not defined($end_date);
+pod2usage(-verbose => 1, -exitstatus => -1)
+  if not defined($MODEL_NAME) or
+    not defined($PROJECT)    or
+    not defined($start_date) or
+    not defined
+    ($end_date);
 
 # Parse & validate start/end dates
 if ($start_date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/) {
@@ -246,12 +250,11 @@ if ($start_year > $end_year) {
     if ($start_day > $end_day) {
       print STDERR "$0: ERROR: start_date is later than end_date: " .
         "start_year == end_year, start_month == end_month " .
-          "and start_day > end_day.\n";
+        "and start_day > end_day.\n";
       pod2usage(-verbose => 1, -exitstatus => -1);
     }
   }
 }
-
 if ($DATE =~ /(\d\d\d\d)(\d\d)(\d\d)/) {
   ($STATE_YR, $STATE_MON, $STATE_DAY) = Add_Delta_Days($1, $2, $3, 0);
 
@@ -504,7 +507,8 @@ if ($model_specific) {
 $func_name = "wrap_run_" . $modelalias;
 &{$func_name}($model_specific);
 if (!-e $STORDIR) {
-  (&make_dir($STORDIR) == 0) or die "$0: ERROR: Cannot create path $STORDIR: $!\n";
+  (&make_dir($STORDIR) == 0) or
+    die "$0: ERROR: Cannot create path $STORDIR: $!\n";
 }  ### Creating Storage directory
 if (!-e "$STORDIR/monthly_flux") ### Creating Storage directory for monthly flux
 {

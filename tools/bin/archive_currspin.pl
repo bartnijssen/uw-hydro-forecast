@@ -25,7 +25,6 @@ project and model combination (each must have a config file). The archived files
 are put into the PLOT_DEPOT_DIR as defined in the config.project.<project> file.
 
 =cut
-
 #-------------------------------------------------------------------------------
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 
@@ -46,17 +45,16 @@ use simma_util;
 #-------------------------------------------------------------------------------
 # Command-line arguments
 #-------------------------------------------------------------------------------
-my $result = GetOptions("help|h|?"    => \$help,
-                        "man|info"    => \$man);
-
+my $result = GetOptions("help|h|?" => \$help,
+                        "man|info" => \$man);
 pod2usage(-verbose => 2, -exitstatus => 0) if $man;
 pod2usage(-verbose => 2, -exitstatus => 0) if $help;
-
 $PROJECT = shift;
 $MODEL   = shift;
-
-pod2usage(-verbose => 1, -exitstatus => 1) 
-  if not defined($PROJECT) or not defined($MODEL);
+pod2usage(-verbose => 1, -exitstatus => 1)
+  if not defined($PROJECT) or
+    not defined
+    ($MODEL);
 
 #-------------------------------------------------------------------------------
 # Set up constants
