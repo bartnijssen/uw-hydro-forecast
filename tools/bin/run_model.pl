@@ -211,7 +211,7 @@ pod2usage(-verbose => 2, -exitstatus => 0) if $help;
 
 # Validate required arguments
 pod2usage(-verbose => 1, -exitstatus => -1) 
-  if not defined ($MODEL_NAME) or not define ($PROJECT) 
+  if not defined ($MODEL_NAME) or not defined ($PROJECT) 
   or not defined ($start_date) or not defined($end_date);
 
 # Parse & validate start/end dates
