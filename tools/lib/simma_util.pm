@@ -3,6 +3,7 @@ package simma_util;
 use strict;
 
 use vars qw(@ISA @EXPORT $VERSION);
+use File::Path qw(make_path);
 
 use Exporter;
 $VERSION = 0.99;		
@@ -87,30 +88,14 @@ sub read_config {
 #   0: successfully created the directory.
 #   All other codes: these are the operating system error codes returned by the
 #   command
+#
+# Updated to simply use the File::Path qw(make_path) function
+#
 #-------------------------------------------------------------------------------
 sub make_dir {
   my $fullpath = $_[0];
-  my @subdirs;
-  my $subdir;
-  my $path_so_far;
-  my $exit_code = 0;
-  @subdirs = split /\//, $fullpath;
-  $path_so_far = "";
-  foreach $subdir (@subdirs) {
-
-    if ($subdir ne "") {
-      $path_so_far = $path_so_far . "/" . $subdir;
-      if (!-e $path_so_far) {
-        my @args = ("mkdir", $path_so_far);
-        if (system(@args) != 0) {
-          $exit_code = $?;
-          printf STDERR "$0: ERROR: cannot create $path_so_far: $exit_code\n";
-          return $exit_code;
-        }
-      }
-    }
-  }
-  return $exit_code;
+  make_path($fullpath, {error => \my $err});
+  return @$err;                 # length 0 if no error
 }
 
 #-------------------------------------------------------------------------------
