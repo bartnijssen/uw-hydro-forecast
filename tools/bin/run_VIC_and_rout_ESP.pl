@@ -114,7 +114,7 @@ while ($METYR <= $FEYR) {  # forecast year loop
     $ESP_STORAGE = 1 - $RUN_ROUT;
     $cmd =
       "$TOOLS_DIR/run_model_ESP.pl -m $MODEL -p $PROJECT -f retro " .
-      "-r esp.$datestr.$FORC_START_DATE -s $FORC_START_DATE " .
+      "-r esp/esp.$datestr.$FORC_START_DATE -s $FORC_START_DATE " .
       "-e $FORC_UPD_END_DATE -st curr_spinup -i $datestr -z $ESP_STORAGE " .
       ">& $LogFile.tmp";
     print "$cmd\n";

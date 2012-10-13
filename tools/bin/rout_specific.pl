@@ -51,6 +51,7 @@ sub run_rout {
     die "$0: ERROR: cannot open current controlfile $controlfile\n";
   print "OPENING current controlfile $controlfile\n";
   foreach (@MyParamsInfo) {
+    print "$_\n";
     print CONTROLFILE;
   }
   close(CONTROLFILE);
@@ -59,6 +60,7 @@ sub run_rout {
   $cmd =
     "$ROUTE_EXE_DIR/$ROUTE_EXE_NAME $controlfile >& $LOGFILE.tmp; " .
     "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+  print "$cmd\n";
   (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
 }  ### Sub_rout
 

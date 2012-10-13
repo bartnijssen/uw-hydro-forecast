@@ -338,8 +338,8 @@ foreach $dir ($ParamsModelDir) {
 }
 foreach $dir (
               $ResultsModelRawDir,   $ResultsModelAscDir,
-              $ResultsModelFinalDir, $StateModelDir,
-              $ControlModelDir,      $LogsModelDir
+              $ResultsModelFinalDir, $ControlModelDir,      
+              $LogsModelDir
   ) {
   $status = &make_dir($dir);
 }
@@ -347,7 +347,6 @@ foreach $dir (
 # Output Directories
 $results_dir     = $ResultsModelRawDir;
 $results_dir_asc = $ResultsModelAscDir;
-$state_dir       = $StateModelDir;
 $control_dir     = $ControlModelDir;
 $logs_dir        = $LogsModelDir;
 print "LOG Dir is $logs_dir and control dir is $control_dir\n";
@@ -362,9 +361,6 @@ if ($local_storage) {
   $LOCAL_RESULTS_DIR_ASC =~ s/$PROJECT_DIR/$LOCAL_PROJECT_DIR/g;
   $LOCAL_ROUT_DIR = $Routdir;
   $LOCAL_ROUT_DIR =~ s/$PROJECT_DIR/$LOCAL_PROJECT_DIR/g;
-
-  #$LOCAL_STATE_DIR = $StateModelDir;
-  #$LOCAL_STATE_DIR =~ s/$PROJECT_DIR/$LOCAL_PROJECT_DIR/g;
   $LOCAL_CONTROL_DIR = $ControlModelDir;
   $LOCAL_CONTROL_DIR =~ s/$PROJECT_DIR/$LOCAL_PROJECT_DIR/g;
   $results_dir     = $LOCAL_RESULTS_DIR;
@@ -399,7 +395,7 @@ if ($esp_storage) {
 }
 
 ####### Running routing model ####################
-$func_name = "wrap_run_" . rout;
+$func_name = "wrap_run_" . "rout";
 &{$func_name}($model_specific);
 
 #-------------------------------------------------------------------------------
