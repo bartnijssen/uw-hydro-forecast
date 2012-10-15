@@ -57,7 +57,6 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 use simma_util;
 use Date::Calc qw(leap_year Days_in_Month Delta_Days Add_Delta_Days
   Add_Delta_YM);
-use Statistics::Lite qw(mean);
 use POSIX qw(strftime);
 
 #-------------------------------------------------------------------------------
