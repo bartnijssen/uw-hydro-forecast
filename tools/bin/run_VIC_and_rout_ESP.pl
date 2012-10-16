@@ -199,8 +199,8 @@ while ($METYR <= $FEYR) {  # forecast year loop
       Add_Delta_Days($Cyr, $Cmon, $Cday, $FLEN);
     $ROUT_END_DATE = sprintf "%04d-%02d-%02d", $Rout_Eyr, $Rout_Emon,
       $Rout_Eday;
-    my $STATE_DATE = sprintf "%04d-%02d-%02d", $STATE_YR, $STATE_MON,
-      $STATE_DAY;
+    my $STATE_DATE = sprintf "%04d-%02d-%02d", $Stateyr, $Statemon,
+      $Stateday;
 
     # HACK to sidestep clutting the results directory. See issue 27.
     # Bart - Fri Sep 28 2012

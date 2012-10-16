@@ -344,19 +344,19 @@ if ($forcing_subdir =~ /retro/i) {
 # be the first day of 2 months before the routing starts
 ($Spinup_Eyr, $Spinup_Emon, $Spinup_Eday) = Add_Delta_Days(@statedate, -1);
 
-  # The spinup is added until a day before the forecast initialization, since
-  # for VIC 4.0.5 both day of state file and forecast inialization date is the
-  # same. For other Version VIC 4.0.6 or VIC 4.1.X this end day of spinup will
-  # be the same day as the day of state file hence
-  # ($Spinup_Eyr,$Spinup_Emon,$Spinup_Eday) = Add_Delta_Days(@statedate, 0);
-}
+# The spinup is added until a day before the forecast initialization, since
+# for VIC 4.0.5 both day of state file and forecast inialization date is the
+# same. For other Version VIC 4.0.6 or VIC 4.1.X this end day of spinup will
+# be the same day as the day of state file hence
+# ($Spinup_Eyr,$Spinup_Emon,$Spinup_Eday) = Add_Delta_Days(@statedate, 0);
+
 ($Spinup_Syr, $Spinup_Smon, $Spinup_Sday) =
   Add_Delta_YM($Spinup_Eyr, $Spinup_Emon, $Spinup_Eday, 0, -2);
 $Spinup_Sday = "01";
 
 ### Only if forcing_subdir is curr_spinup
 if ($forcing_subdir =~ /curr_spinup/i) {
-
+  
   # Date of Spinup Start and END
   open(FILE, $StartDateFile) or
     die "$0: ERROR: cannot open file $StartDateFile\n";
