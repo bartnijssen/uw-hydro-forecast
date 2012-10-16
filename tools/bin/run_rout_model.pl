@@ -152,6 +152,7 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 #-------------------------------------------------------------------------------
 # Subroutine for reading config files
 use simma_util;
+use GenUtils;
 
 # This allows us to use sophisticated command-line argument parsing
 use Getopt::Long;
