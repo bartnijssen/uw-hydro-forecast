@@ -379,21 +379,7 @@ if ($forcing_subdir =~ /retro/i) {
 #---------------------------------------------------
 # HACK!
 if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
-  $uname = `uname -a`;
-  if ($uname =~ /compute-(...)/) {
-    $nodename = $1;
-  }
-  if (!$nodename) {
-    die "$0: ERROR: node name not found\n";
-  }
-  print "Node is $uname\n";
-
-  # Determine local dir
-  if ($nodename =~ /c-(0|1|2|3|4)/) {
-    $local_root = "<SYSTEM_LOCAL_ROOT2>";
-  } else {
-    $local_root = "<SYSTEM_LOCAL_ROOT1>";
-  }
+  $local_root = "<SYSTEM_LOCAL_ROOT>";
   $PROJECT_DIR       = $var_info_project{"PROJECT_DIR"};
   $LOCAL_PROJECT_DIR = $var_info_project{"LOCAL_PROJECT_DIR"};
   $replace           = "<SYSTEM_ROOT>";

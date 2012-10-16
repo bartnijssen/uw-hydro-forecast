@@ -11,6 +11,4 @@ SYSTEM_NETCDF_INC /home/nijssen/apps/include
 SYSTEM_NETCDF_LIB  /home/nijssen/apps/lib
 SYSTEM_LOCAL_STORAGE true
 SYSTEM_LOCAL_ROOT /state/partition1
-SYSTEM_LOCAL_ROOT1 /state/partition1
-SYSTEM_LOCAL_ROOT2 /state/partition2
 SYSTEM_NCO_DIR /home/nijssen/apps/bin

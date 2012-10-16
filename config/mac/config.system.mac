@@ -9,7 +9,4 @@ SYSTEM_PERL_LIBS /opt/local/lib/perl5/site_perl/5.12.4
 SYSTEM_NETCDF_INC /opt/local/include
 SYSTEM_NETCDF_LIB  /opt/local/lib
 SYSTEM_LOCAL_STORAGE false
-SYSTEM_LOCAL_ROOT /state/partition1
-SYSTEM_LOCAL_ROOT1 /state/partition1
-SYSTEM_LOCAL_ROOT2 /state/partition2
 SYSTEM_NCO_DIR /opt/local/bin
