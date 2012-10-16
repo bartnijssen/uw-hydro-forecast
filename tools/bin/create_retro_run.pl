@@ -16,7 +16,6 @@ create_retro_run.pl
     --man|info                  full documentation
     --verbose|v                 increase verbosity
     --route|r                   route the flows
-    --local|l                   use local storage in a cluster environment
 
  Required:
     --model|m=model             model to run
@@ -77,7 +76,6 @@ my $project;
 my $start_date;
 my $end_date;
 my $routeflows;
-my $local_storage;
 my $verbose = 0;
 
 # Hash used in GetOptions function
@@ -89,8 +87,7 @@ my $status = GetOptions(
                         "project|p=s" => \$project,
                         "start|s=s"   => \$start_date,
                         "end|e=s"     => \$end_date,
-                        "route|r"     => \$routeflows,
-                        "local|l"     => \$local_storage
+                        "route|r"     => \$routeflows
                        );
 
 #-------------------------------------------------------------------------------
@@ -176,7 +173,7 @@ for (my $i = 0 ; $i < 10 ; $i++) {
   $cmd =
     "$TOOLS_DIR/run_model.pl -m $model -p $project -f retro " .
     "-s $start_date -e $enddate_oneyear -i $initfile";
-  $cmd .= " -l" if ($local_storage);
+  $cmd .= " -l" if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i);
   $cmd .= " >& $LogFile.tmp";
   print "$cmd\n";
   (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
@@ -197,7 +194,7 @@ for (my $i = 0 ; $i < 10 ; $i++) {
 $cmd =
   "$TOOLS_DIR/run_model.pl -m $model -p $project -f retro " .
   "-s $start_date -e $end_date -i $initfile";
-$cmd .= " -l" if ($local_storage);
+$cmd .= " -l" if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i);
 $cmd .= " >& $LogFile.tmp";
 print "$cmd\n";
 (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";

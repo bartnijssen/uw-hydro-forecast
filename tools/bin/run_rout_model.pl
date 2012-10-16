@@ -15,7 +15,6 @@ run_rout_model.pl
     --help|h|?                  brief help message
     --man|info                  full documentation
     -uncmp                      do not compress output
-    -l                          use local storage in cluster environment
     -f <forcing_subdir>         forcing subdirectory
     -r <results_subdir>         results subdirectory
     -st <state_subdir>          state subdirectory
@@ -129,14 +128,6 @@ Arguments:
    (\").  Example: for SAC model, need to specify the directory where pe files
    are located, as: run_model.pl (blah blah) -mspc "-pe path_to_pe_files"
 
--l 
-
-   (optional) If specified, input data will be copied to a drive that is local
-   to the node that the script is being run on; results will be written to this
-   local drive, and then the results will be copied to the central drive when
-   the run is finished. This reduces network traffic on the cluster and speeds
-   up performance dramatically.
-
 -z  
 
    (optional) ZIP and move results directory into ESP storage directory when
@@ -166,7 +157,7 @@ use simma_util;
 use Getopt::Long;
 
 # Date arithmetic
-use Date::Calc qw(Add_Delta_Days Add_Delta_YM);
+use Date::Calc qw(Add_Delta_Days Add_Delta_YM Delta_Days);
 
 # Access to environment variables
 use POSIX qw(strftime);
@@ -182,7 +173,6 @@ $forcing_subdir = "";
 $results_subdir = "";
 $UNCOMP_OUTPUT  = 0;
 $extract_vars   = "";
-$local_storage  = "1";
 $rout_storage   = 1;
 
 # Hash used in GetOptions function
@@ -200,7 +190,6 @@ my $result = GetOptions(
                         "en=i"     => \$ENS_YR,
                         "z=i"      => \$esp_storage,
                         "uncmp"    => \$UNCOMP_OUTPUT,
-                        "l"        => \$local_storage,
                         "x=s"      => \$extract_vars,
                         "mspc"     => \$model_specific,
                        );
@@ -222,36 +211,14 @@ pod2usage(-verbose => 1, -exitstatus => -1)
     ($DATE);
 
 # Parse & validate start/end dates
-if ($start_date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/) {
-  ($start_year, $start_month, $start_day) = ($1, $2, $3);
-} else {
-  print STDERR "$0: ERROR: start date must have format YYYY-MM-DD.\n";
-  pod2usage(-verbose => 1, -exitstatus => -1);
-}
-if ($end_date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/) {
-  ($end_year, $end_month, $end_day) = ($1, $2, $3);
-} else {
-  print STDERR "$0: ERROR: end date must have format YYYY-MM-DD.\n";
-  pod2usage(-verbose => 1, -exitstatus => -1);
-}
-if ($start_year > $end_year) {
-  print STDERR "$0: ERROR: start_date is later than end_date: " .
-    "start_year > end_year.\n";
-  pod2usage(-verbose => 1, -exitstatus => -1);
-} elsif ($start_year == $end_year) {
-  if ($start_month > $end_month) {
-    print STDERR "$0: ERROR: start_date is later than end_date: " .
-      "start_year == end_year and start_month > end_month.\n";
-    pod2usage(-verbose => 1, -exitstatus => -1);
-  } elsif ($start_month == $end_month) {
-    if ($start_day > $end_day) {
-      print STDERR "$0: ERROR: start_date is later than end_date: " .
-        "start_year == end_year, start_month == end_month " .
-        "and start_day > end_day.\n";
-      pod2usage(-verbose => 1, -exitstatus => -1);
-    }
-  }
-}
+my @startdate = parse_yyyymmdd($start_date, "-");
+@startdate == 3 or die "$0: ERROR: start date must have format YYYY-MM-DD.\n";
+isdate(@startdate) or die "Not a valid start date: $start_date\n";
+my @enddate = parse_yyyymmdd($end_date, "-");
+@enddate == 3 or die "$0: ERROR: end date must have format YYYY-MM-DD.\n";
+isdate(@enddate) or die "Not a valid end date: $end_date\n";
+Delta_Days(@startdate, @enddate) > 0 or
+  die "$0: ERROR: start date is later than end date.\n";
 
 # Default values of $spinup_subdir and results_subdir
 if ($forcing_subdir) {
@@ -262,18 +229,14 @@ if ($results_subdir) {
     $state_subdir = $results_subdir;
   }
 }
-if ($DATE =~ /(\d\d\d\d)(\d\d)(\d\d)/) {
-  ($STATE_YR, $STATE_MON, $STATE_DAY) = Add_Delta_Days($1, $2, $3, 0);
-  $FCST_DATE = sprintf "%04d%02d%02d", $STATE_YR, $STATE_MON, $STATE_DAY;
 
-  #  Date of forecast initialization date.  Same as the day of state file It
-  #  should be changed to a day after the state day for the VIC version 4.0.6
-  #  and after
-} else {
-  print STDERR "$0: ERROR: State date must have format YYYYMMDD.\n";
-  pod2usage(-verbose => 1, -exitstatus => -1);
-  usage("full");
-}
+my @statedate = parse_yyyymmdd($DATE, "-");
+@statedate == 3 or die "$0: ERROR: state date must have format YYYY-MM-DD.\n";
+#  Date of forecast initialization date.  Same as the day of state file It
+#  should be changed to a day after the state day for the VIC version 4.0.6
+#  and after
+@statedate = Add_Delta_Days(@statedate, 0);
+my $FCST_DATE = sprintf "%04d%02d%02d", @statedate;
 
 #-------------------------------------------------------------------------------
 # Set up constants
@@ -313,78 +276,79 @@ foreach $key_proj (keys(%var_info_project)) {
 }
 
 # Substitute user-specified information into project and model variables
-$var_info_project{"FORCING_MODEL_DIR"} =~ s/<FORCING_SUBDIR>/$forcing_subdir/g;
-$var_info_project{"RESULTS_MODEL_RAW_DIR"} =~
+$var_info_project{FORCING_MODEL_DIR} =~ s/<FORCING_SUBDIR>/$forcing_subdir/g;
+$var_info_project{RESULTS_MODEL_RAW_DIR} =~
   s/<RESULTS_SUBDIR>/$results_subdir/g;
-$var_info_project{"ROUT_MODEL_DIR"} =~ s/<RESULTS_SUBDIR>/$results_subdir/g;
-$var_info_project{"RESULTS_MODEL_ASC_DIR"} =~
+$var_info_project{ROUT_MODEL_DIR} =~ s/<RESULTS_SUBDIR>/$results_subdir/g;
+$var_info_project{RESULTS_MODEL_ASC_DIR} =~
   s/<RESULTS_SUBDIR>/$results_subdir/g;
-$var_info_project{"SPINUP_MODEL_ASC_DIR"} =~
+$var_info_project{SPINUP_MODEL_ASC_DIR} =~
   s/<FORCING_SUBDIR>/$forcing_subdir/g;
-$var_info_project{"CONTROL_MODEL_DIR"} =~ s/<CONTROL_SUBDIR>/rout/g
+$var_info_project{CONTROL_MODEL_DIR} =~ s/<CONTROL_SUBDIR>/rout/g
   ;  #### Control file and Log file for routing model runs go in to subdirectory
      #### <rout>.
-$var_info_project{"LOGS_MODEL_DIR"} =~ s/<LOGS_SUBDIR>/rout/g;
+$var_info_project{LOGS_MODEL_DIR} =~ s/<LOGS_SUBDIR>/rout/g;
 
-if ($var_info_model{"POSTPROC"}) {
-  $var_info_model{"POSTPROC"} =~ s/<TOOLS_DIR>/$TOOLS_DIR/g;
-  $var_info_model{"POSTPROC"} =~ s/<START_DATE>/$start_date/g;
-  $var_info_model{"POSTPROC"} =~ s/<END_DATE>/$end_date/g;
+if ($var_info_model{POSTPROC}) {
+  $var_info_model{POSTPROC} =~ s/<TOOLS_DIR>/$TOOLS_DIR/g;
+  $var_info_model{POSTPROC} =~ s/<START_DATE>/$start_date/g;
+  $var_info_model{POSTPROC} =~ s/<END_DATE>/$end_date/g;
 
   # The final processed model results will be stored in the ascii dir
-  $var_info_model{"POSTPROC"} =~
-    s/<RESULTS_DIR_FINAL>/$var_info_project{"RESULTS_MODEL_ASC_DIR"}/g;
+  $var_info_model{POSTPROC} =~
+    s/<RESULTS_DIR_FINAL>/$var_info_project{RESULTS_MODEL_ASC_DIR}/g;
 }
 
 # Save relevant project info in variables
-$ParamsModelDir = $var_info_project{
-  "PARAMS_ROUT_DIR"};  #### Directory where Rout parameters reside
-$ForcingModelDir    = $var_info_project{"FORCING_MODEL_DIR"};
-$ResultsModelRawDir = $var_info_project{"RESULTS_MODEL_RAW_DIR"};
-$ResultsModelAscDir = $var_info_project{"RESULTS_MODEL_ASC_DIR"};
-$Routdir            = $var_info_project{"ROUT_MODEL_DIR"};
-$SpinupModelAscDir  = $var_info_project{ "SPINUP_MODEL_ASC_DIR"
-  };  ### Spinup Directory which has flux output since Spinup_start_date
-$ControlModelDir = $var_info_project{"CONTROL_MODEL_DIR"};
-$LogsModelDir    = $var_info_project{"LOGS_MODEL_DIR"};
+# Directory where Rout parameters reside
+$ParamsModelDir = $var_info_project{PARAMS_ROUT_DIR};
+$ForcingModelDir    = $var_info_project{FORCING_MODEL_DIR};
+$ResultsModelRawDir = $var_info_project{RESULTS_MODEL_RAW_DIR};
+$ResultsModelAscDir = $var_info_project{RESULTS_MODEL_ASC_DIR};
+$Routdir            = $var_info_project{ROUT_MODEL_DIR};
+# Spinup Directory which has flux output since Spinup_start_date 
+$SpinupModelAscDir  = $var_info_project{SPINUP_MODEL_ASC_DIR};
+$ControlModelDir = $var_info_project{CONTROL_MODEL_DIR};
+$LogsModelDir    = $var_info_project{LOGS_MODEL_DIR};
 
 # The final processed model results will be stored in the ascii dir
 $ResultsModelFinalDir = $ResultsModelAscDir;
-$ForcTypeAscVic       = $var_info_project{"FORCING_TYPE_ASC_VIC"};
-$ForcTypeNC           = $var_info_project{"FORCING_TYPE_NC"};
-$ForcingAscVicPrefix  = $var_info_project{"FORCING_ASC_VIC_PREFIX"};
-$ForcingNCPrefix      = $var_info_project{"FORCING_NC_PREFIX"};
-$ESP                  = $var_info_project{
-  "ESP"};  #### Directory where ESP outputs are saved ## Shrad added this
-$ROUT = $var_info_project{"ROUT"};  #### Directory where ROUT outputs are saved
+$ForcTypeAscVic       = $var_info_project{FORCING_TYPE_ASC_VIC};
+$ForcTypeNC           = $var_info_project{FORCING_TYPE_NC};
+$ForcingAscVicPrefix  = $var_info_project{FORCING_ASC_VIC_PREFIX};
+$ForcingNCPrefix      = $var_info_project{FORCING_NC_PREFIX};
+# Directory where ESP outputs are saved ## Shrad added this
+$ESP                  = $var_info_project{ESP};  
+$ROUT = $var_info_project{ROUT};  #### Directory where ROUT outputs are saved
 $STORDIR =
   "$ESP/$modelalias/$FCST_DATE/dly_flux";  #### ESP FLUXOUTPUT storage directory
 $STOR_ROUT_DIR =
   "$ROUT/$modelalias/$FCST_DATE/sflow";    #### ESP Rout storage directory
 
 # Save relevant model info in variables
-$ROUTE_SRC_DIR  = $var_info_route{"MODEL_SRC_DIR"};
-$ROUTE_EXE_DIR  = $var_info_route{"MODEL_EXE_DIR"};
-$ROUTE_EXE_NAME = $var_info_route{"MODEL_EXE_NAME"};
+$ROUTE_SRC_DIR  = $var_info_route{MODEL_SRC_DIR};
+$ROUTE_EXE_DIR  = $var_info_route{MODEL_EXE_DIR};
+$ROUTE_EXE_NAME = $var_info_route{MODEL_EXE_NAME};
 if ($forcing_subdir =~ /retro/i) {
-  $StartDateFile = $var_info_project{"FORCING_RETRO_START_DATE_FILE"};
+  $StartDateFile = $var_info_project{FORCING_RETRO_START_DATE_FILE};
 } elsif ($forcing_subdir =~ /spinup_nearRT/i) {
-  $StartDateFile = $var_info_project{"FORCING_NEAR_RT_START_DATE_FILE"};
+  $StartDateFile = $var_info_project{FORCING_NEAR_RT_START_DATE_FILE};
 } elsif ($forcing_subdir =~ /curr_spinup/i) {
-  $StartDateFile = $var_info_project{"FORCING_CURRSPIN_START_DATE_FILE"};
+  $StartDateFile = $var_info_project{FORCING_CURRSPIN_START_DATE_FILE};
 }
+
+
 
 # Estimate Spinup start and end Date here: Spinup start date is currently set to
 # be the day 1 of curr_spinup, however for retro or spinup_nearRT, the date will
 # be the first day of 2 months before the routing starts
-if ($DATE =~ /(\d\d\d\d)(\d\d)(\d\d)/) {
-  ($Spinup_Eyr, $Spinup_Emon, $Spinup_Eday) = Add_Delta_Days($1, $2, $3, -1);
+($Spinup_Eyr, $Spinup_Emon, $Spinup_Eday) = Add_Delta_Days(@statedate, -1);
 
   # The spinup is added until a day before the forecast initialization, since
   # for VIC 4.0.5 both day of state file and forecast inialization date is the
   # same. For other Version VIC 4.0.6 or VIC 4.1.X this end day of spinup will
   # be the same day as the day of state file hence
-  # ($Spinup_Eyr,$Spinup_Emon,$Spinup_Eday) = Add_Delta_Days($1,$2,$3, 0);
+  # ($Spinup_Eyr,$Spinup_Emon,$Spinup_Eday) = Add_Delta_Days(@statedate, 0);
 }
 ($Spinup_Syr, $Spinup_Smon, $Spinup_Sday) =
   Add_Delta_YM($Spinup_Eyr, $Spinup_Emon, $Spinup_Eday, 0, -2);
@@ -406,7 +370,7 @@ if ($forcing_subdir =~ /curr_spinup/i) {
 
 #---------------------------------------------------
 # HACK!
-if ($local_storage) {
+if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
   $uname = `uname -a`;
   if ($uname =~ /compute-(...)/) {
     $nodename = $1;
@@ -421,8 +385,8 @@ if ($local_storage) {
   } else {
     $local_root = "<SYSTEM_LOCAL_ROOT1>";
   }
-  $PROJECT_DIR       = $var_info_project{"PROJECT_DIR"};
-  $LOCAL_PROJECT_DIR = $var_info_project{"LOCAL_PROJECT_DIR"};
+  $PROJECT_DIR       = $var_info_project{PROJECT_DIR};
+  $LOCAL_PROJECT_DIR = $var_info_project{LOCAL_PROJECT_DIR};
   $replace           = "<SYSTEM_ROOT>";
   $LOCAL_PROJECT_DIR =~ s/$replace/$local_root/;
   print "$0: LOCAL_PROJECT_DIR: $LOCAL_PROJECT_DIR\n";
@@ -462,7 +426,7 @@ $LOGFILE     = "$logs_dir/log.rout.$PROJECT.$MODEL_NAME.$DATE.$ENS_YR";
 $controlfile = "$control_dir/inp.rout.$MODEL_NAME.$DATE.$ENS_YR";
 
 # Use local directories if specified
-if ($local_storage) {
+if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
   $LOCAL_RESULTS_DIR = $ResultsModelRawDir;
   $LOCAL_RESULTS_DIR =~ s/$PROJECT_DIR/$LOCAL_PROJECT_DIR/g;
   $LOCAL_RESULTS_DIR_ASC = $ResultsModelAscDir;
@@ -476,18 +440,27 @@ if ($local_storage) {
   $Routdir         = $LOCAL_ROUT_DIR;
 
   # Clean out the directories if they exist
-  foreach $dir ($LOCAL_ROUT_DIR, $LOCAL_CONTROL_DIR) {
+  foreach $dir ($LOCAL_CONTROL_DIR) {
     if (-e $dir) {
       $cmd = "rm -rf $dir";
       (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
     }
   }
+}
 
-  # Create the directories
-  foreach $dir ($LOCAL_ROUT_DIR, $LOCAL_CONTROL_DIR, $logs_dir) {
-    (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
+# Clean out the directories if they exist
+foreach $dir ($Routdir) {
+  if (-e $dir) {
+    $cmd = "rm -rf $dir";
+    (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
   }
 }
+
+# Create the directories
+foreach $dir ($Routdir, $logs_dir) {
+  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
+}
+
 $LOGFILE = "$LogsModelDir/log.rout.$PROJECT.$MODEL_NAME.$DATE.$ENS_YR";
 
 ###### if ESP_STORAGE = 1

@@ -15,7 +15,6 @@ run_model.pl
     --help|h|?                  brief help message
     --man|info                  full documentation
     -uncmp                      do not compress output
-    -l                          use local storage in cluster environment
     -f <forcing_subdir>         forcing subdirectory
     -r <results_subdir>         results subdirectory
     -i <init_file>              state file for startup
@@ -129,14 +128,6 @@ Arguments:
    (\").  Example: for SAC model, need to specify the directory where pe files
    are located, as: run_model.pl (blah blah) -mspc "-pe path_to_pe_files"
 
--l 
-
-   (optional) If specified, input data will be copied to a drive that is local
-   to the node that the script is being run on; results will be written to this
-   local drive, and then the results will be copied to the central drive when
-   the run is finished. This reduces network traffic on the cluster and speeds
-   up performance dramatically.
-
 =cut
 #-------------------------------------------------------------------------------
 no warnings qw(once);  # don't like this, but there are global
@@ -180,7 +171,6 @@ $state_subdir   = "";
 $UNCOMP_OUTPUT  = 0;
 $init_file      = "";
 $extract_vars   = "";
-$local_storage  = 0;
 
 # Hash used in GetOptions function
 # format: option => \$variable_to_set
@@ -196,7 +186,6 @@ my $result = GetOptions(
                         "i=s"      => \$init_file,
                         "st=s"     => \$state_subdir,
                         "uncmp"    => \$UNCOMP_OUTPUT,
-                        "l"        => \$local_storage,
                         "x=s"      => \$extract_vars,
                         "mspc=s"   => \$model_specific,
                        );
@@ -365,7 +354,7 @@ close(FILE);
 
 #---------------------------------------------------
 # HACK!
-if ($local_storage) {
+if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
   $uname = `uname -a`;
   if ($uname =~ /compute-(...)/) {
     $nodename = $1;
@@ -417,7 +406,7 @@ $control_dir     = $ControlModelDir;
 $logs_dir        = $LogsModelDir;
 
 # Use local directories if specified
-if ($local_storage) {
+if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
   $LOCAL_RESULTS_DIR = $ResultsModelRawDir;
   $LOCAL_RESULTS_DIR =~ s/$PROJECT_DIR/$LOCAL_PROJECT_DIR/g;
   $LOCAL_RESULTS_DIR_ASC = $ResultsModelAscDir;
@@ -433,27 +422,20 @@ if ($local_storage) {
   $state_dir       = $LOCAL_STATE_DIR;
   $control_dir     = $LOCAL_CONTROL_DIR;
   $logs_dir        = $LOCAL_LOGS_DIR;
-
-  # Clean out the directories if they exist
-  foreach $dir (
-                $LOCAL_RESULTS_DIR, $LOCAL_RESULTS_DIR_ASC,
-                $LOCAL_STATE_DIR,   $LOCAL_CONTROL_DIR,
-                $LOCAL_LOGS_DIR
-    ) {
-    if (-e $dir) {
-      $cmd = "rm -rf $dir";
-      (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
-    }
+}
+# Clean out the directories if they exist
+foreach $dir ($results_dir, $results_dir_asc) {
+  if (-e $dir) {
+    $cmd = "rm -rf $dir";
+    (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
   }
+}
 
-  # Create the directories
-  foreach $dir (
-                $LOCAL_RESULTS_DIR, $LOCAL_RESULTS_DIR_ASC,
-                $LOCAL_STATE_DIR,   $LOCAL_CONTROL_DIR,
-                $LOCAL_LOGS_DIR
-    ) {
-    (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
-  }
+# Create the directories
+foreach $dir ($results_dir, $results_dir_asc,
+              $state_dir,   $control_dir,
+              $logs_dir) {
+  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
 }
 
 # Override initial state file if specified on command line
@@ -484,7 +466,7 @@ $func_name = "wrap_run_" . $modelalias;
 #-------------------------------------------------------------------------------
 # Copy results from local directories to absolute directories, if specified
 #-------------------------------------------------------------------------------
-if ($local_storage) {
+if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
   $RESULTS_DIR     = $ResultsModelRawDir;
   $RESULTS_DIR_ASC = $ResultsModelAscDir;
   $STATE_DIR       = $StateModelDir;

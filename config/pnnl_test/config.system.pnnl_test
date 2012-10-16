@@ -9,6 +9,7 @@ SYSTEM_PERL_EXE /projects/waterpower/assim/perl/bin/perl
 SYSTEM_PERL_LIBS /projects/waterpower/assim/perl/lib/site_perl/5.12.2
 SYSTEM_NETCDF_INC /usr/software/netcdf/include
 SYSTEM_NETCDF_LIB  /usr/software/netcdf/lib
+SYSTEM_LOCAL_STORAGE false
 SYSTEM_LOCAL_ROOT /state/partition1
 SYSTEM_LOCAL_ROOT1 /state/partition1
 SYSTEM_LOCAL_ROOT2 /state/partition2

@@ -15,7 +15,6 @@ run_model_ESP.pl
     --help|h|?                  brief help message
     --man|info                  full documentation
     -uncmp                      do not compress output
-    -l                          use local storage in cluster environment
     -z                          zip and store ESP results
     -f <forcing_subdir>         forcing subdirectory
     -r <results_subdir>         results subdirectory
@@ -130,14 +129,6 @@ Arguments:
    (\").  Example: for SAC model, need to specify the directory where pe files
    are located, as: run_model.pl (blah blah) -mspc "-pe path_to_pe_files"
 
--l 
-
-   (optional) If specified, input data will be copied to a drive that is local
-   to the node that the script is being run on; results will be written to this
-   local drive, and then the results will be copied to the central drive when
-   the run is finished. This reduces network traffic on the cluster and speeds
-   up performance dramatically.
-
 -z  
 
    (optional) ZIP and move results directory into ESP storage directory when
@@ -187,7 +178,6 @@ $state_subdir   = "";
 $UNCOMP_OUTPUT  = 0;
 $init_file      = "";
 $extract_vars   = "";
-$local_storage  = "1";  ####### Local Storage ################
 $post_process   = "1";  ##### Post processing of ESP flux output
 
 # Hash used in GetOptions function
@@ -205,7 +195,6 @@ my $result = GetOptions(
                         "st=s"     => \$state_subdir,
                         "uncmp"    => \$UNCOMP_OUTPUT,
                         "z=i"      => \$esp_storage,
-                        "l"        => \$local_storage,
                         "x=s"      => \$extract_vars,
                         "mspc"     => \$model_specific,
                        );
@@ -389,7 +378,7 @@ if ($forcing_subdir =~ /retro/i) {
 
 #---------------------------------------------------
 # HACK!
-if ($local_storage) {
+if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
   $uname = `uname -a`;
   if ($uname =~ /compute-(...)/) {
     $nodename = $1;
@@ -445,7 +434,7 @@ $control_dir     = $ControlModelDir;
 $logs_dir        = $LogsFcstDir;
 
 # Log file name and control file name #### It's set up so that regardless of
-# local_storage = 1 or 0 (the Log files and control file would be stored on
+# SYSTEM_LOCAL_STORAGE (the Log files and control file would be stored on
 # /raid8)
 $LOGFILE =
   "$logs_dir/log.$PROJECT.$MODEL_NAME.ESP_run.$DATE." . "$start_year.$JOB_ID";
@@ -455,28 +444,29 @@ foreach $dir ($logs_dir, $control_dir) {
 }
 
 # Use local directories if specified
-if ($local_storage) {
+if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
   $LOCAL_RESULTS_DIR = $ResultsModelRawDir;
   $LOCAL_RESULTS_DIR =~ s/$PROJECT_DIR/$LOCAL_PROJECT_DIR/g;
   $LOCAL_RESULTS_DIR_ASC = $ResultsModelAscDir;
   $LOCAL_RESULTS_DIR_ASC =~ s/$PROJECT_DIR/$LOCAL_PROJECT_DIR/g;
-  print "Results dir is $LOCAL_RESULTS_DIR_ASC\n";
   $results_dir     = $LOCAL_RESULTS_DIR;
   $results_dir_asc = $LOCAL_RESULTS_DIR_ASC;
+}
+print "Results dir is $results_dir_asc\n";
 
-  # Clean out the directories if they exist
-  foreach $dir ($LOCAL_RESULTS_DIR, $LOCAL_RESULTS_DIR_ASC) {
-    if (-e $dir) {
-      $cmd = "rm -rf $dir";
 
-      ##(system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
-    }
+# Clean out the directories if they exist
+foreach $dir ($results_dir, $results_dir_asc) {
+  if (-e $dir) {
+    $cmd = "rm -rf $dir";
+    
+    ##(system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
   }
+} 
 
-  # Create the directories
-  foreach $dir ($LOCAL_RESULTS_DIR, $LOCAL_RESULTS_DIR_ASC) {
-    (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
-  }
+# Create the directories
+foreach $dir ($results_dir, $results_dir_asc) {
+  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
 }
 
 # Override initial state file if specified on command line

@@ -199,13 +199,15 @@ while ($METYR <= $FEYR) {  # forecast year loop
       Add_Delta_Days($Cyr, $Cmon, $Cday, $FLEN);
     $ROUT_END_DATE = sprintf "%04d-%02d-%02d", $Rout_Eyr, $Rout_Emon,
       $Rout_Eday;
+    my $STATE_DATE = sprintf "%04d-%02d-%02d", $STATE_YR, $STATE_MON,
+      $STATE_DAY;
 
     # HACK to sidestep clutting the results directory. See issue 27.
     # Bart - Fri Sep 28 2012
     $cmd =
       "$TOOLS_DIR/run_rout_model.pl -m $MODEL -p $PROJECT " .
       "-f curr_spinup -r esp/esp.$datestr.$FORC_START_DATE " .
-      "-s $ROUT_START_DATE -e $ROUT_END_DATE -i $datestr " .
+      "-s $ROUT_START_DATE -e $ROUT_END_DATE -i $STATE_DATE " .
       "-en $METYR -z $ESP_STORAGE >& $LogFile.tmp";
     print "$cmd\n";
     (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
