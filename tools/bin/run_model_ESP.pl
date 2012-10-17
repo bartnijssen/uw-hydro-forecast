@@ -168,6 +168,8 @@ use POSIX qw(strftime);
 # Model-specific subroutines
 require "$TOOLS_DIR/model_specific.pl";
 
+$| = 1;
+
 #-------------------------------------------------------------------------------
 # Parse the command line
 #-------------------------------------------------------------------------------
@@ -343,7 +345,7 @@ $ForcingNCPrefix      = $var_info_project{"FORCING_NC_PREFIX"};
 $ESP = $var_info_project{"ESP"};
 
 # ESP FLUXOUTPUT storage directory
-$STORDIR = "$ESP/$modelalias/$FCST_DATE";
+$STORDIR = "$ESP/$modelalias/${FCST_DATE}";
 print "STORE dir is $STORDIR\n";
 
 # Save relevant model info in variables
@@ -423,8 +425,8 @@ $logs_dir        = $LogsFcstDir;
 # SYSTEM_LOCAL_STORAGE (the Log files and control file would be stored on
 # /raid8)
 $LOGFILE =
-  "$logs_dir/log.$PROJECT.$MODEL_NAME.ESP_run.$DATE." . "$start_year.$JOB_ID";
-$controlfile = "$control_dir/inp.ESP.$DATE.$start_year";
+  "$logs_dir/log.$PROJECT.$MODEL_NAME.ESP_run.${FCST_DATE}." . "$start_year.$JOB_ID";
+$controlfile = "$control_dir/inp.ESP.${FCST_DATE}.$start_year";
 foreach $dir ($logs_dir, $control_dir) {
   (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
 }
@@ -443,6 +445,7 @@ print "Results dir is $results_dir_asc\n";
 
 # Clean out the directories if they exist
 foreach $dir ($results_dir, $results_dir_asc) {
+  print "=====> Deleting $dir\n";
   if (-e $dir) {
     $cmd = "rm -rf $dir";
     
@@ -457,9 +460,9 @@ foreach $dir ($results_dir, $results_dir_asc) {
 
 # Override initial state file if specified on command line
 if ($modelalias eq "vic") {
-  $init_file = "state_$DATE";
+  $init_file = "state_${FCST_DATE}";
 } else {
-  $init_file = "state.$DATE.nc";
+  $init_file = "state.${FCST_DATE}.nc";
 }
 if ($init_file) {
   if (!-e $init_file) {
@@ -504,6 +507,8 @@ if ($post_process == 1) {
     "$PROJECT $TOOLS_DIR $STORDIR $results_dir_asc " .
     "$STORDIR/MON.$start_year $Flist >& $LOGFILE.tmp; " .
     "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+
+  print "======> $cmd\n";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
     die "$0: ERROR: $cmd failed: $status\n";
 
@@ -515,6 +520,7 @@ if ($post_process == 1) {
   $cmd =
     "mv  $STORDIR/MON.$start_year ./MON.$PROJECT.$start_year " .
     ">& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+  print "======> $cmd\n";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
     die "$0: ERROR: $cmd failed: $status\n >& $LOGFILE.tmp; " .
     "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
@@ -522,8 +528,10 @@ if ($post_process == 1) {
     "tar -czf $STORDIR/monthly_flux/fluxes.mon.$start_year.tar.gz " .
     "./MON.$PROJECT.$start_year >& $LOGFILE.tmp; cat $LOGFILE.tmp " .
     ">> $LOGFILE; rm $LOGFILE.tmp";
+  print "======> $cmd\n";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
     die "$0: ERROR: $cmd failed: $status\n";
+  print "======> Deleting ./MON.$PROJECT.$start_year\n";
   $cmd =
     "rm -rf ./MON.$PROJECT.$start_year >& $LOGFILE.tmp; " .
     "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
@@ -539,7 +547,7 @@ if ($esp_storage == 1) {
     $dir = "$STORDIR/dly_flux";
     (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
   }
-  $LOGFILE = "$logs_dir/log.$MODEL_NAME.ESP.$DATE.$start_year";
+  $LOGFILE = "$logs_dir/log.$MODEL_NAME.ESP.$FSCT_DATE.$start_year";
   $cmd =
     "mv $results_dir_asc ./ESP.$PROJECT.$start_year >& $LOGFILE.tmp; " .
     "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
@@ -551,6 +559,7 @@ if ($esp_storage == 1) {
     "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
     die "$0: ERROR: $cmd failed: $status\n";
+  print "======> Deleting ./ESP.$PROJECT.$start_year\n";
   $cmd =
     "rm -rf ./ESP.$PROJECT.$start_year >& $LOGFILE.tmp; " .
     "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
@@ -558,6 +567,7 @@ if ($esp_storage == 1) {
     die "$0: ERROR: $cmd failed: $status\n";
 
   # Remove results directory esp for model which produce nc output
+  print "======> Deleting $local_root\n";
   $cmd = "rm -rf $local_root";
   print "$cmd\n";
 

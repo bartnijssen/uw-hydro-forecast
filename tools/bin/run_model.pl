@@ -409,7 +409,15 @@ if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
   $state_dir       = $LOCAL_STATE_DIR;
   $control_dir     = $LOCAL_CONTROL_DIR;
   $logs_dir        = $LOCAL_LOGS_DIR;
+  # Clean out the directories if they exist
+  foreach $dir ($state_dir, $control_dir, $logs_dir) {
+    if (-e $dir) {
+      $cmd = "rm -rf $dir";
+      (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+    }
+  }
 }
+
 # Clean out the directories if they exist
 foreach $dir ($results_dir, $results_dir_asc) {
   if (-e $dir) {
@@ -459,9 +467,7 @@ if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
   $STATE_DIR       = $StateModelDir;
   $CONTROL_DIR     = $ControlModelDir;
   $LOGS_DIR        = $LogsModelDir;
-  $cmd             = "gzip $LOCAL_LOGS_DIR/*";
-  (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
+
   foreach $prefix (@output_prefixes) {
     $cmd =
       "cp --no-dereference --preserve=link $LOCAL_RESULTS_DIR/$prefix* " .
@@ -472,7 +478,10 @@ if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
   $cmd = "cp -r $LOCAL_RESULTS_DIR_ASC $RESULTS_DIR_ASC/../";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
     die "$0: ERROR: $cmd failed: $status\n";
-  $cmd = "cp --no-dereference --preserve=link $LOCAL_STATE_DIR/* $state_dir/";
+  $cmd = "cp --no-dereference --preserve=link $LOCAL_CONTROL_DIR/* $CONTROL_DIR/";
+  (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
+    die "$0: ERROR: $cmd failed: $status\n";
+  $cmd = "cp --no-dereference --preserve=link $LOCAL_STATE_DIR/* $STATE_DIR/";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
     die "$0: ERROR: $cmd failed: $status\n";
   $cmd = "cp --no-dereference --preserve=link $LOCAL_LOGS_DIR/* $LOGS_DIR/";
@@ -480,7 +489,7 @@ if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
     die "$0: ERROR: $cmd failed: $status\n";
   $cmd =
     "rm -rf $LOCAL_RESULTS_DIR $LOCAL_RESULTS_DIR_ASC $LOCAL_STATE_DIR " .
-    "$LOCAL_CONTROL_DIR $LOCAL_LOGS_DIR";
+      "$LOCAL_CONTROL_DIR $LOCAL_LOGS_DIR";
   (($status = &shell_cmd($cmd)) == 0) or
     die "$0: ERROR: $cmd failed: $status\n";
 }

@@ -221,6 +221,9 @@ isdate(@enddate) or die "Not a valid end date: $end_date\n";
 Delta_Days(@startdate, @enddate) > 0 or
   die "$0: ERROR: start date is later than end date.\n";
 
+($start_year, $start_month, $start_day) = @startdate; # route_specific.pl
+($end_year, $end_month, $end_day) = @enddate; # route_specific.pl
+
 # Default values of $spinup_subdir and results_subdir
 if ($forcing_subdir) {
   $spinup_subdir = $forcing_subdir;
@@ -410,8 +413,8 @@ $results_dir_asc = $ResultsModelAscDir;
 $control_dir     = $ControlModelDir;
 $logs_dir        = $LogsModelDir;
 print "LOG Dir is $logs_dir and control dir is $control_dir\n";
-$LOGFILE     = "$logs_dir/log.rout.$PROJECT.$MODEL_NAME.$DATE.$ENS_YR";
-$controlfile = "$control_dir/inp.rout.$MODEL_NAME.$DATE.$ENS_YR";
+$LOGFILE     = "$logs_dir/log.rout.$PROJECT.$MODEL_NAME.$FCST_DATE.$ENS_YR";
+$controlfile = "$control_dir/inp.rout.$MODEL_NAME.$FCST_DATE.$ENS_YR";
 
 # Use local directories if specified
 if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
@@ -449,7 +452,7 @@ foreach $dir ($Routdir, $logs_dir) {
   (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
 }
 
-$LOGFILE = "$LogsModelDir/log.rout.$PROJECT.$MODEL_NAME.$DATE.$ENS_YR";
+$LOGFILE = "$LogsModelDir/log.rout.$PROJECT.$MODEL_NAME.$FCST_DATE.$ENS_YR";
 
 ###### if ESP_STORAGE = 1
 if ($esp_storage) {

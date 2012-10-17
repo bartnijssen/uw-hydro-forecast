@@ -142,6 +142,7 @@ $ESP_START_TIME = localtime;
 while ($METYR <= $FEYR) {  # forecast year loop
   $SDAY = $Cday;
   $FORC_START_DATE = sprintf "%04d-%02d-%02d", $METYR, $Cmon, $SDAY;
+  $FORC_START_DATE_STR = sprintf "%04d%02d%02d", $METYR, $Cmon, $SDAY;
 
   # move forward for FLEN days
   ($Eyr, $Emon, $Eday) = Add_Delta_Days($METYR, $Cmon, $SDAY, $FLEN);
@@ -166,7 +167,7 @@ while ($METYR <= $FEYR) {  # forecast year loop
     $ESP_STORAGE = 1 - $RUN_ROUT;
     $cmd =
       "$TOOLS_DIR/run_model_ESP.pl -m $MODEL -p $PROJECT -f retro " .
-      "-r esp/esp.$datestr.$FORC_START_DATE -s $FORC_START_DATE " .
+      "-r esp/esp.$datestr.${FORC_START_DATE_STR} -s $FORC_START_DATE " .
       "-e $FORC_UPD_END_DATE -st curr_spinup -i $datestr -z $ESP_STORAGE " .
       ">& $LogFile.tmp";
     print "$cmd\n";
@@ -206,7 +207,7 @@ while ($METYR <= $FEYR) {  # forecast year loop
     # Bart - Fri Sep 28 2012
     $cmd =
       "$TOOLS_DIR/run_rout_model.pl -m $MODEL -p $PROJECT " .
-      "-f curr_spinup -r esp/esp.$datestr.$FORC_START_DATE " .
+      "-f curr_spinup -r esp/esp.$datestr.${FORC_START_DATE_STR} " .
       "-s $ROUT_START_DATE -e $ROUT_END_DATE -i $STATE_DATE " .
       "-en $METYR -z $ESP_STORAGE >& $LogFile.tmp";
     print "$cmd\n";
