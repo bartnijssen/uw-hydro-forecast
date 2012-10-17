@@ -346,7 +346,6 @@ $ESP = $var_info_project{"ESP"};
 
 # ESP FLUXOUTPUT storage directory
 $STORDIR = "$ESP/$modelalias/${FCST_DATE}";
-print "STORE dir is $STORDIR\n";
 
 # Save relevant model info in variables
 $MODEL_SRC_DIR      = $var_info_model{"MODEL_SRC_DIR"};
@@ -386,7 +385,6 @@ if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
   $LOCAL_PROJECT_DIR = $var_info_project{"LOCAL_PROJECT_DIR"};
   $replace           = "<SYSTEM_ROOT>";
   $LOCAL_PROJECT_DIR =~ s/$replace/$local_root/;
-  print "$0: LOCAL_PROJECT_DIR: $LOCAL_PROJECT_DIR\n";
 }
 
 #---------------------------------------------------
@@ -440,12 +438,9 @@ if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
   $results_dir     = $LOCAL_RESULTS_DIR;
   $results_dir_asc = $LOCAL_RESULTS_DIR_ASC;
 }
-print "Results dir is $results_dir_asc\n";
-
 
 # Clean out the directories if they exist
 foreach $dir ($results_dir, $results_dir_asc) {
-  print "=====> Deleting $dir\n";
   if (-e $dir) {
     $cmd = "rm -rf $dir";
     
@@ -501,14 +496,14 @@ if (!-e "$STORDIR/monthly_flux") ### Creating Storage directory for monthly flux
 if ($post_process == 1) {
 
   #### The script which converts daily ESP flux output into monthly and also
-  #### extracts variable for spatial plots
+  #### extracts variable for spatial plots. Note that the awkward command syntax
+  #### is needed to make the csh script run properly in the background
   $cmd =
-    "$TOOLS_DIR/xtr_monthly_ts.scr $start_year " .
+    "($TOOLS_DIR/xtr_monthly_ts.scr $start_year " .
     "$PROJECT $TOOLS_DIR $STORDIR $results_dir_asc " .
     "$STORDIR/MON.$start_year $Flist >& $LOGFILE.tmp; " .
-    "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+    "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp)&";
 
-  print "======> $cmd\n";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
     die "$0: ERROR: $cmd failed: $status\n";
 
@@ -520,7 +515,6 @@ if ($post_process == 1) {
   $cmd =
     "mv  $STORDIR/MON.$start_year ./MON.$PROJECT.$start_year " .
     ">& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
-  print "======> $cmd\n";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
     die "$0: ERROR: $cmd failed: $status\n >& $LOGFILE.tmp; " .
     "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
@@ -528,10 +522,8 @@ if ($post_process == 1) {
     "tar -czf $STORDIR/monthly_flux/fluxes.mon.$start_year.tar.gz " .
     "./MON.$PROJECT.$start_year >& $LOGFILE.tmp; cat $LOGFILE.tmp " .
     ">> $LOGFILE; rm $LOGFILE.tmp";
-  print "======> $cmd\n";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
     die "$0: ERROR: $cmd failed: $status\n";
-  print "======> Deleting ./MON.$PROJECT.$start_year\n";
   $cmd =
     "rm -rf ./MON.$PROJECT.$start_year >& $LOGFILE.tmp; " .
     "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
@@ -559,7 +551,6 @@ if ($esp_storage == 1) {
     "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
     die "$0: ERROR: $cmd failed: $status\n";
-  print "======> Deleting ./ESP.$PROJECT.$start_year\n";
   $cmd =
     "rm -rf ./ESP.$PROJECT.$start_year >& $LOGFILE.tmp; " .
     "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
@@ -567,9 +558,7 @@ if ($esp_storage == 1) {
     die "$0: ERROR: $cmd failed: $status\n";
 
   # Remove results directory esp for model which produce nc output
-  print "======> Deleting $local_root\n";
   $cmd = "rm -rf $local_root";
-  print "$cmd\n";
 
   #(($status = &shell_cmd($cmd)) == 0)
   # or die "$0: ERROR: $cmd failed: $status\n";
