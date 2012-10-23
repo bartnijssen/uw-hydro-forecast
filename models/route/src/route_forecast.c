@@ -180,11 +180,11 @@ int main (int argc, char *argv[])
 
   if(argc != 2){
       printf("USAGE: %s <infile>\n", argv[0]);
-   exit(0);
+   exit(EXIT_FAILURE);
   }
   if((fp = fopen(argv[1], "r")) == NULL) {
    printf("Cannot open %s\n",argv[1]);
-   exit(1);
+   exit(EXIT_FAILURE);
   }
 
   /* Find number of rows and cols in grid of interest */
@@ -315,7 +315,7 @@ int main (int argc, char *argv[])
       printf("Spinup starts: %4d %2d %2d,\n", spinup_start.year, spinup_start.month, spinup_start.day);
       printf("Output starts: %4d %2d %2d.\n", out_start.year, out_start.month, out_start.day);
       printf("Change these dates and restart.\n\n");
-      exit(-1);
+      exit(EXIT_FAILURE);
     }
   }
   else {
@@ -325,7 +325,7 @@ int main (int argc, char *argv[])
       printf("Input  starts: %4d %2d %2d,\n", inp_start.year, inp_start.month, inp_start.day);
       printf("Output starts: %4d %2d %2d.\n", out_start.year, out_start.month, out_start.day);
       printf("Change these dates and restart.\n\n");
-      exit(-1);
+      exit(EXIT_FAILURE);
     }
     memcpy((void *)&spinup_start, (void *)&inp_start, sizeof(DATE)); // use input start day for spinup (used to calculate day1)
   }
@@ -336,7 +336,7 @@ int main (int argc, char *argv[])
 //    printf("Input  stops: %4d %2d,\n", stop_year, stop_month);
     printf("Output stops: %4d %2d %2d.\n", out_stop.year, out_stop.month, out_stop.day);
     printf("Change these dates and restart.\n\n");
-    exit(-1);
+    exit(EXIT_FAILURE);
   }
 
 /* Allocate memory for BASEFLOW, RUNOFF and FLOW */
@@ -404,7 +404,7 @@ int main (int argc, char *argv[])
   free(CATCHMENT);
   
   printf("route program finished.\n");
-  return(1);
+  return(EXIT_SUCCESS);
 }
 /***************************************************/
 /* CalculateDaysInYear                             */
@@ -451,7 +451,7 @@ void FindRowsCols(char *filename,
 
   if((fp = fopen(filename, "r")) == NULL) {
     printf("Cannot open %s\n",filename);
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 
   fscanf(fp,"%s %d", dummy, &(*ncols)); 
@@ -466,7 +466,7 @@ void FindRowsCols(char *filename,
   if((*nrows)>MAXROWS || (*ncols)>MAXCOLS){
    printf("Incorrect dimensions: Reset nrow and ncol in main to %d, %d\n",
      (*nrows), (*ncols));
-   exit(0);
+   exit(EXIT_FAILURE);
    }
 }
 /*************************************/
@@ -641,7 +641,7 @@ void MakeGridUH(ARC **BASIN,
   strcat(name,".uh_s2");
   if((fp = fopen(name, "w")) == NULL) {
     printf("Cannot open %s\n",name);
-    exit(1);
+    exit(EXIT_FAILURE);
   }
   else printf("File opened for writing: %s\n",name);
 
@@ -772,7 +772,7 @@ void ReadDiffusion(char *filename,
 
   if((fp = fopen(filename, "r")) == NULL) {
     printf("Cannot open %s\n",filename);
-    exit(1);
+    exit(EXIT_FAILURE);
   }
   else printf("File opened %s\n",filename);
 
@@ -881,7 +881,7 @@ void ReadFraction(char *filename,
 
   if((fp = fopen(filename, "r")) == NULL) {
     printf("Cannot open %s\n",filename);
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 
   for(i=0;i<6;i++)
@@ -938,7 +938,7 @@ void ReadUHBox(char *filename,
   for(i=1;i<=number_of_cells;i++) { 
     if((fp = fopen(filename, "r")) == NULL) {
       printf("Cannot open %s\n",filename);
-      exit(1);
+      exit(EXIT_FAILURE);
     }
     for(j=1;j<=12;j++) 
       fscanf(fp,"%*f %f",&UH_BOX[i][j]); 
@@ -971,7 +971,7 @@ void ReadStartStopDate(char *data, DATE *start_date, DATE *stop_date, char *msg)
       printf("should be either: <start yr> <month> <day> <stop yr> <month> <day>\n");
       printf("              or: <start yr> <month> <stop yr> <month>\n");
       printf("Change the dates and restart.\n");
-      exit(-1);  
+      exit(EXIT_FAILURE);  
   }
 }
 /*********************************/
@@ -987,7 +987,7 @@ void ReadStation(char *filename,
 
   if((fp = fopen(filename, "r")) == NULL) {
     printf("Cannot open %s\n",filename);
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 
   i=1;
@@ -1016,7 +1016,7 @@ void ReadVelocity(char *filename,
 
   if((fp = fopen(filename, "r")) == NULL) {
     printf("Cannot open %s\n",filename);
-    exit(1);
+    exit(EXIT_FAILURE);
   }
   else printf("File opened %s\n",filename);
 
@@ -1045,7 +1045,7 @@ void ReadXmask(char *filename,
 
   if((fp = fopen(filename, "r")) == NULL) {
     printf("Cannot open %s\n",filename);
-    exit(1);
+    exit(EXIT_FAILURE);
   }
   else printf("File opened %s\n",filename);
 
@@ -1126,12 +1126,12 @@ void WriteData(float *FLOW,
   sprintf(filename,"%s%.5s.day",outpath,stn_name);
   if((fp = fopen(filename, "wt")) == NULL) {
     printf("Cannot open %s\n",filename);
-    exit(-1);
+    exit(EXIT_FAILURE);
   }
   sprintf(filename,"%s%.5s.month",outpath,stn_name);
   if((fp_m = fopen(filename, "wt")) == NULL) {
     printf("Cannot open %s\n",filename);
-    exit(-1);
+    exit(EXIT_FAILURE);
   }
 
   yr = date->year; mn = date->month; day = date->day;
@@ -1169,7 +1169,7 @@ void WriteData(float *FLOW,
   sprintf(filename,"%s%.5s.year",outpath,stn_name);
   if((fp = fopen(filename, "w")) == NULL) {
     printf("Cannot open %s\n",filename);
-    exit(-1);
+    exit(EXIT_FAILURE);
   }
   for (mn = 1; mn < 13; mn ++) fprintf(fp, "%2d %f\n", mn, yearly_mean[mn] / days_counts[mn]);
   fclose(fp);    
