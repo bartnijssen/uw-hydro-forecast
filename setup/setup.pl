@@ -106,6 +106,21 @@ This will compile the tool and install the executable in the right directory
 (specified in the config.tool.<tool> file. At this time, additional manual steps
 may be required.
 
+=head1 LOG
+
+Logging configuration files in the runtime config directory can be changed
+directly to change the logging behavior of the system. The log4perl logging
+configuration file that is used is identified as SYSTEM_LOG_CONFIG in the
+config.system.<system> file. There is also a SYSTEM_LOG_SOCKET_CONFIG if you are
+logging to a socket. The setup for the logging only needs to be run if you make
+a new logging config file with system variables that need to be expanded
+properly (i.e. the file needs to be copied from the code to the runtime
+directory). In that case, the file with the name config.log.<log> will be
+copied. This means that your existing logging configuration will be overwritten.
+
+ * Create a file config.log.<log> in config (user is responsible for this)
+ * Run setup/setup.pl --log=log --system=<system>
+
 =cut
 
 use strict;
@@ -142,13 +157,15 @@ use simma_util;
 #                                     MAIN                                     #
 ################################################################################
 {
-  my ($system, $project, $model, $tool) = processcommandline();
+  my ($system, $project, $model, $tool, $log) = processcommandline();
   if (defined $project) {
     setup_project($system, $project);
   } elsif (defined $model) {
     setup_model($system, $model);
   } elsif (defined $tool) {
     setup_tool($system, $tool);
+  } elsif (defined $log) {
+    setup_tool($system, $log);
   } else {
     setup_system($system);
   }
@@ -278,6 +295,7 @@ sub modify_source {
 ############################## processcommandline ##############################
 sub processcommandline {
   my $help;
+  my $log;
   my $man;
   my $model;
   my $project;
@@ -292,7 +310,8 @@ sub processcommandline {
     "system=s"  => \$system,
     "project=s" => \$project,
     "model=s"   => \$model,
-    "tool=s"    => \$tool
+    "tool=s"    => \$tool,
+    "log=s"    => \$log
                          );
   pod2usage(-verbose => 2, -exitstatus => 0) if $man;
   pod2usage(-verbose => 1, -exitstatus => 0) if $help;
@@ -316,19 +335,26 @@ sub processcommandline {
     pod2usage(-verbose    => 1,
               -exitstatus => 1);
   }
+  if (defined $log and not defined $system) {
+    warn "Error: need to define system when defining log\n";
+    pod2usage(-verbose    => 1,
+              -exitstatus => 1);
+  }
   my $total = 0;
   $total += 1 if defined $project;
   $total += 1 if defined $model;
   $total += 1 if defined $tool;
+  $total += 1 if defined $log;
   pod2usage(-verbose => 1, -exitstatus => 1)
     if not defined $system and
       $total == 0;
   if ($total > 1) {
-    warn "\nError: Cannot specfiy more  than one project, model or tool\n\n";
+    warn "\nError: Cannot specfiy more than one project, model, tool or " .
+      "log\n\n";
     pod2usage(-verbose    => 1,
               -exitstatus => 1);
   }
-  return ($system, $project, $model, $tool);
+  return ($system, $project, $model, $tool, $log);
 }
 
 ############################## read_configuration ##############################
@@ -364,6 +390,20 @@ sub sed_file {
     print "Replaced tags: $src ==> $target\n" if $verbose and $changed;
     print "Copied: $src ==> $target\n" if $verbose and not $changed;
   }
+}
+
+################################## setup_log ###################################
+sub setup_log {
+  my ($system, $log) = @_;
+  print "Setting up log: $log in $system ...\n" if $quiet;
+  my %sysinfo    = 
+    read_configuration("$basepath/config/$system/config.system.$system");
+  my %systags    = 
+    get_tags("$basepath/config/$system/config.system.$system", "SYSTEM");
+  my $runtime    = $sysinfo{SYSTEM_INSTALLDIR};
+  my $srcfile    = "$basepath/config/$system/config.log.$log";
+  my $targetfile = "$runtime/config/config.log.$log";
+  sed_file($srcfile, $targetfile, \%systags);
 }
 
 ################################## setup_model #################################
@@ -541,9 +581,19 @@ sub setup_system {
     die "Cannot copy $srcfile ==> $targetfile: $!\n";
   print "Copied: $srcfile ==> $targetfile\n" if $verbose;
 
+  # setup logs
+  print "Setting up logs ...\n" if $quiet;
+  my $dirname = "$basepath/config/$system";
+  opendir(DIR, "$dirname") or die "Cannot opendir $dirname: $!";
+  my @loglist = grep /^config\.log/, readdir(DIR);
+  closedir(DIR);
+  map {$_ =~ s/config\.log\.//} @loglist;
+  map {print "Logging methods to configure: $_\n"} @loglist if $verbose;
+  map {setup_log($system, $_)} @loglist;
+
   # setup tools
   print "Setting up tools ...\n" if $quiet;
-  my $dirname = "$basepath/config/$system";
+  $dirname = "$basepath/config/$system";
   opendir(DIR, "$dirname") or die "Cannot opendir $dirname: $!";
   my @toollist = grep /^config\.tool/, readdir(DIR);
   closedir(DIR);

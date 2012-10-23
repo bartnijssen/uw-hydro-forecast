@@ -1,0 +1,6 @@
+log4perl.logger                    = <SYSTEM_LOG_LEVEL>, Socket
+log4perl.appender.Socket           = Log::Log4perl::Appender::Socket
+log4perl.appender.Socket.PeerAddr  = <SYSTEM_LOG_SERVER_HOST>
+log4perl.appender.Socket.PeerPort  = <SYSTEM_LOG_SERVER_PORT>
+log4perl.appender.Socket.layout    = PatternLayout
+log4perl.appender.Socket.layout.ConversionPattern = %d %H[%P]: %p (%F:%L)> %m%n

@@ -1,0 +1,8 @@
+log4perl.logger                        = <SYSTEM_LOG_LEVEL>, Logfile
+log4perl.appender.Logfile              = Log::Log4perl::Appender::File
+log4perl.appender.Logfile.filename     = <SYSTEM_LOG_FILE>
+log4perl.appender.Logfile.mode         = append
+log4perl.appender.Logfile.autoflush    = 1
+log4perl.appender.Logfile.syswrite     = 1
+log4perl.appender.Logfile.layout       = PatternLayout
+log4perl.appender.Logfile.layout.ConversionPattern = %d %H[%P]: %p (%F:%L)> %m%n
