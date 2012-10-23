@@ -27,9 +27,10 @@ The leap day is inserted by taking the record of Feb 28 from a leap year
 and repeating it.
 
 =cut
-
+use Log::Log4perl qw(:easy);
 use Pod::Usage;
 use Getopt::Long;
+Log::Log4perl->init('<SYSTEM_LOG_CONFIG>');
 my $result = GetOptions("help|h|?" => \$help,
                         "man|info" => \$man);
 pod2usage(-verbose => 2, -exitstatus => 0) if $man;
@@ -44,7 +45,7 @@ pod2usage(-verbose => 1, -exitstatus => 1)
 @month_days = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
 @cols_to_zero = split /,/, $col_list;
 $delta_days = 0;
-open(FILE, $file) or die "$0: ERROR: cannot open $file for reading\n";
+open(FILE, $file) or LOGDIE("Cannot open $file for reading");
 
 foreach (<FILE>) {
   chomp;

@@ -46,8 +46,10 @@ precede start of data.
  and others since then
 
 =cut
+
 #-------------------------------------------------------------------------------
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Log::Log4perl qw(:easy);
 use Pod::Usage;
 use Getopt::Long;
 
@@ -68,6 +70,7 @@ use Date::Calc qw(Delta_Days Add_Delta_Days Add_Delta_YM);
 #-------------------------------------------------------------------------------
 # Parse the command line
 #-------------------------------------------------------------------------------
+Log::Log4perl->init('<SYSTEM_LOG_CONFIG>');
 my $result = GetOptions("help|h|?" => \$help,
                         "man|info" => \$man);
 pod2usage(-verbose => 2, -exitstatus => 0) if $man;
@@ -152,11 +155,11 @@ $Outfl = "$OUTD/ro.$PROJECT_UC.$MODEL.qnt.xyzz";
 # Check for directories; create if necessary & possible
 foreach $dir ($RTDir, $NearRTDir, $RetroDir) {
   if (!-d $dir) {
-    die "$0: ERROR: directory $dir not found\n";
+    LOGDIE("directory $dir not found");
   }
 }
 foreach $dir ($OUTD) {
-  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
+  (&make_dir($dir) == 0) or LOGDIE("Cannot create path $dir: $!");
 }
 
 # read file/station list ----------------------
@@ -167,14 +170,15 @@ foreach (@cell) {
 }
 
 # check adequacy of data records ---------------
-open(FL, "<$RetroDir/$cell[0]") or die "can't open $RetroDir/$cell[0]: $!\n";
+open(FL, "<$RetroDir/$cell[0]") or LOGDIE("can't open $RetroDir/$cell[0]: $!");
 $r = 0;
 while (<FL>) {
   ($yr[$r], $mo[$r], $dy[$r], @tmp) = split;
   $r++;
 }
 close(FL);
-open(FL, "<$NearRTDir/$cell[0]") or die "can't open $NearRTDir/$cell[0]: $!\n";
+open(FL, "<$NearRTDir/$cell[0]") or
+  LOGDIE("can't open $NearRTDir/$cell[0]: $!");
 while (<FL>) {
   ($yr[$r], $mo[$r], $dy[$r], @tmp) = split;
   $r++;
@@ -182,7 +186,8 @@ while (<FL>) {
 close(FL);
 $rt_skip = 0; # counter to see if it's necesary to skip days from overlapping rt
               # archive
-open(FL, "<$RTDir/$cell[0]") or die "can't open $RTDir/$cell[0]: $!\n";
+open(FL, "<$RTDir/$cell[0]") or
+  LOGDIE("can't open $RTDir/$cell[0]: $!");
 while (<FL>) {
   ($yy, $mm, $dd, @tmp) = split;
   if (Delta_Days($yr[$r - 1], $mo[$r - 1], $dy[$r - 1], $yy, $mm, $dd) < 1) {
@@ -202,16 +207,16 @@ $days_needed = Delta_Days($yr[0], $mo[0], $dy[0],
                           $mo[$datarecs - 1],
                           $dy[$datarecs - 1]) + 1;
 if ($datarecs != $days_needed) {
-  die "ERROR: read $datarecs days but period from $yr[0]$mo[0]$dy[0] to " .
-    "$yr[$datarecs-1]$mo[$datarecs-1]$dy[$datarecs-1] should have " .
-    "$days_needed days\n";
+  LOGDIE("read $datarecs days but period from $yr[0]$mo[0]$dy[0] to " .
+         "$yr[$datarecs-1]$mo[$datarecs-1]$dy[$datarecs-1] should have " .
+         "$days_needed days");
 } else {
-  print "read $datarecs days for period from $yr[0]$mo[0]$dy[0] to " .
-    "$yr[$datarecs-1]$mo[$datarecs-1]$dy[$datarecs-1]\n";
+  DEBUG("read $datarecs days for period from $yr[0]$mo[0]$dy[0] to " .
+        "$yr[$datarecs-1]$mo[$datarecs-1]$dy[$datarecs-1]");
 }
 
 # == first make matrix of start & end dates for all periods desired
-print "making matrix of start & end records for accumulations periods\n";
+DEBUG("making matrix of start & end records for accumulations periods");
 
 # calculate records bounding CLIM period accumulations ------------- use zero
 # element of @recbnd for end record of period; save last element for WY
@@ -225,8 +230,8 @@ for ($y = $Clim_Syr ; $y <= $Clim_Eyr ; $y++) {
     ($tyr, $tmo, $tdy) = Add_Delta_Days($ty, $tm, $td, 1);
     $recbnd[$ny][$p] = Delta_Days($yr0, $mon0, $day0, $tyr, $tmo, $tdy);
     if ($recbnd[$ny][$p] < 0) {
-      die "ERROR:  accum. period starts before data -- " .
-        "make climatology period later\n";
+      LOGDIE("accum. period starts before data -- " .
+             "make climatology period later");
     }
   }
 
@@ -234,14 +239,14 @@ for ($y = $Clim_Syr ; $y <= $Clim_Eyr ; $y++) {
   if ($Cmon < 10) {
     $recbnd[$ny][$p] = Delta_Days($yr0, $mon0, $day0, $y - 1, 10, 1);
     if ($recbnd[$ny][$p] < 0) {
-      die "ERROR:  accum. period starts before data -- " .
-        "make climatology period later\n";
+      LOGDIE("accum. period starts before data -- " .
+             "make climatology period later");
     }
   } else {
     $recbnd[$ny][$p] = Delta_Days($yr0, $mon0, $day0, $y, 10, 1);
     if ($recbnd[$ny][$p] < 0) {
-      die "ERROR:  accum. period starts before data -- " .
-        "make climatology period later\n";
+      LOGDIE("accum. period starts before data -- " .
+             "make climatology period later");
     }
   }
   $ny++;
@@ -255,8 +260,8 @@ for ($p = 1 ; $p <= @PER ; $p++) {
   ($tyr, $tmo, $tdy) = Add_Delta_Days($ty, $tm, $td, 1);
   $recbnd[$ny][$p] = Delta_Days($yr0, $mon0, $day0, $tyr, $tmo, $tdy);
   if ($recbnd[$ny][$p] < 0) {
-    die "ERROR:  accum. period starts before data -- " .
-      "make climatology period later\n";
+    LOGDIE(
+      "accum. period starts before data -- " . "make climatology period later");
   }
 }
 
@@ -264,39 +269,24 @@ for ($p = 1 ; $p <= @PER ; $p++) {
 if ($Cmon < 10) {
   $recbnd[$ny][$p] = Delta_Days($yr0, $mon0, $day0, $Cyr - 1, 10, 1);
   if ($recbnd[$ny][$p] < 0) {
-    die "ERROR:  accum. period starts before data -- " .
-      "make climatology period later\n";
+    LOGDIE(
+      "accum. period starts before data -- " . "make climatology period later");
   }
 } else {
   $recbnd[$ny][$p] = Delta_Days($yr0, $mon0, $day0, $Cyr, 10, 1);
   if ($recbnd[$ny][$p] < 0) {
-    die "ERROR:  accum. period starts before data -- " .
-      "make climatology period later\n";
+    LOGDIE(
+      "accum. period starts before data -- " . "make climatology period later");
   }
 }
 $curr_ndx = $ny;  # array index of current record boundaries for periods
 
-# check matrix by printing out
-#for($y=0;$y<$ny;$y++) {
-#  printf "%d %d\t",$Clim_Syr+$y, $recbnd[$y][0];
-#  for($p=1;$p<=@PER+1;$p++) {
-#    printf "%d\t",$recbnd[$y][0]-$recbnd[$y][$p]+1;
-#  }
-#  printf "\n";
-#}
-#printf "%d %d\t",$Cyr, $recbnd[$y][0];
-#for($p=1;$p<=@PER+1;$p++) {
-#  printf "%d\t",$recbnd[$y][0]-$recbnd[$y][$p]+1;
-#}
-#printf "\n";
 # %%%%%%%%%%%%%% loop through cells/stations %%%%%%%%%%%%%%%%%%%%%%%%
 @qnt       = ();  # initialize array to store data for a write at one time
 @min_count = ();
 @max_count = ();
 for ($c = 0 ; $c < @cell ; $c++) {
-
-  #for($c=0;$c<10;$c++) {
-  print "$c $cell[$c]\n";
+  DEBUG("$c $cell[$c]");
   @data = @accum = ();
   Read_Runoff_One_Cell($cell[$c], $rt_skip, \@data);  # call subr. for getting
                                                       # data only
@@ -336,23 +326,20 @@ for ($c = 0 ; $c < @cell ; $c++) {
     if ($qnt[$c][$p] == $max_p) {
       $max_count[$p]++;
     }
-
-    #    print STDERR "cell $c period $p qnt $qnt[$c][$p]\n";
+    TRACE("cell $c period $p qnt $qnt[$c][$p]");
   }  # end percentile period loop
 }  # end looping through stations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 # Quick check on data quality
 for ($p = 0 ; $p <= @PER ; $p++) {  # loop through accum periods
   if ($min_count[$p] + $max_count[$p] == @cell) {
-    die "$0: ERROR: for period $p, data consist only of extreme values\n";
+    LOGDIE("for period $p, data consist only of extreme values");
   }
 }
 
 # ---- now write out format file --------------------------
-open(OUT, ">$Outfl") or die "can't open $Outfl: $!\n";
-print "writing...\n";
-
-#for($c=0;$c<10;$c++) {
+open(OUT, ">$Outfl") or LOGDIE("can't open $Outfl: $!");
+DEBUG("writing...");
 for ($c = 0 ; $c < @cell ; $c++) {
   @tmp = split("_", $cell[$c]);
   printf OUT "%.4f %.4f   ", $tmp[2], $tmp[1];
@@ -368,7 +355,8 @@ close(OUT);
 #   uses global variables for directory names
 sub Read_Runoff_One_Cell {
   ($cname, $skip_rec, $data_ref) = @_;
-  open(FL, "<$RetroDir/$cname") or die "can't open $RetroDir/$cname: $!\n";
+  open(FL, "<$RetroDir/$cname") or
+    LOGDIE("can't open $RetroDir/$cname: $!");
   $r = 0;
   while (<FL>) {
     @tmp = split;
@@ -377,14 +365,16 @@ sub Read_Runoff_One_Cell {
     $r++;
   }
   close(FL);
-  open(FL, "<$NearRTDir/$cname") or die "can't open $NearRTDir/$cname: $!\n";
+  open(FL, "<$NearRTDir/$cname") or
+    LOGDIE("can't open $NearRTDir/$cname: $!");
   while (<FL>) {
     @tmp = split;
     $data_ref->[$r] = $tmp[5] + $tmp[6];
     $r++;
   }
   close(FL);
-  open(FL, "<$RTDir/$cname") or die "can't open $RTDir/$cname: $!\n";
+  open(FL, "<$RTDir/$cname") or
+    LOGDIE("can't open $RTDir/$cname: $!");
   $cnt = 0;
   while (<FL>) {
     if ($cnt >= $skip_rec) {
@@ -413,7 +403,6 @@ sub F_given_val {
   $max_p = $LEN / ($LEN + 1) + $min_p;  # ditto for above dist
 
   # sort array (using logic set in other subroutine)
-  #print "F_given_val: val=$val\n";
   @srt_arr = sort numer @array;
   $i       = 0;
   while ($i < $LEN) {

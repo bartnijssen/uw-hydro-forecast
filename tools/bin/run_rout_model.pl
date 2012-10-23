@@ -134,10 +134,12 @@ Arguments:
    specified
 
 =cut
+
 #-------------------------------------------------------------------------------
 no warnings qw(once);  # don't like this, but there are global
                        # variables used by model_specific.pl
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Log::Log4perl qw(:easy);
 use Getopt::Long;
 use Pod::Usage;
 
@@ -169,6 +171,8 @@ require "$TOOLS_DIR/rout_specific.pl";
 #-------------------------------------------------------------------------------
 # Parse the command line
 #-------------------------------------------------------------------------------
+Log::Log4perl->init('<SYSTEM_LOG_CONFIG>');
+
 # Default values
 $forcing_subdir = "";
 $results_subdir = "";
@@ -213,16 +217,15 @@ pod2usage(-verbose => 1, -exitstatus => -1)
 
 # Parse & validate start/end dates
 my @startdate = parse_yyyymmdd($start_date, "-");
-@startdate == 3 or die "$0: ERROR: start date must have format YYYY-MM-DD.\n";
-isdate(@startdate) or die "Not a valid start date: $start_date\n";
+@startdate == 3 or LOGDIE("Start date must have format YYYY-MM-DD.");
+isdate(@startdate) or LOGDIE("Not a valid start date: $start_date");
 my @enddate = parse_yyyymmdd($end_date, "-");
-@enddate == 3 or die "$0: ERROR: end date must have format YYYY-MM-DD.\n";
-isdate(@enddate) or die "Not a valid end date: $end_date\n";
+@enddate == 3 or LOGDIE("End date must have format YYYY-MM-DD.");
+isdate(@enddate) or LOGDIE("Not a valid end date: $end_date");
 Delta_Days(@startdate, @enddate) > 0 or
-  die "$0: ERROR: start date is later than end date.\n";
-
-($start_year, $start_month, $start_day) = @startdate; # route_specific.pl
-($end_year, $end_month, $end_day) = @enddate; # route_specific.pl
+  LOGDIE("Start date is later than end date.");
+($start_year, $start_month, $start_day) = @startdate;  # route_specific.pl
+($end_year,   $end_month,   $end_day)   = @enddate;    # route_specific.pl
 
 # Default values of $spinup_subdir and results_subdir
 if ($forcing_subdir) {
@@ -233,9 +236,9 @@ if ($results_subdir) {
     $state_subdir = $results_subdir;
   }
 }
-
 my @statedate = parse_yyyymmdd($DATE, "-");
-@statedate == 3 or die "$0: ERROR: state date must have format YYYY-MM-DD.\n";
+@statedate == 3 or LOGDIE("State date must have format YYYY-MM-DD.");
+
 #  Date of forecast initialization date.  Same as the day of state file It
 #  should be changed to a day after the state day for the VIC version 4.0.6
 #  and after
@@ -245,9 +248,6 @@ my $FCST_DATE = sprintf "%04d%02d%02d", @statedate;
 #-------------------------------------------------------------------------------
 # Set up constants
 #-------------------------------------------------------------------------------
-# Unique identifier for this job
-$JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
-
 # Set up netcdf access
 $ENV{INC_NETCDF} = "<SYSTEM_NETCDF_INC>";
 $ENV{LIB_NETCDF} = "<SYSTEM_NETCDF_LIB>";
@@ -286,8 +286,7 @@ $var_info_project{RESULTS_MODEL_RAW_DIR} =~
 $var_info_project{ROUT_MODEL_DIR} =~ s/<RESULTS_SUBDIR>/$results_subdir/g;
 $var_info_project{RESULTS_MODEL_ASC_DIR} =~
   s/<RESULTS_SUBDIR>/$results_subdir/g;
-$var_info_project{SPINUP_MODEL_ASC_DIR} =~
-  s/<FORCING_SUBDIR>/$forcing_subdir/g;
+$var_info_project{SPINUP_MODEL_ASC_DIR} =~ s/<FORCING_SUBDIR>/$forcing_subdir/g;
 $var_info_project{CONTROL_MODEL_DIR} =~ s/<CONTROL_SUBDIR>/rout/g
   ;  #### Control file and Log file for routing model runs go in to subdirectory
      #### <rout>.
@@ -305,15 +304,16 @@ if ($var_info_model{POSTPROC}) {
 
 # Save relevant project info in variables
 # Directory where Rout parameters reside
-$ParamsModelDir = $var_info_project{PARAMS_ROUT_DIR};
+$ParamsModelDir     = $var_info_project{PARAMS_ROUT_DIR};
 $ForcingModelDir    = $var_info_project{FORCING_MODEL_DIR};
 $ResultsModelRawDir = $var_info_project{RESULTS_MODEL_RAW_DIR};
 $ResultsModelAscDir = $var_info_project{RESULTS_MODEL_ASC_DIR};
 $Routdir            = $var_info_project{ROUT_MODEL_DIR};
-# Spinup Directory which has flux output since Spinup_start_date 
-$SpinupModelAscDir  = $var_info_project{SPINUP_MODEL_ASC_DIR};
-$ControlModelDir = $var_info_project{CONTROL_MODEL_DIR};
-$LogsModelDir    = $var_info_project{LOGS_MODEL_DIR};
+
+# Spinup Directory which has flux output since Spinup_start_date
+$SpinupModelAscDir = $var_info_project{SPINUP_MODEL_ASC_DIR};
+$ControlModelDir   = $var_info_project{CONTROL_MODEL_DIR};
+$LogsModelDir      = $var_info_project{LOGS_MODEL_DIR};
 
 # The final processed model results will be stored in the ascii dir
 $ResultsModelFinalDir = $ResultsModelAscDir;
@@ -321,8 +321,9 @@ $ForcTypeAscVic       = $var_info_project{FORCING_TYPE_ASC_VIC};
 $ForcTypeNC           = $var_info_project{FORCING_TYPE_NC};
 $ForcingAscVicPrefix  = $var_info_project{FORCING_ASC_VIC_PREFIX};
 $ForcingNCPrefix      = $var_info_project{FORCING_NC_PREFIX};
+
 # Directory where ESP outputs are saved ## Shrad added this
-$ESP                  = $var_info_project{ESP};  
+$ESP  = $var_info_project{ESP};
 $ROUT = $var_info_project{ROUT};  #### Directory where ROUT outputs are saved
 $STORDIR =
   "$ESP/$modelalias/$FCST_DATE/dly_flux";  #### ESP FLUXOUTPUT storage directory
@@ -341,8 +342,6 @@ if ($forcing_subdir =~ /retro/i) {
   $StartDateFile = $var_info_project{FORCING_CURRSPIN_START_DATE_FILE};
 }
 
-
-
 # Estimate Spinup start and end Date here: Spinup start date is currently set to
 # be the day 1 of curr_spinup, however for retro or spinup_nearRT, the date will
 # be the first day of 2 months before the routing starts
@@ -353,17 +352,16 @@ if ($forcing_subdir =~ /retro/i) {
 # same. For other Version VIC 4.0.6 or VIC 4.1.X this end day of spinup will
 # be the same day as the day of state file hence
 # ($Spinup_Eyr,$Spinup_Emon,$Spinup_Eday) = Add_Delta_Days(@statedate, 0);
-
 ($Spinup_Syr, $Spinup_Smon, $Spinup_Sday) =
   Add_Delta_YM($Spinup_Eyr, $Spinup_Emon, $Spinup_Eday, 0, -2);
 $Spinup_Sday = "01";
 
 ### Only if forcing_subdir is curr_spinup
 if ($forcing_subdir =~ /curr_spinup/i) {
-  
+
   # Date of Spinup Start and END
   open(FILE, $StartDateFile) or
-    die "$0: ERROR: cannot open file $StartDateFile\n";
+    LOGDIE("Cannot open file $StartDateFile");
   foreach (<FILE>) {
     if (/^(\d+)\s+(\d+)\s+(\d+)\s+/) {
       ($Spinup_Syr, $Spinup_Smon, $Spinup_Sday) = ($1, $2, $3);
@@ -375,12 +373,12 @@ if ($forcing_subdir =~ /curr_spinup/i) {
 #---------------------------------------------------
 # HACK!
 if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
-  $local_root = "<SYSTEM_LOCAL_ROOT>";
+  $local_root        = "<SYSTEM_LOCAL_ROOT>";
   $PROJECT_DIR       = $var_info_project{PROJECT_DIR};
   $LOCAL_PROJECT_DIR = $var_info_project{LOCAL_PROJECT_DIR};
   $replace           = "<SYSTEM_ROOT>";
   $LOCAL_PROJECT_DIR =~ s/$replace/$local_root/;
-  print "$0: LOCAL_PROJECT_DIR: $LOCAL_PROJECT_DIR\n";
+  DEBUG("$0: LOCAL_PROJECT_DIR: $LOCAL_PROJECT_DIR");
 }
 
 #---------------------------------------------------
@@ -388,15 +386,15 @@ if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
 # Model parameters
 $ParamsTemplate = "$ParamsModelDir/input.rout.template";
 open(PARAMS_TEMPLATE, $ParamsTemplate) or
-  die "$0: ERROR: cannot open parameter template file $ParamsTemplate\n";
-print "Rout input file is $ParamsTemplate\n";
+  LOGDIE("Cannot open parameter template file $ParamsTemplate");
+DEBUG("Rout input file is $ParamsTemplate");
 @ParamsInfo = <PARAMS_TEMPLATE>;
 close(PARAMS_TEMPLATE);
 
 # Check for directories; create if necessary & appropriate
 foreach $dir ($ParamsModelDir) {
   if (!-d $dir) {
-    die "$0: ERROR: directory $dir not found\n";
+    LOGDIE("Directory $dir not found");
   }
 }
 foreach $dir (
@@ -404,7 +402,7 @@ foreach $dir (
               $ResultsModelFinalDir, $ControlModelDir,
               $LogsModelDir
   ) {
-  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
+  (&make_dir($dir) == 0) or LOGDIE("Cannot create path $dir: $!");
 }
 
 # Output Directories
@@ -412,7 +410,7 @@ $results_dir     = $ResultsModelRawDir;
 $results_dir_asc = $ResultsModelAscDir;
 $control_dir     = $ControlModelDir;
 $logs_dir        = $LogsModelDir;
-print "LOG Dir is $logs_dir and control dir is $control_dir\n";
+DENUG("LOG Dir is $logs_dir and control dir is $control_dir");
 $LOGFILE     = "$logs_dir/log.rout.$PROJECT.$MODEL_NAME.$FCST_DATE.$ENS_YR";
 $controlfile = "$control_dir/inp.rout.$MODEL_NAME.$FCST_DATE.$ENS_YR";
 
@@ -434,7 +432,7 @@ if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
   foreach $dir ($LOCAL_CONTROL_DIR) {
     if (-e $dir) {
       $cmd = "rm -rf $dir";
-      (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+      (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
     }
   }
 }
@@ -443,26 +441,25 @@ if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
 foreach $dir ($Routdir) {
   if (-e $dir) {
     $cmd = "rm -rf $dir";
-    (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   }
 }
 
 # Create the directories
 foreach $dir ($Routdir, $logs_dir) {
-  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
+  (&make_dir($dir) == 0) or LOGDIE("Cannot create path $dir: $!");
 }
-
 $LOGFILE = "$LogsModelDir/log.rout.$PROJECT.$MODEL_NAME.$FCST_DATE.$ENS_YR";
 
 ###### if ESP_STORAGE = 1
 if ($esp_storage) {
   if (!-e $results_dir_asc) {
     $dir = $results_dir_asc;
-    (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
+    (&make_dir($dir) == 0) or LOGDIE("Cannot create path $dir: $!");
   }
   $cmd = "tar -xzf $STORDIR/fluxes.$ENS_YR.tar.gz -C $results_dir_asc";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
+    LOGDIE("$cmd failed: $status");
   $temp_results_dir = "$results_dir_asc" . '/ESP.' . "$ENS_YR";
   $results_dir_asc  = "$temp_results_dir";
 }
@@ -477,29 +474,21 @@ $func_name = "wrap_run_" . "rout";
 #-------------------------------------------------------------------------------
 if (!-e $STORDIR) {
   $dir = $STORDIR;
-  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
+  (&make_dir($dir) == 0) or LOGDIE("Cannot create path $dir: $!");
 }
 if ($rout_storage) {
-  $cmd =
-    "mv $results_dir_asc ./ESP.$PROJECT.$ENS_YR >& $LOGFILE.tmp; " .
-    "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+  $cmd = "mv $results_dir_asc ./ESP.$PROJECT.$ENS_YR";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
-  $cmd =
-    "tar -czf $STORDIR/fluxes.$ENS_YR.tar.gz ./ESP.$PROJECT.$ENS_YR >& " .
-    "$LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+    LOGDIE("$cmd failed: $status");
+  $cmd = "tar -czf $STORDIR/fluxes.$ENS_YR.tar.gz ./ESP.$PROJECT.$ENS_YR";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
-  $cmd =
-    "rm -rf ./ESP.$PROJECT.$ENS_YR >& $LOGFILE.tmp; cat $LOGFILE.tmp >> " .
-    "$LOGFILE; rm $LOGFILE.tmp";
+    LOGDIE("$cmd failed: $status");
+  $cmd = "rm -rf ./ESP.$PROJECT.$ENS_YR";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
-  $cmd =
-    "rm -rf $results_dir_asc >& $LOGFILE.tmp; cat $LOGFILE.tmp >> " .
-    "$LOGFILE; rm $LOGFILE.tmp";
+    LOGDIE("$cmd failed: $status");
+  $cmd = "rm -rf $results_dir_asc";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
+    LOGDIE("$cmd failed: $status");
 }
 
 #-------------------------------------------------------------------------------
@@ -508,29 +497,22 @@ if ($rout_storage) {
 #-------------------------------------------------------------------------------
 if (!-e $STOR_ROUT_DIR) {
   $dir = $STOR_ROUT_DIR;
-  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
+  (&make_dir($dir) == 0) or LOGDIE("Cannot create path $dir: $!");
 }
 if ($rout_storage) {
-  $cmd =
-    "mv $Routdir ./SFLOW.$PROJECT.$ENS_YR >& $LOGFILE.tmp; " .
-    "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+  $cmd = "mv $Routdir ./SFLOW.$PROJECT.$ENS_YR";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
+    LOGDIE("$cmd failed: $status");
   $cmd =
     "tar -czf $STOR_ROUT_DIR/sflow.$ENS_YR.tar.gz " .
-    "./SFLOW.$PROJECT.$ENS_YR >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; " .
-    "rm $LOGFILE.tmp";
+    "./SFLOW.$PROJECT.$ENS_YR";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
-  $cmd =
-    "rm -rf ./SFLOW.$PROJECT.$ENS_YR >& $LOGFILE.tmp; " .
-    "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+    LOGDIE("$cmd failed: $status");
+  $cmd = "rm -rf ./SFLOW.$PROJECT.$ENS_YR";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
-  $cmd =
-    "rm -rf $Routdir >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; " .
-    "rm $LOGFILE.tmp";
+    LOGDIE("$cmd failed: $status");
+  $cmd = "rm -rf $Routdir";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
+    LOGDIE("$cmd failed: $status");
 }
 exit(0);

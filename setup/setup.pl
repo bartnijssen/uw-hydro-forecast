@@ -122,7 +122,6 @@ copied. This means that your existing logging configuration will be overwritten.
  * Run setup/setup.pl --log=log --system=<system>
 
 =cut
-
 use strict;
 use warnings;  # instead of -w since that does not work
                # reliably with /usr/bin/env
@@ -142,9 +141,10 @@ my $srcmodtoken = 'XXX';
 my $quiet       = 0;     # not quite silent, just some progress messages
 my $verbose     = 0;     # highest verbosity level
 my $scriptname;          # name of this script
-our $basepath;            # base path for the forecast system
+our $basepath;           # base path for the forecast system
 our $suffix;
 our $path;
+
 BEGIN {
   ($scriptname, $path, $suffix) = fileparse($0, ".pl");
   $basepath = abs_path($path);
@@ -311,7 +311,7 @@ sub processcommandline {
     "project=s" => \$project,
     "model=s"   => \$model,
     "tool=s"    => \$tool,
-    "log=s"    => \$log
+    "log=s"     => \$log
                          );
   pod2usage(-verbose => 2, -exitstatus => 0) if $man;
   pod2usage(-verbose => 1, -exitstatus => 0) if $help;
@@ -396,9 +396,9 @@ sub sed_file {
 sub setup_log {
   my ($system, $log) = @_;
   print "Setting up log: $log in $system ...\n" if $quiet;
-  my %sysinfo    = 
+  my %sysinfo =
     read_configuration("$basepath/config/$system/config.system.$system");
-  my %systags    = 
+  my %systags =
     get_tags("$basepath/config/$system/config.system.$system", "SYSTEM");
   my $runtime    = $sysinfo{SYSTEM_INSTALLDIR};
   my $srcfile    = "$basepath/config/$system/config.log.$log";
@@ -410,9 +410,9 @@ sub setup_log {
 sub setup_model {
   my ($system, $model) = @_;
   print "Setting up model: $model in $system ...\n" if $quiet;
-  my %sysinfo    =
+  my %sysinfo =
     read_configuration("$basepath/config/$system/config.system.$system");
-  my %systags    = 
+  my %systags =
     get_tags("$basepath/config/$system/config.system.$system", "SYSTEM");
   my $runtime    = $sysinfo{SYSTEM_INSTALLDIR};
   my $srcfile    = "$basepath/config/$system/config.model.$model";
@@ -447,9 +447,9 @@ sub setup_project {
   my ($system, $project) = @_;
   my $result;
   print "Setting up project: $project in $system ...\n" if $quiet;
-  my %sysinfo    =
+  my %sysinfo =
     read_configuration("$basepath/config/$system/config.system.$system");
-  my %systags    = 
+  my %systags =
     get_tags("$basepath/config/$system/config.system.$system", "SYSTEM");
   my $runtime    = $sysinfo{SYSTEM_INSTALLDIR};
   my $srcfile    = "$basepath/config/$system/config.project.$project";
@@ -486,9 +486,9 @@ sub setup_project {
 sub setup_tool {
   my ($system, $tool) = @_;
   print "Setting up tool: $tool in $system ...\n" if $quiet;
-  my %sysinfo    = 
+  my %sysinfo =
     read_configuration("$basepath/config/$system/config.system.$system");
-  my %systags    = 
+  my %systags =
     get_tags("$basepath/config/$system/config.system.$system", "SYSTEM");
   my $runtime    = $sysinfo{SYSTEM_INSTALLDIR};
   my $srcfile    = "$basepath/config/$system/config.tool.$tool";
@@ -522,10 +522,10 @@ sub setup_tool {
 sub setup_system {
   my ($system) = @_;
   print "Setting up system: $system ...\n" if $quiet;
-  my %info = 
+  my %info =
     read_configuration("$basepath/config/$system/config.system.$system");
 
-  # Create SYSTEM_INSTALLDIR/bin, SYSTEM_INSTALLDIR/lib and 
+  # Create SYSTEM_INSTALLDIR/bin, SYSTEM_INSTALLDIR/lib and
   # SYSTEM_INSTALLDIR/config
   my $runtime = $info{SYSTEM_INSTALLDIR};
   my @subdirs = qw(bin config lib);
@@ -535,9 +535,9 @@ sub setup_system {
         die "Cannot make path $runtime/$dir: $!";
     }
   }
-  my %tags = 
+  my %tags =
     get_tags("$basepath/config/$system/config.system.$system", "SYSTEM");
-  
+
   # Get listing of executable files
   my @filelist;
   my %files;
@@ -553,7 +553,7 @@ sub setup_system {
   }
 
   # Get listing of library files
-  @dirlist = ("$basepath/tools/lib");
+  @dirlist   = ("$basepath/tools/lib");
   $targetdir = "$runtime/lib";
   for my $srcdir (@dirlist) {
     opendir(DIR, $srcdir) or die "Cannot opendir $srcdir: $!";
@@ -574,7 +574,6 @@ sub setup_system {
         die "Cannot copy $srcfile ==> $targetfile: $!\n";
     }
   }
-
   my $srcfile    = "$basepath/config/$system/config.system.$system";
   my $targetfile = "$runtime/config/config.system.$system";
   copy($srcfile, $targetfile) or

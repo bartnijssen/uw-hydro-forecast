@@ -35,8 +35,10 @@ Script to convert model results into percentiles of model climatology
  and others since then
 
 =cut
+
 #-------------------------------------------------------------------------------
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Log::Log4perl qw(:easy);
 use Pod::Usage;
 use Getopt::Long;
 
@@ -55,6 +57,7 @@ use simma_util;
 #-------------------------------------------------------------------------------
 # Parse the command line
 #-------------------------------------------------------------------------------
+Log::Log4perl->init('<SYSTEM_LOG_CONFIG>');
 my $result = GetOptions("help|h|?" => \$help,
                         "man|info" => \$man);
 pod2usage(-verbose => 2, -exitstatus => 0) if $man;
@@ -159,34 +162,34 @@ if ($modelalias =~ /vic/i) {
 # Check for directories; create if necessary & possible
 foreach $dir ($CURRPATH, $HISTPATH) {
   if (!-d $dir) {
-    die "$0: ERROR: directory $dir not found\n";
+    LOGDIE("directory $dir not found");
   }
 }
 foreach $dir ($OUTD) {
-  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
+  (&make_dir($dir) == 0) or LOGDIE("Cannot create path $dir: $!");
 }
 
 # Remove old files
 if (-e $SMFILE) {
   $cmd = "rm -f $SMFILE";
-  (system($cmd) == 0) or die "$0: ERROR: cannot remove file $SMFILE\n";
+  (system($cmd) == 0) or LOGDIE("Cannot remove file $SMFILE");
 }
 if (-e $SWEFILE) {
   $cmd = "rm -f $SWEFILE";
-  (system($cmd) == 0) or die "$0: ERROR: cannot remove file $SWEFILE\n";
+  (system($cmd) == 0) or LOGDIE("Cannot remove file $SWEFILE");
 }
 if ($modelalias =~ /vic/i) {
   if (-e $SM1FILE) {
     $cmd = "rm -f $SM1FILE";
-    (system($cmd) == 0) or die "$0: ERROR: cannot remove file $SM1FILE\n";
+    (system($cmd) == 0) or LOGDIE("Cannot remove file $SM1FILE");
   }
   if (-e $SM2FILE) {
     $cmd = "rm -f $SM2FILE";
-    (system($cmd) == 0) or die "$0: ERROR: cannot remove file $SM2FILE\n";
+    (system($cmd) == 0) or LOGDIE("Cannot remove file $SM2FILE");
   }
   if (-e $SM3FILE) {
     $cmd = "rm -f $SM3FILE";
-    (system($cmd) == 0) or die "$0: ERROR: cannot remove file $SM3FILE\n";
+    (system($cmd) == 0) or LOGDIE("Cannot remove file $SM3FILE");
   }
 }
 
@@ -218,18 +221,18 @@ for ($i = -int($width / 2) ; $i < int($width / 2) + 1 ; $i++) {
 
 # Open output files
 open(SMFILE, ">$SMFILE") or
-  die "$0: ERROR: cannot open file $SMFILE for writing\n";
+  LOGDIE("Cannot open file $SMFILE for writing");
 open(SWEFILE, ">$SWEFILE") or
-  die "$0: ERROR: cannot open file $SWEFILE for writing\n";
+  LOGDIE("Cannot open file $SWEFILE for writing");
 open(STOTFILE, ">$STOTFILE") or
-  die "$0: ERROR: cannot open file $STOTFILE for writing\n";
+  LOGDIE("Cannot open file $STOTFILE for writing");
 if ($modelalias =~ /vic/i) {
   open(SM1FILE, ">$SM1FILE") or
-    die "$0: ERROR: cannot open file $SM1FILE for writing\n";
+    LOGDIE("Cannot open file $SM1FILE for writing");
   open(SM2FILE, ">$SM2FILE") or
-    die "$0: ERROR: cannot open file $SM2FILE for writing\n";
+    LOGDIE("Cannot open file $SM2FILE for writing");
   open(SM3FILE, ">$SM3FILE") or
-    die "$0: ERROR: cannot open file $SM3FILE for writing\n";
+    LOGDIE("Cannot open file $SM3FILE for writing");
 }
 
 #-------------------------------------------------------------------------------
@@ -242,7 +245,7 @@ if ($modelalias =~ /multimodel/i) {
   foreach $ens_model (@ENS_MODELS) {
     $PCTL_FILE = "$OUTD/sm.$PROJECT_UC.$ens_model.f-c_mean.a-m_anom.qnt.xyzz";
     open(PCTL_FILE, $PCTL_FILE) or
-      die "$0: ERROR: cannot open file $PCTL_FILE for reading\n";
+      LOGDIE("Cannot open file $PCTL_FILE for reading");
     $cell_idx = 0;
     foreach (<PCTL_FILE>) {
       chomp;
@@ -265,7 +268,7 @@ if ($modelalias =~ /multimodel/i) {
   foreach $ens_model (@ENS_MODELS) {
     $PCTL_FILE = "$OUTD/swe.$PROJECT_UC.$ens_model.f-c_mean.a-m_anom.qnt.xyzz";
     open(PCTL_FILE, $PCTL_FILE) or
-      die "$0: ERROR: cannot open file $PCTL_FILE for reading\n";
+      LOGDIE("Cannot open file $PCTL_FILE for reading");
     $cell_idx = 0;
     foreach (<PCTL_FILE>) {
       chomp;
@@ -298,7 +301,7 @@ if ($modelalias =~ /multimodel/i) {
   foreach $ens_model (@ENS_MODELS) {
     $PCTL_FILE = "$OUTD/stot.$PROJECT_UC.$ens_model.f-c_mean.a-m_anom.qnt.xyzz";
     open(PCTL_FILE, $PCTL_FILE) or
-      die "$0: ERROR: cannot open file $PCTL_FILE for reading\n";
+      LOGDIE("Cannot open file $PCTL_FILE for reading");
     $cell_idx = 0;
     foreach (<PCTL_FILE>) {
       chomp;
@@ -320,7 +323,7 @@ if ($modelalias =~ /multimodel/i) {
 }
 
 # Loop over grid cells
-open(FLIST, $FLIST) or die "$0: ERROR: cannot open file $FLIST for reading\n";
+open(FLIST, $FLIST) or LOGDIE("Cannot open file $FLIST for reading");
 $cell_idx = 0;
 foreach $F (<FLIST>) {
   chomp $F;
@@ -338,7 +341,7 @@ foreach $F (<FLIST>) {
     $CurrSWE        = -1;
     $CurrSTOT       = -1;
     open(CFILEH, $CFILE) or
-      die "$0: ERROR: cannot open file $CFILE for reading\n";
+      LOGDIE("Cannot open file $CFILE for reading");
     foreach (<CFILEH>) {
       chomp;
       @fields = split /\s+/;
@@ -362,7 +365,7 @@ foreach $F (<FLIST>) {
     }
     close(CFILEH);
     if ($CurrSoilMoist == -1 || $CurrSWE == -1) {
-      die "$0: ERROR: no info for $fyear-$fmonth-$fday found in file $CFILE\n";
+      LOGDIE("No info for $fyear-$fmonth-$fday found in file $CFILE");
     }
   }
 
@@ -388,7 +391,7 @@ foreach $F (<FLIST>) {
   @day            = ();
   $i              = 0;
   open(HFILEH, $HFILE) or
-    die "$0: ERROR: cannot open file $HFILE for reading\n";
+    LOGDIE("Cannot open file $HFILE for reading");
 
   foreach (<HFILEH>) {
     chomp;
@@ -498,101 +501,101 @@ if ($modelalias =~ /vic/i) {
 # SM
 $cmd =
   "$TOOLS_DIR/fcst_stats.pl $SMFILE $OUTD/sm.$PROJECT_UC.$modelalias.stats";
-print "$cmd\n";
-(system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+DEBUG($cmd);
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 $cmd =
   "/usr/bin/paste $LONLAT $OUTD/sm.$PROJECT_UC.$modelalias.stats > " .
   "$OUTD/sm.$PROJECT_UC.$modelalias.f-c_mean.a-m_anom.qnt.xyzz";
-print "$cmd\n";
-(system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+DEBUG($cmd);
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
 # SWE
 $cmd =
   "$TOOLS_DIR/fcst_stats.pl $SWEFILE $OUTD/swe.$PROJECT_UC.$modelalias.stats";
-print "$cmd\n";
-(system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+DEBUG($cmd);
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 $cmd =
   "/usr/bin/paste $LONLAT $OUTD/swe.$PROJECT_UC.$modelalias.stats > " .
   "$OUTD/swe.$PROJECT_UC.$modelalias.f-c_mean.a-m_anom.qnt.xyzz";
-print "$cmd\n";
-(system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+DEBUG($cmd);
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
 # STOT
 $cmd =
   "$TOOLS_DIR/fcst_stats.pl $STOTFILE $OUTD/stot.$PROJECT_UC.$modelalias.stats";
-print "$cmd\n";
-(system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+DEBUG($cmd);
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 $cmd =
   "/usr/bin/paste $LONLAT $OUTD/stot.$PROJECT_UC.$modelalias.stats > " .
   "$OUTD/stot.$PROJECT_UC.$modelalias.f-c_mean.a-m_anom.qnt.xyzz";
-print "$cmd\n";
-(system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+DEBUG($cmd);
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
 # Layer-specific SoilMoist
 if ($modelalias =~ /vic/i) {
   $cmd =
     "$TOOLS_DIR/fcst_stats.pl $SM1FILE $OUTD/sm1.$PROJECT_UC.$modelalias.stats";
-  print "$cmd\n";
-  (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+  DEBUG($cmd);
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   $cmd =
     "/usr/bin/paste $LONLAT $OUTD/sm1.$PROJECT_UC.$modelalias.stats > " .
     "$OUTD/sm1.$PROJECT_UC.$modelalias.f-c_mean.a-m_anom.qnt.xyzz";
-  print "$cmd\n";
-  (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+  DEBUG($cmd);
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   $cmd =
     "$TOOLS_DIR/fcst_stats.pl $SM2FILE $OUTD/sm2.$PROJECT_UC.$modelalias.stats";
-  print "$cmd\n";
-  (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+  DEBUG($cmd);
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   $cmd =
     "/usr/bin/paste $LONLAT $OUTD/sm2.$PROJECT_UC.$modelalias.stats > " .
     "$OUTD/sm2.$PROJECT_UC.$modelalias.f-c_mean.a-m_anom.qnt.xyzz";
-  print "$cmd\n";
-  (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+  DEBUG($cmd);
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   $cmd =
     "$TOOLS_DIR/fcst_stats.pl $SM3FILE $OUTD/sm3.$PROJECT_UC.$modelalias.stats";
-  print "$cmd\n";
-  (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+  DEBUG($cmd);
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   $cmd =
     "/usr/bin/paste $LONLAT $OUTD/sm3.$PROJECT_UC.$modelalias.stats > " .
     "$OUTD/sm3.$PROJECT_UC.$modelalias.f-c_mean.a-m_anom.qnt.xyzz";
-  print "$cmd\n";
-  (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+  DEBUG($cmd);
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 }
 
 # Clean up
 $cmd = "\\rm -f $OUTD/*.stats";
-(system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
 # SM
 $cmd = "\\rm -f $SMFILE.gz";
-(system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 $cmd = "gzip $SMFILE";
-(system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
 # SWE
 $cmd = "\\rm -f $SWEFILE.gz";
-(system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 $cmd = "gzip $SWEFILE";
-(system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
 # STOT
 $cmd = "\\rm -f $STOTFILE.gz";
-(system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 $cmd = "gzip $STOTFILE";
-(system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
 # Layer-specific SoilMoist
 if ($modelalias =~ /vic/i) {
   $cmd = "\\rm -f $SM1FILE.gz";
-  (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   $cmd = "gzip $SM1FILE";
-  (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   $cmd = "\\rm -f $SM2FILE.gz";
-  (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   $cmd = "gzip $SM2FILE";
-  (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   $cmd = "\\rm -f $SM3FILE.gz";
-  (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   $cmd = "gzip $SM3FILE";
-  (system($cmd) == 0) or die "$0: ERROR: cmd $cmd failed: $?\n";
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 }

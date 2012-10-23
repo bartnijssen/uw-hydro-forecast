@@ -135,13 +135,14 @@ Arguments:
    specified
 
 =cut
+
 #-------------------------------------------------------------------------------
 no warnings qw(once);  # don't like this, but there are global
                        # variables used by model_specific.pl
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Log::Log4perl qw(:easy);
 use Getopt::Long;
 use Pod::Usage;
-use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 
 #-------------------------------------------------------------------------------
 # Determine tools and config directories
@@ -167,12 +168,13 @@ use POSIX qw(strftime);
 
 # Model-specific subroutines
 require "$TOOLS_DIR/model_specific.pl";
-
 $| = 1;
 
 #-------------------------------------------------------------------------------
 # Parse the command line
 #-------------------------------------------------------------------------------
+Log::Log4perl->init('<SYSTEM_LOG_CONFIG>');
+
 # Default values
 $forcing_subdir = "";
 $results_subdir = "";
@@ -219,29 +221,28 @@ pod2usage(-verbose => 1, -exitstatus => -1)
 if ($start_date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/) {
   ($start_year, $start_month, $start_day) = ($1, $2, $3);
 } else {
-  print STDERR "$0: ERROR: start date must have format YYYY-MM-DD.\n";
+  LOGWARN("Start date must have format YYYY-MM-DD");
   pod2usage(-verbose => 1, -exitstatus => -1);
 }
 if ($end_date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/) {
   ($end_year, $end_month, $end_day) = ($1, $2, $3);
 } else {
-  print STDERR "$0: ERROR: end date must have format YYYY-MM-DD.\n";
+  LOGWARN("nd date must have format YYYY-MM-DD");
   pod2usage(-verbose => 1, -exitstatus => -1);
 }
 if ($start_year > $end_year) {
-  print STDERR "$0: ERROR: start_date is later than end_date: " .
-    "start_year > end_year.\n";
+  LOGWARN("Start_date is later than end_date: " . "start_year > end_year");
   pod2usage(-verbose => 1, -exitstatus => -1);
 } elsif ($start_year == $end_year) {
   if ($start_month > $end_month) {
-    print STDERR "$0: ERROR: start_date is later than end_date: " .
-      "start_year == end_year and start_month > end_month.\n";
+    LOGWARN("Start_date is later than end_date: " .
+            "start_year == end_year and start_month > end_month");
     pod2usage(-verbose => 1, -exitstatus => -1);
   } elsif ($start_month == $end_month) {
     if ($start_day > $end_day) {
-      print STDERR "$0: ERROR: start_date is later than end_date: " .
-        "start_year == end_year, start_month == end_month " .
-        "and start_day > end_day.\n";
+      LOGWARN("Start_date is later than end_date: " .
+              "start_year == end_year, start_month == end_month " .
+              "and start_day > end_day");
       pod2usage(-verbose => 1, -exitstatus => -1);
     }
   }
@@ -254,7 +255,7 @@ if ($DATE =~ /(\d\d\d\d)(\d\d)(\d\d)/) {
   ### version 4.0.6 and after
   $FCST_DATE = sprintf "%04d%02d%02d", $STATE_YR, $STATE_MON, $STATE_DAY;
 } else {
-  print STDERR "$0: ERROR: State date must have format YYYYMMDD.\n";
+  LOGWARN("State date must have format YYYYMMDD");
   pod2usage(-verbose => 1, -exitstatus => -1);
 }
 
@@ -380,7 +381,7 @@ if ($forcing_subdir =~ /retro/i) {
 #---------------------------------------------------
 # HACK!
 if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
-  $local_root = "<SYSTEM_LOCAL_ROOT>";
+  $local_root        = "<SYSTEM_LOCAL_ROOT>";
   $PROJECT_DIR       = $var_info_project{"PROJECT_DIR"};
   $LOCAL_PROJECT_DIR = $var_info_project{"LOCAL_PROJECT_DIR"};
   $replace           = "<SYSTEM_ROOT>";
@@ -390,7 +391,7 @@ if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
 #---------------------------------------------------
 # Date of beginning of data forcings
 open(FILE, $StartDateFile) or
-  die "$0: ERROR: cannot open file $StartDateFile\n";
+  LOGDIE("cannot open file $StartDateFile");
 foreach (<FILE>) {
   if (/^(\d+)\s+(\d+)\s+(\d+)\s+/) {
     ($Forc_Syr, $Forc_Smon, $Forc_Sday) = ($1, $2, $3);
@@ -401,14 +402,14 @@ close(FILE);
 # Model parameters
 $ParamsTemplate = "$ParamsModelDir/input.template.retro";
 open(PARAMS_TEMPLATE, $ParamsTemplate) or
-  die "$0: ERROR: cannot open parameter template file $ParamsTemplate\n";
+  LOGDIE("cannot open parameter template file $ParamsTemplate");
 @ParamsInfo = <PARAMS_TEMPLATE>;
 close(PARAMS_TEMPLATE);
 
 # Check for directories; create if necessary & appropriate
 foreach $dir ($ParamsModelDir, $ForcingModelDir) {
   if (!-d $dir) {
-    die "$0: ERROR: directory $dir not found\n";
+    LOGDIE("directory $dir not found");
   }
 }
 
@@ -423,10 +424,11 @@ $logs_dir        = $LogsFcstDir;
 # SYSTEM_LOCAL_STORAGE (the Log files and control file would be stored on
 # /raid8)
 $LOGFILE =
-  "$logs_dir/log.$PROJECT.$MODEL_NAME.ESP_run.${FCST_DATE}." . "$start_year.$JOB_ID";
+  "$logs_dir/log.$PROJECT.$MODEL_NAME.ESP_run.${FCST_DATE}." .
+  "$start_year.$JOB_ID";
 $controlfile = "$control_dir/inp.ESP.${FCST_DATE}.$start_year";
 foreach $dir ($logs_dir, $control_dir) {
-  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
+  (&make_dir($dir) == 0) or LOGDIE("Cannot create path $dir: $!");
 }
 
 # Use local directories if specified
@@ -443,14 +445,14 @@ if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
 foreach $dir ($results_dir, $results_dir_asc) {
   if (-e $dir) {
     $cmd = "rm -rf $dir";
-    
-    ##(system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
+
+    ##(system($cmd)==0) or LOGDIE("$cmd failed: $?");
   }
-} 
+}
 
 # Create the directories
 foreach $dir ($results_dir, $results_dir_asc) {
-  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
+  (&make_dir($dir) == 0) or LOGDIE("Cannot create path $dir: $!");
 }
 
 # Override initial state file if specified on command line
@@ -464,7 +466,7 @@ if ($init_file) {
     if (-e "$state_dir/$init_file") {
       $init_file = "$state_dir/$init_file";
     } else {
-      die "$0: ERROR: init file $init_file not found\n";
+      LOGDIE("init file $init_file not found");
     }
   }
 }
@@ -482,12 +484,12 @@ $func_name = "wrap_run_" . $modelalias;
 &{$func_name}($model_specific);
 if (!-e $STORDIR) {
   (&make_dir($STORDIR) == 0) or
-    die "$0: ERROR: Cannot create path $STORDIR: $!\n";
+    LOGDIE("Cannot create path $STORDIR: $!");
 }  ### Creating Storage directory
 if (!-e "$STORDIR/monthly_flux") ### Creating Storage directory for monthly flux
 {
   $dir = "$STORDIR/monthly_flux";
-  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
+  (&make_dir($dir) == 0) or LOGDIE("Cannot create path $dir: $!");
 }
 
 #-------------------------------------------------------------------------------
@@ -501,34 +503,26 @@ if ($post_process == 1) {
   $cmd =
     "($TOOLS_DIR/xtr_monthly_ts.scr $start_year " .
     "$PROJECT $TOOLS_DIR $STORDIR $results_dir_asc " .
-    "$STORDIR/MON.$start_year $Flist >& $LOGFILE.tmp; " .
-    "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp)&";
-
+    "$STORDIR/MON.$start_year $Flist >& $LOGFILE)&";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
+    LOGDIE("$cmd failed: $status");
 
   #### Now archive monthly flux output generated in last step Directory
   #### $STORDIR/MON.$start_year where the monthly flux output for each ensemble
   #### (i.e. $start_year) gets stored. This directory is created in the script
   #### xtr_monthly_ts.scr
   ### Moving $STORDIR/MON.$start_year to current directory
-  $cmd =
-    "mv  $STORDIR/MON.$start_year ./MON.$PROJECT.$start_year " .
-    ">& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+  $cmd = "mv  $STORDIR/MON.$start_year ./MON.$PROJECT.$start_year";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n >& $LOGFILE.tmp; " .
-    "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+    LOGDIE("$cmd failed: $status");
   $cmd =
     "tar -czf $STORDIR/monthly_flux/fluxes.mon.$start_year.tar.gz " .
-    "./MON.$PROJECT.$start_year >& $LOGFILE.tmp; cat $LOGFILE.tmp " .
-    ">> $LOGFILE; rm $LOGFILE.tmp";
+    "./MON.$PROJECT.$start_year";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
-  $cmd =
-    "rm -rf ./MON.$PROJECT.$start_year >& $LOGFILE.tmp; " .
-    "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+    LOGDIE("$cmd failed: $status");
+  $cmd = "rm -rf ./MON.$PROJECT.$start_year";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
+    LOGDIE("$cmd failed: $status");
 }
 
 #-------------------------------------------------------------------------------
@@ -537,30 +531,25 @@ if ($post_process == 1) {
 if ($esp_storage == 1) {
   if (!-e "$STORDIR/dly_flux") {
     $dir = "$STORDIR/dly_flux";
-    (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
+    (&make_dir($dir) == 0) or LOGDIE("Cannot create path $dir: $!");
   }
   $LOGFILE = "$logs_dir/log.$MODEL_NAME.ESP.$FSCT_DATE.$start_year";
-  $cmd =
-    "mv $results_dir_asc ./ESP.$PROJECT.$start_year >& $LOGFILE.tmp; " .
-    "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+  $cmd     = "mv $results_dir_asc ./ESP.$PROJECT.$start_year";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
+    LOGDIE("$cmd failed: $status");
   $cmd =
     "tar -czf $STORDIR/dly_flux/fluxes.$start_year.tar.gz " .
-    "./ESP.$PROJECT.$start_year >& $LOGFILE.tmp; " .
-    "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+    "./ESP.$PROJECT.$start_year";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
-  $cmd =
-    "rm -rf ./ESP.$PROJECT.$start_year >& $LOGFILE.tmp; " .
-    "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
+    LOGDIE("$cmd failed: $status");
+  $cmd = "rm -rf ./ESP.$PROJECT.$start_year";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
+    LOGDIE("$cmd failed: $status");
 
   # Remove results directory esp for model which produce nc output
   $cmd = "rm -rf $local_root";
 
   #(($status = &shell_cmd($cmd)) == 0)
-  # or die "$0: ERROR: $cmd failed: $status\n";
+  # or LOGDIE("$cmd failed: $status");
 }
 exit(0);

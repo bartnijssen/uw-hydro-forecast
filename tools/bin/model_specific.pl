@@ -4,6 +4,7 @@
 #                     NOTE: these routines assume that several variables
 #                     have been defined globally in the parent script.
 #-------------------------------------------------------------------------------
+use Log::Log4perl qw(:easy);
 use File::Temp qw(tempfile tempdir);
 $cleanup = 1;
 
@@ -42,7 +43,7 @@ sub wrap_run_vic {
   #  foreach $cmd (@POSTPROC) {
   #    $cmd = $cmd . " >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; " .
   #      "rm $LOGFILE.tmp";
-  #    (system($cmd)==0) or die "$0: ERROR in $cmd: $?\n";
+  #    (system($cmd)==0) or LOGDIE("$cmd failed: $?");
   #  }
 }
 
@@ -75,7 +76,7 @@ sub run_vic {
     s/<RESULTS_DIR>/$results_dir_asc/g;  # Note that VIC writes ascii output
   }
   open(CONTROLFILE, ">$controlfile") or
-    die "$0: ERROR: cannot open current controlfile $controlfile\n";
+    LOGDIE("Cannot open current controlfile $controlfile");
   foreach (@MyParamsInfo) {
     print CONTROLFILE;
   }
@@ -83,10 +84,8 @@ sub run_vic {
 
   # Run the model
   #  $cmd = "$MODEL_EXE_DIR/$MODEL_EXE_NAME -g $controlfile 2>&1 >> $LOGFILE";
-  $cmd =
-    "$MODEL_EXE_DIR/$MODEL_EXE_NAME -g $controlfile >& $LOGFILE.tmp; " .
-    "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
-  (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+  $cmd = "$MODEL_EXE_DIR/$MODEL_EXE_NAME -g $controlfile >& $LOGFILE";
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
   #######################################################
   #  # Optionally convert ascii results to netcdf
@@ -170,31 +169,29 @@ sub wrap_run_noah {
   if ($extract_vars && $extract_vars !~ /^none$/i) {
     $cmd =
       "$TOOLS_DIR/wrap_nc2vic.pl $results_dir $output_prefixes[0] " .
-      "$extract_vars $results_dir_asc $output_prefixes[0] scientific >& " .
-      "$LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
-    (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+      "$extract_vars $results_dir_asc $output_prefixes[0] scientific";
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
     #    # Optional post-processing
     #    foreach $cmd (@POSTPROC) {
     #      $cmd = $cmd . " >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; " .
     #        "rm $LOGFILE.tmp";
-    #      (system($cmd)==0) or die "$0: ERROR in $cmd: $?\n";
+    #      (system($cmd)==0) or LOGDIE("$cmd failed: $?");
     #    }
     # Multiply moisture fluxes by sec_per_day to get daily total moisture fluxes
     $status = &make_dir("$results_dir_asc.tmp");
     $cmd =
       "$TOOLS_DIR/wrap_mult.pl $results_dir_asc wb 4 4,5,6 86400 " .
-      "$results_dir_asc.tmp >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; " .
-      "rm $LOGFILE.tmp";
-    (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+      "$results_dir_asc.tmp";
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
     # Clean up temporary directories
     foreach $dir ("$results_dir_asc") {
       $cmd = "rm -rf $dir";
-      (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+      (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
     }
     $cmd = "mv $results_dir_asc.tmp $results_dir_asc";
-    (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   }
 }
 
@@ -225,7 +222,7 @@ sub run_noah {
     }
   }
   open(CONTROLFILE, ">$controlfile") or
-    die "$0: ERROR: cannot open current controlfile $controlfile\n";
+    LOGDIE("Cannot open current controlfile $controlfile");
   foreach (@MyParamsInfo) {
     print CONTROLFILE;
   }
@@ -233,10 +230,8 @@ sub run_noah {
 
   # Run the model
   #  $cmd = "$MODEL_EXE_DIR/$MODEL_EXE_NAME $controlfile 2>&1 >> $LOGFILE";
-  $cmd =
-    "$MODEL_EXE_DIR/$MODEL_EXE_NAME $controlfile >& $LOGFILE.tmp; " .
-    "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
-  (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+  $cmd = "$MODEL_EXE_DIR/$MODEL_EXE_NAME $controlfile >& $LOGFILE";
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
   # Rename state files to contain date of final simulation day for that month
   $year  = $start_year;
@@ -256,7 +251,7 @@ sub run_noah {
       $year, $month, $last_day;
     if (-e $old_state_file_name) {
       $cmd = "mv $old_state_file_name $new_state_file_name";
-      (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+      (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
     }
     $month++;
     if ($month > 12) {
@@ -305,31 +300,29 @@ sub wrap_run_sac {
     #   "$extract_vars $results_dir_asc $output_prefixes[0]";
     $cmd =
       "$TOOLS_DIR/wrap_nc2vic.pl $results_dir $output_prefixes[0] " .
-      "$extract_vars $results_dir_asc $output_prefixes[0] scientific >& " .
-      "$LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
-    (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+      "$extract_vars $results_dir_asc $output_prefixes[0] scientific";
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
     # # Optional post-processing
     # foreach $cmd (@POSTPROC) {
     #   $cmd = $cmd . " >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; " .
     #     "rm $LOGFILE.tmp";
-    #     (system($cmd)==0) or die "$0: ERROR in $cmd: $?\n";
+    #     (system($cmd)==0) or LOGDIE("$cmd failed: $?");
     #    }
     # Multiply moisture fluxes by sec_per_day to get daily total moisture fluxes
     $status = &make_dir("$results_dir_asc.tmp");
     $cmd =
       "$TOOLS_DIR/wrap_mult.pl $results_dir_asc wb 4 4,5,6 86400 " .
-      "$results_dir_asc.tmp >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; " .
-      "rm $LOGFILE.tmp";
-    (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+      "$results_dir_asc.tmp";
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
     # Clean up temporary directories
     foreach $dir ("$results_dir_asc") {
       $cmd = "rm -rf $dir";
-      (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+      (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
     }
     $cmd = "mv $results_dir_asc.tmp $results_dir_asc";
-    (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   }
 }
 
@@ -362,7 +355,7 @@ sub run_sac {
     }
   }
   open(CONTROLFILE, ">$controlfile") or
-    die "$0: ERROR: cannot open current controlfile $controlfile\n";
+    LOGDIE("Cannot open current controlfile $controlfile");
   foreach (@MyParamsInfo) {
     print CONTROLFILE;
   }
@@ -370,10 +363,8 @@ sub run_sac {
 
   # Run the model
   #  $cmd = "$MODEL_EXE_DIR/$MODEL_EXE_NAME $controlfile 2>&1 >> $LOGFILE";
-  $cmd =
-    "$MODEL_EXE_DIR/$MODEL_EXE_NAME $controlfile >& $LOGFILE.tmp; " .
-    "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
-  (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+  $cmd = "$MODEL_EXE_DIR/$MODEL_EXE_NAME $controlfile >& $LOGFILE";
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
   # Rename state files to contain date of final simulation day for that month
   $year  = $start_year;
@@ -394,7 +385,7 @@ sub run_sac {
       $year, $month, $last_day;
     if (-e $old_state_file_name) {
       $cmd = "mv $old_state_file_name $new_state_file_name";
-      (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+      (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
     }
     $month++;
     if ($month > 12) {
@@ -419,55 +410,50 @@ sub wrap_run_clm {
   if ($extract_vars && $extract_vars !~ /^none$/i) {
     $cmd =
       "$TOOLS_DIR/wrap_nc2vic.pl $results_dir $output_prefixes[0] " .
-      "$extract_vars $results_dir_asc $output_prefixes[0] scientific >& " .
-      "$LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
-    (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+      "$extract_vars $results_dir_asc $output_prefixes[0] scientific";
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
     # Optional post-processing
     #    foreach $cmd (@POSTPROC) {
     #      $cmd = $cmd . " >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; " .
     #        "rm $LOGFILE.tmp";
-    #      (system($cmd)==0) or die "$0: ERROR in $cmd: $?\n";
+    #      (system($cmd)==0) or LOGDIE("$cmd failed: $?")
     #    }
     # Multiply moisture fluxes by sec_per_day to get daily total moisture fluxes
     $status = &make_dir("$results_dir_asc.tmp");
     $cmd =
       "$TOOLS_DIR/wrap_mult.pl $results_dir_asc wb 4 4,5,6,7,8 86400 " .
-      "$results_dir_asc.tmp >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; " .
-      "rm $LOGFILE.tmp";
-    (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+      "$results_dir_asc.tmp";
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
     # Add liquid and frozen soil moisture fields together
     $status = &make_dir("$results_dir_asc.tmp2");
     $cmd =
       "$TOOLS_DIR/wrap_add_fields.pl $results_dir_asc.tmp wb 4 " .
       "$results_dir_asc.tmp2 4:5:6,10:20,11:21,12:22,13:23,14:24,15:25,16:26," .
-      "17:27,18:28,19:29 >& $LOGFILE.tmp; cat $LOGFILE.tmp >> $LOGFILE; " .
-      "rm $LOGFILE.tmp";
-    (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+      "17:27,18:28,19:29";
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
     # Insert dummy records where leap days were omitted
     $status = &make_dir("$results_dir_asc.tmp3");
     $cmd =
       "$TOOLS_DIR/wrap_insert_leap_day.pl $results_dir_asc.tmp2 wb " .
-      "$results_dir_asc.tmp3 $start_date $end_date >& $LOGFILE.tmp; " .
-      "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
-    (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+      "$results_dir_asc.tmp3 $start_date $end_date";
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
     # Clean up temporary directories
     foreach $dir ("$results_dir_asc", "$results_dir_asc.tmp",
                   "$results_dir_asc.tmp2") {
       $cmd = "rm -rf $dir";
-      (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+      (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
     }
     $cmd = "mv $results_dir_asc.tmp3 $results_dir_asc";
-    (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
     if ($PROJECT eq "mexico") {
       $cmd =
         "cp $results_dir_asc/wb_22.7500_-109.7500 " .
-        "$results_dir_asc/wb_22.7500_-110.2500 >& $LOGFILE.tmp; " .
-        "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
-      (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+        "$results_dir_asc/wb_22.7500_-110.2500";
+      (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
     }
   }
 }
@@ -502,7 +488,7 @@ sub run_clm {
     s/<INITIAL>/$init_file/g;
   }
   open(CONTROLFILE, ">$controlfile") or
-    die "$0: ERROR: cannot open current controlfile $controlfile\n";
+    LOGDIE("Cannot open current controlfile: $controlfile");
   foreach (@MyParamsInfo) {
     print CONTROLFILE;
   }
@@ -510,7 +496,7 @@ sub run_clm {
 
   # Run the model
   $cmd = "cp $controlfile $MODEL_EXE_DIR/lnd.stdin";
-  (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
   #  $cmd = "/bin/sh; $MODEL_EXE_DIR/$MODEL_EXE_NAME < $controlfile 2>&1 " .
   #    ">> $LOGFILE; exit";
@@ -518,30 +504,27 @@ sub run_clm {
   #    "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp; cd -";
   #  $cmd = "$MODEL_EXE_DIR/$MODEL_EXE_NAME < $controlfile >& $LOGFILE.tmp; " .
   #    "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
-  $cmd =
-    "cd $MODEL_EXE_DIR; ./$MODEL_EXE_NAME >& $LOGFILE.tmp; " .
-    "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp; cd -";
+  $cmd = "cd $MODEL_EXE_DIR; ./$MODEL_EXE_NAME >& $LOGFILE; cd -";
 
   #  print "$cmd\n";
-  (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
   # Insert origin time into the output files
   # This assumes that CLM writes all output variables to one file
   opendir(INDIR, "$results_dir") or
-    die "$0: ERROR: cannot open $results_dir for reading\n";
+    LOGDIE("Cannot open $results_dir for reading");
   @my_filelist = grep /^$PROJECT.clm2.h0/, readdir(INDIR);
   closedir(INDIR);
   foreach $myfile (@my_filelist) {
     $newfile = $myfile;
     $newfile =~ s/$PROJECT.clm2.h0/$output_prefixes[0]/;
     $cmd = "mv $results_dir/$myfile $results_dir/$newfile";
-    (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
     $cmd =
       "$ncodir/ncatted -O -a time_origin,global,c,c," .
       "\"$start_year-$start_month-$start_day 00:00:00\" " .
-      "$results_dir/$newfile >& $LOGFILE.tmp; " .
-      "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
-    (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+      "$results_dir/$newfile";
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   }
 
   # Rename state file to contain date of final simulation day
@@ -550,7 +533,7 @@ sub run_clm {
   $new_state_file_name = sprintf "%s/state.%04d%02d%02d.nc", $StateModelDir,
     $end_year, $end_month, $end_day;
   $cmd = "mv $old_state_file_name $new_state_file_name";
-  (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 }
 
 ############################# apply_scale_factors ##############################
@@ -560,11 +543,11 @@ sub apply_scale_factors {
     my $infile  = $srcdir . "/" . $prefix . "_" . $key;
     my $outfile = $destdir . "/" . $prefix . "_" . $key;
     open IN, "<$infile" or
-      die "Error: Scaling failed - cannot open $infile: $!\n";
+      LOGDIE("Scaling failed - cannot open $infile: $!");
     open OUT, ">$outfile" or
-      die "Error: Scaling failed - cannot open $outfile: $!\n";
+      LOGDIE("Scaling failed - cannot open $outfile: $!");
     my @contents = <IN>;
-    close IN or warn "Warning: Cannot close $infile\n";
+    close IN or WARN("Cannot close $infile");
     @contents = trim(@contents);
     my @scaled_contents = ();
 
@@ -574,16 +557,16 @@ sub apply_scale_factors {
       push @scaled_contents, join(' ', @fields) . "\n";
     }
     print OUT @scaled_contents;
-    close OUT or warn "Warning: Cannot close $outfile\n";
+    close OUT or WARN("Cannot close $outfile");
   }
 }
 
 ############################### read_rescale_file ##############################
 sub read_rescale_file {
   my ($infile, $href) = @_;
-  open IN, "<$infile" or die "Error: Cannot open $infile: $!\n";
+  open IN, "<$infile" or LOGDIE("Cannot open $infile: $!");
   my @contents = <IN>;
-  close IN or warn "Warning: Cannot close $dirfile\n";
+  close IN or WARN("Cannot close $dirfile");
   @contents = trim(@contents);
   for my $line (@contents) {
     my @fields = split /\s+/, $line;

@@ -23,8 +23,10 @@ publish_figs.pl
 Script to copy model results plots to web site
 
 =cut
+
 #-------------------------------------------------------------------------------
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Log::Log4perl qw(:easy);
 use Pod::Usage;
 use Getopt::Long;
 
@@ -42,6 +44,7 @@ use simma_util;
 #-------------------------------------------------------------------------------
 # Parse the command line
 #-------------------------------------------------------------------------------
+Log::Log4perl->init('<SYSTEM_LOG_CONFIG>');
 my $result = GetOptions("help|h|?" => \$help,
                         "man|info" => \$man);
 pod2usage(-verbose => 2, -exitstatus => 0) if $man;
@@ -67,11 +70,11 @@ $WebPubDir = $var_info_project{"WEB_PUB_DIR"} . "/$PROJECT";
 # Check for directories; create if necessary & possible
 foreach $dir ($DepotDir, $WebPubDir) {
   if (!-d $dir) {
-    die "$0: ERROR: directory $dir not found\n";
+    LOGDIE("Directory $dir not found");
   }
 }
 
 # Copy plots
 $cmd = "cp $DepotDir/* $WebPubDir/";
-print "$cmd\n";
-(system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+DEBUG($cmd);
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");

@@ -26,8 +26,11 @@ For example, to add columns 3,4,and 5 together, and to add columns 7 and 8
 together: add_fields.pl filename 3:4:5,7:8
 
 =cut
+
+use Log::Log4perl qw(:easy);
 use Pod::Usage;
 use Getopt::Long;
+Log::Log4perl->init('<SYSTEM_LOG_CONFIG>');
 my $result = GetOptions("help|h|?" => \$help,
                         "man|info" => \$man);
 pod2usage(-verbose => 2, -exitstatus => 0) if $man;
@@ -41,7 +44,7 @@ pod2usage(-verbose => 1, -exitstatus => 1)
     not defined
     ($col_group_list);
 @col_groups = split /,/, $col_group_list;
-open(FILE, "$file") or die "$0: ERROR: cannot open $file for reading\n";
+open(FILE, "$file") or LOGDIE("Cannot open $file for reading");
 
 foreach (<FILE>) {
   chomp;

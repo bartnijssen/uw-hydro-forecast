@@ -7,6 +7,8 @@
 #-------------------------------------------------------------------------------
 # Rout routines
 #-------------------------------------------------------------------------------
+use Log::Log4perl qw(:easy);
+
 #-------------------------------------------------------------------------------
 # wrap_run_vic - runs the VIC model for the simulation period
 #-------------------------------------------------------------------------------
@@ -48,8 +50,8 @@ sub run_rout {
     s/<ROUT_END_DAY>/$end_day/g;
   }
   open(CONTROLFILE, ">$controlfile") or
-    die "$0: ERROR: cannot open current controlfile $controlfile\n";
-  print "OPENING current controlfile $controlfile\n";
+    LOGDIE("Cannot open current controlfile $controlfile");
+  DEBUG("OPENING current controlfile $controlfile");
   foreach (@MyParamsInfo) {
     print "$_\n";
     print CONTROLFILE;
@@ -57,11 +59,9 @@ sub run_rout {
   close(CONTROLFILE);
 
   # Run the model
-  $cmd =
-    "$ROUTE_EXE_DIR/$ROUTE_EXE_NAME $controlfile >& $LOGFILE.tmp; " .
-    "cat $LOGFILE.tmp >> $LOGFILE; rm $LOGFILE.tmp";
-  print "$cmd\n";
-  (system($cmd) == 0) or die "$0: ERROR in $cmd: $?\n";
+  $cmd = "$ROUTE_EXE_DIR/$ROUTE_EXE_NAME $controlfile >& $LOGFILE";
+  DEBUG($cmd);
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 }  ### Sub_rout
 
 #-------------------------------------------------------------------------------

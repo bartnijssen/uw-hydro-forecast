@@ -23,8 +23,10 @@ wrap_multimodel_nowcast.pl [options] project stage
 Wrapper script for complete multi-model nowcast
 
 =cut
+
 #-------------------------------------------------------------------------------
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Log::Log4perl qw(:easy);
 use Pod::Usage;
 use Getopt::Long;
 
@@ -40,14 +42,10 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 # Subroutine for reading config files
 use simma_util;
 
-# Filename parsing
-use File::Basename;
-use POSIX qw(strftime);
-($scriptname) = fileparse($0);
-
 #-------------------------------------------------------------------------------
 # Command-line arguments
 #-------------------------------------------------------------------------------
+Log::Log4perl->init('<SYSTEM_LOG_CONFIG>');
 my $result = GetOptions("help|h|?" => \$help,
                         "man|info" => \$man);
 pod2usage(-verbose => 2, -exitstatus => 0) if $man;
@@ -61,9 +59,6 @@ pod2usage(-verbose => 1, -exitstatus => 1) if not defined($PROJECT);
 #-------------------------------------------------------------------------------
 # Set up constants
 #-------------------------------------------------------------------------------
-# Unique identifier for this job
-$JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
-
 # !!!!!!!!!!!!!!!!! GET THIS FROM CONFIG FILE !!!!!!!!!!!!!!!!!!
 # Set up netcdf access
 $ENV{INC_NETCDF} = "<SYSTEM_NETCDF_INC>";
@@ -79,13 +74,6 @@ $ModelList            = $var_info_project{"MODEL_LIST"};
 @models               = split /,/, $ModelList;
 $EmailList            = $var_info_project{"EMAIL_LIST"};
 @emails               = split /,/, $EmailList;
-$LogDir  = $var_info_project{"LOGS_CURRSPIN_DIR"} . "/" . $scriptname;
-$LogFile = "$LogDir/log.$scriptname.$JOB_ID";
-
-# Check for directories; create if necessary & appropriate
-foreach $dir ($LogDir) {
-  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
-}
 
 # Stage can be defined in the config file. Precedence is:command-line, config
 # file. It is 1 if it is not specified in either of those locations
@@ -106,11 +94,9 @@ if (not defined $stage) {
 # Update ascii forcings
 #-------------------------------------------------------------------------------
 if ($stage == 1) {
-  $cmd =
-    "$TOOLS_DIR/update_forcings_asc.pl $PROJECT >& $LogFile.tmp; " .
-    "cat $LogFile.tmp >> $LogFile";
-  print "$cmd\n";
-  (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+  $cmd = "$TOOLS_DIR/update_forcings_asc.pl $PROJECT";
+  DEBUG($cmd);
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   $stage++;
 }
 
@@ -127,11 +113,9 @@ if ($stage == 2) {
     $ModelType          = $var_info_model{"MODEL_TYPE"};
     $ForcingType        = $var_info_model{"FORCING_TYPE"};
     if ($ModelType eq "real" && $ForcingType ne "nc") {
-      $cmd =
-        "$TOOLS_DIR/nowcast_model.pl $PROJECT $model >& $LogFile.tmp; " .
-        "cat $LogFile.tmp >> $LogFile";
-      print "$cmd\n";
-      (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+      $cmd = "$TOOLS_DIR/nowcast_model.pl $PROJECT $model";
+      DEBUG($cmd);
+      (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
     }
   }
   $stage++;
@@ -158,11 +142,9 @@ if ($stage == 3) {
 
   # Generate the netcdf forcings
   if ($need_netcdf) {
-    $cmd =
-      "$TOOLS_DIR/update_forcings_nc.pl $PROJECT >& $LogFile.tmp; " .
-      "cat $LogFile.tmp >> $LogFile";
-    print "$cmd\n";
-    (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+    $cmd = "$TOOLS_DIR/update_forcings_nc.pl $PROJECT";
+    DEBUG($cmd);
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   }
   $stage++;
 }
@@ -180,11 +162,9 @@ if ($stage == 4) {
     $ModelType          = $var_info_model{"MODEL_TYPE"};
     $ForcingType        = $var_info_model{"FORCING_TYPE"};
     if ($ModelType eq "real" && $ForcingType eq "nc") {
-      $cmd =
-        "$TOOLS_DIR/nowcast_model.pl $PROJECT $model >& $LogFile.tmp; " .
-        "cat $LogFile.tmp >> $LogFile";
-      print "$cmd\n";
-      (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+      $cmd = "$TOOLS_DIR/nowcast_model.pl $PROJECT $model";
+      DEBUG($cmd);
+      (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
     }
   }
   $stage++;
@@ -202,11 +182,9 @@ if ($stage == 5) {
     %var_info_model     = %{$var_info_model_ref};
     $ModelType          = $var_info_model{"MODEL_TYPE"};
     if ($ModelType eq "ensemble") {
-      $cmd =
-        "$TOOLS_DIR/nowcast_model.pl $PROJECT $model >& $LogFile.tmp; " .
-        "cat $LogFile.tmp >> $LogFile";
-      print "$cmd\n";
-      (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+      $cmd = "$TOOLS_DIR/nowcast_model.pl $PROJECT $model";
+      DEBUG($cmd);
+      (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
     }
   }
   $stage++;
@@ -217,8 +195,8 @@ if ($stage == 5) {
 #-------------------------------------------------------------------------------
 if ($stage == 6) {
   $cmd = "$TOOLS_DIR/publish_figs.pl $PROJECT";
-  print "$cmd\n";
-  (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+  DEBUG($cmd);
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   $stage++;
 }
 
@@ -230,7 +208,5 @@ $subject   = "\"[USWIDE] Nowcast $PROJECT complete\"";
 $addresses = join " ", @emails;
 $cmd       = "echo OK | /bin/mail $addresses -s $subject";
 
-####print "$cmd\n";
-###(system($cmd)==0) or die "$0: ERROR: $cmd failed: $?\n";
-# Clean up tmp files
-`rm -f $LogFile.tmp`;
+####DEBUG($cmd);
+###(system($cmd)==0) or LOGDIE("$cmd failed: $?");

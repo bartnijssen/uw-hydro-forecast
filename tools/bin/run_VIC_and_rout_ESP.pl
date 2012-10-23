@@ -39,8 +39,10 @@ Run a set of ESP forecasts, given existing state files & forcings, etc.
   and others since then 
 
 =cut
+
 #-------------------------------------------------------------------------------
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Log::Log4perl qw(:easy);
 use Pod::Usage;
 use Getopt::Long;
 
@@ -57,11 +59,11 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 use simma_util;
 use Date::Calc qw(leap_year Days_in_Month Delta_Days Add_Delta_Days
   Add_Delta_YM);
-use POSIX qw(strftime);
 
 #-------------------------------------------------------------------------------
 # Command-line arguments
 #-------------------------------------------------------------------------------
+Log::Log4perl->init('<SYSTEM_LOG_CONFIG>');
 my $result = GetOptions("help|h|?" => \$help,
                         "man|info" => \$man);
 pod2usage(-verbose => 2, -exitstatus => 0) if $man;
@@ -95,9 +97,6 @@ $PROJECT    =~ tr/A-Z/a-z/;
 $PROJECT_UC =~ tr/a-z/A-Z/;
 $FLEN = 367;  ### Number of days to run the model for in future
 
-# Unique identifier for this job
-$JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
-
 # Read project configuration info
 $ConfigProject        = "$CONFIG_DIR/config.project.$PROJECT";
 $var_info_project_ref = &read_config($ConfigProject);
@@ -121,7 +120,7 @@ $ResultsModelAscDir = $var_info_project{"RESULTS_MODEL_ASC_DIR"};
 $var_info_project{"LOGS_MODEL_DIR"} =~ s/<LOGS_SUBDIR>/esp/g;
 $LogDir = $var_info_project{"LOGS_MODEL_DIR"};
 foreach $dir ($LogDir) {
-  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
+  (&make_dir($dir) == 0) or LOGDIE("Cannot create path $dir: $!");
 }
 
 # The final processed model results will be stored in the ascii dir
@@ -140,8 +139,8 @@ if ($results_subdir_override) {
 }
 $ESP_START_TIME = localtime;
 while ($METYR <= $FEYR) {  # forecast year loop
-  $SDAY = $Cday;
-  $FORC_START_DATE = sprintf "%04d-%02d-%02d", $METYR, $Cmon, $SDAY;
+  $SDAY                = $Cday;
+  $FORC_START_DATE     = sprintf "%04d-%02d-%02d", $METYR, $Cmon, $SDAY;
   $FORC_START_DATE_STR = sprintf "%04d%02d%02d", $METYR, $Cmon, $SDAY;
 
   # move forward for FLEN days
@@ -153,12 +152,9 @@ while ($METYR <= $FEYR) {  # forecast year loop
   ($Stateyr, $Statemon, $Stateday) = Add_Delta_Days($Cyr, $Cmon, $Cday, 0);
   $datestr = sprintf("%04d%02d%02d", $Stateyr, $Statemon, $Stateday);
 
-  #### Will have to change this for other models
-  $LogFile = "$LogDir/log.$PROJECT.$MODEL.model_run.$datestr.$METYR.pl.$JOB_ID";
-
   ####### ESP PART ##########################################
   if ($RUN_ESP == 1) {
-    print "Running ensembles intialized on $FORC_START_DATE\n ";
+    INFO("Running ensembles intialized on $FORC_START_DATE");
 
     #### ESP_STORAGE = 1 (when the routing part is inactivated ($RUN_ROUT ==
     #### 0). if $RUN_ROUT == 1 then it means ESP output does not needed to be
@@ -168,16 +164,9 @@ while ($METYR <= $FEYR) {  # forecast year loop
     $cmd =
       "$TOOLS_DIR/run_model_ESP.pl -m $MODEL -p $PROJECT -f retro " .
       "-r esp/esp.$datestr.${FORC_START_DATE_STR} -s $FORC_START_DATE " .
-      "-e $FORC_UPD_END_DATE -st curr_spinup -i $datestr -z $ESP_STORAGE " .
-      ">& $LogFile.tmp";
-    print "$cmd\n";
-    (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
-    $cmd = "cat $LogFile.tmp >> $LogFile";
-    print "$cmd\n";
-    (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
-    $cmd = "rm -f $LogFile.tmp";
-    print "$cmd\n";
-    (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+      "-e $FORC_UPD_END_DATE -st curr_spinup -i $datestr -z $ESP_STORAGE";
+    DEBUG($cmd);
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   }
 
   #################### Routing  Part ###########################
@@ -200,8 +189,7 @@ while ($METYR <= $FEYR) {  # forecast year loop
       Add_Delta_Days($Cyr, $Cmon, $Cday, $FLEN);
     $ROUT_END_DATE = sprintf "%04d-%02d-%02d", $Rout_Eyr, $Rout_Emon,
       $Rout_Eday;
-    my $STATE_DATE = sprintf "%04d-%02d-%02d", $Stateyr, $Statemon,
-      $Stateday;
+    my $STATE_DATE = sprintf "%04d-%02d-%02d", $Stateyr, $Statemon, $Stateday;
 
     # HACK to sidestep clutting the results directory. See issue 27.
     # Bart - Fri Sep 28 2012
@@ -209,15 +197,9 @@ while ($METYR <= $FEYR) {  # forecast year loop
       "$TOOLS_DIR/run_rout_model.pl -m $MODEL -p $PROJECT " .
       "-f curr_spinup -r esp/esp.$datestr.${FORC_START_DATE_STR} " .
       "-s $ROUT_START_DATE -e $ROUT_END_DATE -i $STATE_DATE " .
-      "-en $METYR -z $ESP_STORAGE >& $LogFile.tmp";
-    print "$cmd\n";
-    (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
-    $cmd = "cat $LogFile.tmp >> $LogFile";
-    print "$cmd\n";
-    (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
-    $cmd = "rm -f $LogFile.tmp";
-    print "$cmd\n";
-    (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+      "-en $METYR -z $ESP_STORAGE";
+    DEBUG($cmd);
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   }
   $METYR = $METYR + 1;
 }
@@ -230,6 +212,6 @@ if (exists $var_info_project{"EMAIL_LIST"} and $var_info_project{"EMAIL_LIST"})
 {
   ($addresses = $var_info_project{"EMAIL_LIST"}) =~ s/,/ /g;
   $cmd = "echo Completed | /bin/mail -s $subject $addresses";
-  print "$cmd\n";
-  (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+  DEBUG($cmd);
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 }

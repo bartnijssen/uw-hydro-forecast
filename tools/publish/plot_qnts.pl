@@ -27,8 +27,10 @@ plot_qnts.pl
 Script to plot model results
 
 =cut
+
 #-------------------------------------------------------------------------------
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Log::Log4perl qw(:easy);
 use Pod::Usage;
 use Getopt::Long;
 
@@ -54,6 +56,7 @@ use LWP::Simple;
 #-------------------------------------------------------------------------------
 # Parse the command line
 #-------------------------------------------------------------------------------
+Log::Log4perl->init('<SYSTEM_LOG_CONFIG>');
 my $result = GetOptions("help|h|?" => \$help,
                         "man|info" => \$man);
 pod2usage(-verbose => 2, -exitstatus => 0) if $man;
@@ -131,7 +134,7 @@ foreach $dir ("$XYZZ_DIR/$datenow") {
   }
 }
 foreach $dir ("$PLOT_DIR/$datenow") {
-  &make_dir($dir) or die "$0: ERROR: Cannot create path $dir: $!\n";
+  &make_dir($dir) or LOGDIE("Cannot create path $dir: $!");
 }
 if ($modelalias =~ /vic/i && $PROJECT =~ /conus/i) {
   push @varnames, ("smDM", "smw", "smc", "sme");
@@ -232,17 +235,17 @@ foreach $varname (@varnames) {
         }
         $otherdate = sprintf("%04d%02d%02d", $yr2, $mon2, $day2);
       } else {
-        die "$0: ERROR: unsupported period: $periods[$pidx]\n";
+        LOGDIE("unsupported period: $periods[$pidx]");
       }
       if (-e "$XYZZ_DIR/$otherdate") {
         $srcfile2 =
           "$XYZZ_DIR/$otherdate/$varname.$PROJECT_UC.$modelalias.f-c_mean.a-m_anom.qnt.xyzz";
         if (!-e $srcfile2) {
-          print "$0: WARNING: $srcfile2 not found\n";
+          LOGWARN("$srcfile2 not found");
           next;
         }
       } else {
-        print "$0: WARNING: $XYZZ_DIR/$otherdate not found\n";
+        LOGWARN("$XYZZ_DIR/$otherdate not found");
         next;
       }
     }
@@ -320,13 +323,13 @@ foreach $varname (@varnames) {
     if ($varname =~ /^sm(DM|w|c|e)?$/ || $varname =~ /^stot$/) {
       if ($periods[$pidx] eq "") {
         $cmd = "awk \'{print \$1,\$2,\$7*100}\' $srcfile1 > $datafile";
-        (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+        (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
       } else {
         $cmd = "paste $srcfile1 $srcfile2 > $datafile.tmp";
-        (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+        (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
         $cmd =
           "awk \'{print \$1,\$2,(\$7-\$14)*100}\' $datafile.tmp > $datafile";
-        (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+        (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
       }
     } elsif ($varname eq "swe") {
       if ($modelalias =~ /multimodel/i) {
@@ -335,18 +338,18 @@ foreach $varname (@varnames) {
       if ($periods[$pidx] eq "") {
         $cmd =
           "awk \'{if (\$3 > $swe_thresh || \$4 > $swe_thresh) print \$1,\$2,\$7*100}\' $srcfile1 > $datafile";
-        (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+        (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
       } else {
         $cmd = "paste $srcfile1 $srcfile2 > $datafile.tmp";
-        (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+        (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
         $cmd =
           "awk \'{if (\$3 > $swe_thresh || \$4 > $swe_thresh) print \$1,\$2,(\$7-\$14)*100}\' $datafile.tmp > $datafile";
-        (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+        (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
       }
     } else {
       $col = $pidx + 1;
       $cmd = "awk \'{print \$1,\$2,\$(\'$col\'+2)*100}\' $srcfile1 > $datafile";
-      (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+      (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
     }
 
     # Plot-specific layers
@@ -362,12 +365,12 @@ foreach $varname (@varnames) {
     $plot_scr = "$TOOLS_DIR/plot.var_qnt.scr";
     $cmd =
       "$plot_scr $datafile $outfile $current_COORD $current_PROJ $current_ANNOT $current_XX $current_YY $current_SCALE_X \"$title1\" \"$title2\" $cptfile \"$cptlabel1\" \"$cptlabel2\" $polyfile1 $polyfile2 $PROJECT $modelalias";
-    print "$cmd\n";
-    (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+    DEBUG($cmd);
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
     # Clean up temp data file
     $cmd = "rm -f $datafile $datafile.tmp";
-    (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   }
 }
-print "Done with all plots!\n";
+INFO("Done with all plots!");

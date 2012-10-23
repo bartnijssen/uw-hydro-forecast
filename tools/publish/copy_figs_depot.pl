@@ -27,8 +27,10 @@ copy_figs_depot.pl
 Script to copy model results plots to web site
 
 =cut
+
 #-------------------------------------------------------------------------------
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Log::Log4perl qw(:easy);
 use Pod::Usage;
 use Getopt::Long;
 
@@ -46,6 +48,7 @@ use simma_util;
 #-------------------------------------------------------------------------------
 # Parse the command line
 #-------------------------------------------------------------------------------
+Log::Log4perl->init('<SYSTEM_LOG_CONFIG>');
 my $result = GetOptions("help|h|?" => \$help,
                         "man|info" => \$man);
 pod2usage(-verbose => 2, -exitstatus => 0) if $man;
@@ -100,11 +103,11 @@ $DepotDir = $var_info_project{"PLOT_DEPOT_DIR"};
 # Check for directories; create if necessary & possible
 foreach $dir ($XYZZDir, $PlotDir, $DepotDir) {
   if (!-d $dir) {
-    die "$0: ERROR: directory $dir not found\n";
+    LOGDIE("Directory $dir not found");
   }
 }
 foreach $dir ($DepotDir) {
-  &make_dir($dir) or die "$0: ERROR: Cannot create path $dir: $!\n";
+  &make_dir($dir) or LOGDIE("Cannot create path $dir: $!");
 }
 
 # Copy stats
@@ -113,8 +116,8 @@ if ($modelalias eq "all") {
 } else {
   $cmd = "cp $XYZZDir/*${modelalias}* $DepotDir/";
 }
-print "$cmd\n";
-(system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+DEBUG($cmd);
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
 # Copy plots
 if ($modelalias eq "all") {
@@ -122,5 +125,5 @@ if ($modelalias eq "all") {
 } else {
   $cmd = "cp $PlotDir/*${modelalias}* $DepotDir/";
 }
-print "$cmd\n";
-(system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+DEBUG($cmd);
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");

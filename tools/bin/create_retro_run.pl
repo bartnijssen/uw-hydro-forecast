@@ -42,11 +42,12 @@ and libraries in that same system to run. This means that the script does
 necessarily work as a standalone program.
 
 =cut
+
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Log::Log4perl qw(:easy);
 use Getopt::Long;
 use Pod::Usage;
 use Date::Calc qw(Delta_Days Add_Delta_YMD);
-use POSIX qw(strftime);
 use File::Temp qw(tempfile);
 use File::Copy qw(move);
 use strict;  # sanity!!
@@ -77,6 +78,7 @@ my $start_date;
 my $end_date;
 my $routeflows;
 my $verbose = 0;
+Log::Log4perl->init('<SYSTEM_LOG_CONFIG>');
 
 # Hash used in GetOptions function
 my $status = GetOptions(
@@ -104,16 +106,13 @@ pod2usage(-verbose => 1, -exitstatus => 1)
 
 # Parse & validate start/end dates
 my @startdate = parse_yyyymmdd($start_date, "-");
-@startdate == 3 or die "$0: ERROR: start date must have format YYYY-MM-DD.\n";
-isdate(@startdate) or die "Not a valid start date: $start_date\n";
+@startdate == 3 or LOGDIE("Start date must have format YYYY-MM-DD");
+isdate(@startdate) or LOGDIE("Not a valid start date: $start_date");
 my @enddate = parse_yyyymmdd($end_date, "-");
-@enddate == 3 or die "$0: ERROR: end date must have format YYYY-MM-DD.\n";
-isdate(@enddate) or die "Not a valid end date: $end_date\n";
+@enddate == 3 or LOGDIE("End date must have format YYYY-MM-DD");
+isdate(@enddate) or LOGDIE("Not a valid end date: $end_date");
 Delta_Days(@startdate, @enddate) > 0 or
-  die "$0: ERROR: start date is later than end date.\n";
-
-# Unique identifier for this job
-my $JOB_ID = strftime "%y%m%d-%H%M%S", localtime;
+  LOGDIE("Start date is later than end date.");
 
 # Read project configuration info
 my $ConfigProject        = "$CONFIG_DIR/config.project.$project";
@@ -135,22 +134,15 @@ foreach my $key_proj (keys(%var_info_project)) {
 $var_info_project{"LOGS_MODEL_DIR"} =~ s/<LOGS_SUBDIR>/retro/g;
 my $LogDir = $var_info_project{"LOGS_MODEL_DIR"};
 foreach my $dir ($LogDir) {
-  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
+  (&make_dir($dir) == 0) or LOGDIE("Cannot create path $dir: $!");
 }
-my $LogFile = "$LogDir/log.$project.$model.create_retro_run.pl.$JOB_ID";
 
 # First pass through: cold start for full period
 my $cmd =
   "$TOOLS_DIR/run_model.pl -m $model -p $project -f retro " .
-  "-s $start_date -e $end_date " . ">& $LogFile.tmp";
-print "$cmd\n";
-(system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
-$cmd = "cat $LogFile.tmp >> $LogFile";
-print "$cmd\n";
-(system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
-$cmd = "rm -f $LogFile.tmp";
-print "$cmd\n";
-(system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+  "-s $start_date -e $end_date";
+DEBUG($cmd);
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
 # Recycle model state from end of run and run for a single year 10 times
 my $state_subdir =
@@ -174,19 +166,12 @@ for (my $i = 0 ; $i < 10 ; $i++) {
     "$TOOLS_DIR/run_model.pl -m $model -p $project -f retro " .
     "-s $start_date -e $enddate_oneyear -i $initfile";
   $cmd .= " -l" if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i);
-  $cmd .= " >& $LogFile.tmp";
-  print "$cmd\n";
-  (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
-  $cmd = "cat $LogFile.tmp >> $LogFile";
-  print "$cmd\n";
-  (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
-  $cmd = "rm -f $LogFile.tmp";
-  print "$cmd\n";
-  (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+  DEBUG($cmd);
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   $initfile =
     $state_subdir . '/' . 'state_' . sprintf("%04d%02d%02d", @enddate_oneyear);
   move($initfile, $tmpfilename) or
-    die "Error: Cannot move $initfile to $tmpfilename: $!\n";
+    LOGDIE("Cannot move $initfile to $tmpfilename: $!");
   $initfile = $tmpfilename;
 }
 
@@ -195,18 +180,11 @@ $cmd =
   "$TOOLS_DIR/run_model.pl -m $model -p $project -f retro " .
   "-s $start_date -e $end_date -i $initfile";
 $cmd .= " -l" if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i);
-$cmd .= " >& $LogFile.tmp";
-print "$cmd\n";
-(system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
-$cmd = "cat $LogFile.tmp >> $LogFile";
-print "$cmd\n";
-(system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
-$cmd = "rm -f $LogFile.tmp";
-print "$cmd\n";
-(system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+DEBUG($cmd);
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
 # Cleanup: $cleanup = 1 doesn't remove the tempfile, because it was overwritten
 # I presume. So we will do it ourselves
 if ($cleanup and -e $tmpfilename) {
-  unlink $tmpfilename or warn "Warning: Cannot remove $tmpfilename: $!\n";
+  unlink $tmpfilename or WARN("Cannot remove $tmpfilename: $!");
 }

@@ -21,11 +21,14 @@ wrap_insert_leap_day.pl [options] indir prefix outdir start_date end_date
 Wrapper script for insert_leap_day.pl
 
 =cut
+
+use Log::Log4perl qw(:easy);
 use Pod::Usage;
 use Getopt::Long;
 
 # Tools directory
 $TOOLS_DIR = "<SYSTEM_INSTALLDIR>/bin";
+Log::Log4perl->init('<SYSTEM_LOG_CONFIG>');
 my $result = GetOptions("help|h|?" => \$help,
                         "man|info" => \$man);
 pod2usage(-verbose => 2, -exitstatus => 0) if $man;
@@ -52,17 +55,17 @@ if (!($start_year % 4 == 0 && $start_month * 1 <= 2 && $end_month * 1 > 2) &&
     !($end_year % 4 == 0 && $end_month * 1 > 2)) {
   $copy_files = 1;
 }
-opendir(INDIR, $indir) or die "$0: ERROR: cannot open $indir\n";
+opendir(INDIR, $indir) or LOGDIE("Cannot open $indir");
 @filelist = grep /^$prefix/, readdir(INDIR);
 closedir(INDIR);
 if ($copy_files) {
   $cmd = "rm -rf $outdir";
-  (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   $cmd = "cp -r $indir $outdir";
-  (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 } else {
   foreach $file (sort(@filelist)) {
     $cmd = "$TOOLS_DIR/insert_leap_day.pl $indir/$file > $outdir/$file";
-    (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   }
 }

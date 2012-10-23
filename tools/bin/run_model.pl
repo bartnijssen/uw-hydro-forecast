@@ -129,10 +129,12 @@ Arguments:
    are located, as: run_model.pl (blah blah) -mspc "-pe path_to_pe_files"
 
 =cut
+
 #-------------------------------------------------------------------------------
 no warnings qw(once);  # don't like this, but there are global
                        # variables used by model_specific.pl
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Log::Log4perl qw(:easy);
 use Getopt::Long;
 use Pod::Usage;
 
@@ -164,6 +166,8 @@ require "$TOOLS_DIR/model_specific.pl";
 #-------------------------------------------------------------------------------
 # Parse the command line
 #-------------------------------------------------------------------------------
+Log::Log4perl->init('<SYSTEM_LOG_CONFIG>');
+
 # Default values
 $forcing_subdir = "";
 $results_subdir = "";
@@ -208,29 +212,28 @@ pod2usage(-verbose => 1, -exitstatus => -1)
 if ($start_date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/) {
   ($start_year, $start_month, $start_day) = ($1, $2, $3);
 } else {
-  print STDERR "$0: ERROR: start date must have format YYYY-MM-DD.\n";
+  LOGWARN("Start date must have format YYYY-MM-DD.");
   pod2usage(-verbose => 1, -exitstatus => -1);
 }
 if ($end_date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/) {
   ($end_year, $end_month, $end_day) = ($1, $2, $3);
 } else {
-  print STDERR "$0: ERROR: end date must have format YYYY-MM-DD.\n";
+  LOGWARN("End date must have format YYYY-MM-DD.");
   pod2usage(-verbose => 1, -exitstatus => -1);
 }
 if ($start_year > $end_year) {
-  print STDERR "$0: ERROR: start_date is later than end_date: " .
-    "start_year > end_year.\n";
+  LOGWARN("tart_date is later than end_date: " . "start_year > end_year.");
   pod2usage(-verbose => 1, -exitstatus => -1);
 } elsif ($start_year == $end_year) {
   if ($start_month > $end_month) {
-    print STDERR "$0: ERROR: start_date is later than end_date: " .
-      "start_year == end_year and start_month > end_month.\n";
+    LOGWARN("Start_date is later than end_date: " .
+            "start_year == end_year and start_month > end_month");
     pod2usage(-verbose => 1, -exitstatus => -1);
   } elsif ($start_month == $end_month) {
     if ($start_day > $end_day) {
-      print STDERR "$0: ERROR: start_date is later than end_date: " .
-        "start_year == end_year, start_month == end_month " .
-        "and start_day > end_day.\n";
+      LOGWARN("Start_date is later than end_date: " .
+              "start_year == end_year, start_month == end_month " .
+              "and start_day > end_day.");
       pod2usage(-verbose => 1, -exitstatus => -1);
     }
   }
@@ -344,7 +347,7 @@ if ($MODEL_FORCING_TYPE eq $ForcTypeAscVic) {
 
 # Date of beginning of data forcings
 open(FILE, $StartDateFile) or
-  die "$0: ERROR: cannot open file $StartDateFile\n";
+  LOGDIE("Cannot open file $StartDateFile");
 foreach (<FILE>) {
   if (/^(\d+)\s+(\d+)\s+(\d+)\s+/) {
     ($Forc_Syr, $Forc_Smon, $Forc_Sday) = ($1, $2, $3);
@@ -355,26 +358,25 @@ close(FILE);
 #---------------------------------------------------
 # HACK!
 if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
-  $local_root = "<SYSTEM_LOCAL_ROOT>";
+  $local_root        = "<SYSTEM_LOCAL_ROOT>";
   $PROJECT_DIR       = $var_info_project{"PROJECT_DIR"};
   $LOCAL_PROJECT_DIR = $var_info_project{"LOCAL_PROJECT_DIR"};
   $replace           = "<SYSTEM_ROOT>";
   $LOCAL_PROJECT_DIR =~ s/$replace/$local_root/;
-  print "$0: LOCAL_PROJECT_DIR: $LOCAL_PROJECT_DIR\n";
 }
 
 #---------------------------------------------------
 # Model parameters
 $ParamsTemplate = "$ParamsModelDir/input.template";
 open(PARAMS_TEMPLATE, $ParamsTemplate) or
-  die "$0: ERROR: cannot open parameter template file $ParamsTemplate\n";
+  LOGDIE("Cannot open parameter template file $ParamsTemplate");
 @ParamsInfo = <PARAMS_TEMPLATE>;
 close(PARAMS_TEMPLATE);
 
 # Check for directories; create if necessary & appropriate
 foreach $dir ($ParamsModelDir, $ForcingModelDir) {
   if (!-d $dir) {
-    die "$0: ERROR: directory $dir not found\n";
+    LOGDIE("Directory $dir not found");
   }
 }
 foreach $dir (
@@ -382,7 +384,7 @@ foreach $dir (
               $ResultsModelFinalDir, $StateModelDir,
               $ControlModelDir,      $LogsModelDir
   ) {
-  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
+  (&make_dir($dir) == 0) or LOGDIE("Cannot create path $dir: $!");
 }
 
 # Output Directories
@@ -409,11 +411,12 @@ if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
   $state_dir       = $LOCAL_STATE_DIR;
   $control_dir     = $LOCAL_CONTROL_DIR;
   $logs_dir        = $LOCAL_LOGS_DIR;
+
   # Clean out the directories if they exist
   foreach $dir ($state_dir, $control_dir, $logs_dir) {
     if (-e $dir) {
       $cmd = "rm -rf $dir";
-      (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+      (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
     }
   }
 }
@@ -422,15 +425,14 @@ if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
 foreach $dir ($results_dir, $results_dir_asc) {
   if (-e $dir) {
     $cmd = "rm -rf $dir";
-    (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+    (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
   }
 }
 
 # Create the directories
-foreach $dir ($results_dir, $results_dir_asc,
-              $state_dir,   $control_dir,
+foreach $dir ($results_dir, $results_dir_asc, $state_dir, $control_dir,
               $logs_dir) {
-  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
+  (&make_dir($dir) == 0) or LOGDIE("Cannot create path $dir: $!");
 }
 
 # Override initial state file if specified on command line
@@ -439,7 +441,7 @@ if ($init_file) {
     if (-e "$state_dir/$init_file") {
       $init_file = "$state_dir/$init_file";
     } else {
-      die "$0: ERROR: init file $init_file not found\n";
+      LOGDIE("Init file $init_file not found");
     }
   }
 }
@@ -467,30 +469,30 @@ if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
   $STATE_DIR       = $StateModelDir;
   $CONTROL_DIR     = $ControlModelDir;
   $LOGS_DIR        = $LogsModelDir;
-
   foreach $prefix (@output_prefixes) {
     $cmd =
       "cp --no-dereference --preserve=link $LOCAL_RESULTS_DIR/$prefix* " .
       "$RESULTS_DIR/";
     (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-      die "$0: ERROR: $cmd failed: $status\n";
+      LOGDIE("$cmd failed: $status");
   }
   $cmd = "cp -r $LOCAL_RESULTS_DIR_ASC $RESULTS_DIR_ASC/../";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
-  $cmd = "cp --no-dereference --preserve=link $LOCAL_CONTROL_DIR/* $CONTROL_DIR/";
+    LOGDIE("$cmd failed: $status");
+  $cmd =
+    "cp --no-dereference --preserve=link $LOCAL_CONTROL_DIR/* $CONTROL_DIR/";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
+    LOGDIE("$cmd failed: $status");
   $cmd = "cp --no-dereference --preserve=link $LOCAL_STATE_DIR/* $STATE_DIR/";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
+    LOGDIE("$cmd failed: $status");
   $cmd = "cp --no-dereference --preserve=link $LOCAL_LOGS_DIR/* $LOGS_DIR/";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
+    LOGDIE("$cmd failed: $status");
   $cmd =
     "rm -rf $LOCAL_RESULTS_DIR $LOCAL_RESULTS_DIR_ASC $LOCAL_STATE_DIR " .
-      "$LOCAL_CONTROL_DIR $LOCAL_LOGS_DIR";
+    "$LOCAL_CONTROL_DIR $LOCAL_LOGS_DIR";
   (($status = &shell_cmd($cmd)) == 0) or
-    die "$0: ERROR: $cmd failed: $status\n";
+    LOGDIE("$cmd failed: $status");
 }
 exit(0);

@@ -39,10 +39,13 @@ anomalies wrt mean of distribution.
  and others since then
 
 =cut
+
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Log::Log4perl qw(:easy);
 use Pod::Usage;
 use Getopt::Long;
 use Statistics::Lite qw(mean);
+Log::Log4perl->init('<SYSTEM_LOG_CONFIG>');
 my $result = GetOptions("help|h|?" => \$help,
                         "man|info" => \$man);
 pod2usage(-verbose => 2, -exitstatus => 0) if $man;
@@ -52,9 +55,9 @@ pod2usage(-verbose => 2, -exitstatus => 0) if $help;
 @ARGV == 2 or pod2usage(-verbose => 1, -exitstatus => 1);
 
 # open files
-open(INF, "<$ARGV[0]") or die "Can't open $ARGV[0]: $!\n";
-print "reading $ARGV[0] \nwriting $ARGV[1]\n";
-open(OUT, ">$ARGV[1]") or die "Can't open $ARGV[1]: $!\n";
+open(INF, "<$ARGV[0]") or LOGDIE("Can't open $ARGV[0]: $!");
+DEBUG("reading $ARGV[0] -- writing $ARGV[1]");
+open(OUT, ">$ARGV[1]") or LOGDIE("Can't open $ARGV[1]: $!");
 $r   = 0;  # counter
 @tmp = ();
 while ($line = <INF>) {
@@ -65,13 +68,13 @@ while ($line = <INF>) {
     $NDIST = @tmp;                            # number in distribution
     $min_p = 1 / ($NDIST + 1) * 0.5;          # def. p-val for targ below dist
     $max_p = $NDIST / ($NDIST + 1) + $min_p;  # ditto for above dist
-    print "climatology distribution has $NDIST elements\n";
+    DEBUG("climatology distribution has $NDIST elements");
   } else {
     if ($NDIST != @tmp) {
       $ntmp   = @tmp;
       $rowtmp = $r + 1;
-      die "Input file not a regular table:\nRow $rowtmp distribution has " .
-        "$ntmp instead of $NDIST values\n";
+      LOGDIE("Input file not a regular table: Row $rowtmp distribution has " .
+             "$ntmp instead of $NDIST values");
     }
   }
 
@@ -111,7 +114,7 @@ while ($line = <INF>) {
   $r++;  # increment row
 }  # done reading data file
 close(INF);
-print "processed $r rows\n";
+DEBUG("processed $r rows");
 
 # Make sure stats are reasonable
 $min_count = 0;
@@ -124,7 +127,7 @@ for ($row = 0 ; $row < $r ; $row++) {
   }
 }
 if ($min_count + $max_count == $r) {
-  die "$0: ERROR: data in file $ARGV[0] consist only of extreme values\n";
+  LOGDIE("data in file $ARGV[0] consist only of extreme values");
 }
 
 # Write out stats

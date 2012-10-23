@@ -25,6 +25,7 @@ project and model combination (each must have a config file). The archived files
 are put into the PLOT_DEPOT_DIR as defined in the config.project.<project> file.
 
 =cut
+
 #-------------------------------------------------------------------------------
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
 
@@ -36,6 +37,7 @@ $CONFIG_DIR = "<SYSTEM_INSTALLDIR>/config";
 #-------------------------------------------------------------------------------
 # Include external modules
 #-------------------------------------------------------------------------------
+use Log::Log4perl qw(:easy);
 use Pod::Usage;
 use Getopt::Long;
 
@@ -45,6 +47,7 @@ use simma_util;
 #-------------------------------------------------------------------------------
 # Command-line arguments
 #-------------------------------------------------------------------------------
+Log::Log4perl->init('<SYSTEM_LOG_CONFIG>');
 my $result = GetOptions("help|h|?" => \$help,
                         "man|info" => \$man);
 pod2usage(-verbose => 2, -exitstatus => 0) if $man;
@@ -70,7 +73,7 @@ $var_info_model_ref = &read_config($ConfigModel);
 %var_info_model     = %{$var_info_model_ref};
 $modelalias         = $var_info_model{MODEL_ALIAS};
 if ($modelalias ne "vic") {
-  exit(0);
+  LOGDIE($modelalias . " not vic");
 }
 
 # Substitute model-specific information into project variables
@@ -95,11 +98,11 @@ $DepotDir             = $var_info_project{"PLOT_DEPOT_DIR"};
 # Check for directories; create if necessary & possible
 foreach $dir ($ResultsModelFinalDir, $DepotDir) {
   if (!-d $dir) {
-    die "$0: ERROR: directory $dir not found\n";
+    LOGDIE("directory $dir not found");
   }
 }
 foreach $dir ($DepotDir) {
-  (&make_dir($dir) == 0) or die "$0: ERROR: Cannot create path $dir: $!\n";
+  (&make_dir($dir) == 0) or LOGDIE("Cannot create path $dir: $!");
 }
 $Archive = "curr_spinup.$PROJECT.$modelalias.tgz";
 
@@ -107,16 +110,17 @@ $Archive = "curr_spinup.$PROJECT.$modelalias.tgz";
 # END settings
 #-------------------------------------------------------------------------------
 # Archive results
+INFO("Archiving results");
 if (-e "$ResultsModelFinalDir/../$Archive") {
   $cmd = "rm -f $ResultsModelFinalDir/../$Archive";
-  print "$cmd\n";
-  (system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+  DEBUG($cmd);
+  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 }
 $cmd = "cd $ResultsModelFinalDir/..; tar -cvzf $Archive asc; cd -";
-print "$cmd\n";
-(system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+DEBUG($cmd);
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");
 
 # Copy to depot
 $cmd = "cp $ResultsModelFinalDir/../$Archive $DepotDir/";
-print "$cmd\n";
-(system($cmd) == 0) or die "$0: ERROR: $cmd failed: $?\n";
+DEBUG($cmd);
+(system($cmd) == 0) or LOGDIE("$cmd failed: $?");

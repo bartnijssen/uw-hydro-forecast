@@ -34,8 +34,10 @@ Script for merging the model output statistics from a list of project domains
 into one larger domain.
 
 =cut
+
 #-------------------------------------------------------------------------------
 use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use Log::Log4perl qw(:easy);
 use Pod::Usage;
 use Getopt::Long;
 
@@ -53,6 +55,7 @@ use simma_util;
 #-------------------------------------------------------------------------------
 # Command-line arguments
 #-------------------------------------------------------------------------------
+Log::Log4perl->init('<SYSTEM_LOG_CONFIG>');
 my $result = GetOptions("help|h|?" => \$help,
                         "man|info" => \$man);
 pod2usage(-verbose => 2, -exitstatus => 0) if $man;
@@ -160,11 +163,11 @@ for ($proj_idx = 0 ; $proj_idx < @SubProjects ; $proj_idx++) {
     $IND[$proj_idx] = "$MergeDepotDirSub[$proj_idx]";
   }
   if (!-e $IND[$proj_idx]) {
-    die "$0: ERROR: input directory $IND[$proj_idx] not found\n";
+    LOGDIE("Input directory $IND[$proj_idx] not found");
   }
 }
 $OUTD = "$XYZZDir/$DateOut";
-(&make_dir($OUTD) == 0) or die "$0: ERROR: Cannot create path $OUTD: $!\n";
+(&make_dir($OUTD) == 0) or LOGDIE("Cannot create path $OUTD: $!");
 
 #-------------------------------------------------------------------------------
 # END settings
@@ -193,11 +196,7 @@ for ($var_idx = 0 ; $var_idx < @varnames ; $var_idx++) {
         "$SubProjectUC[$proj_idx].$MODEL.$ext >> " .
         "$OUTD/$varnames[$var_idx].$PROJECT_UC.$MODEL.$ext";
     }
-
-    #    print "$cmd\n";
-    (system($cmd) == 0) or die "$0: ERROR: $cmd failed\n";
+    DEBUG($cmd);
+    (system($cmd) == 0) or LOGDIE("$cmd failed");
   }
 }
-
-## Clean up tmp files
-#`rm -f $LogFile.tmp`;

@@ -4,6 +4,7 @@ use strict;
 
 use vars qw(@ISA @EXPORT $VERSION);
 use File::Path qw(make_path);
+use Log::Log4perl qw(:easy);
 
 use Exporter;
 $VERSION = 0.99;		
@@ -19,6 +20,7 @@ $VERSION = 0.99;
 #-------------------------------------------------------------------------------
 # simma_util.pm - utility subroutines for use in the SIMMA framework.
 #-------------------------------------------------------------------------------
+
 #-------------------------------------------------------------------------------
 # read_config - reads a config file and returns a hash containing the key-value
 # pairs
@@ -48,7 +50,7 @@ sub read_config {
   # Find tokens that match previously-read keys and replace them with
   # corresponding values
   open(CONFIG, $config_file) or
-    die "$0: ERROR: cannot open config file $config_file\n";
+    LOGDIE("Cannot open config file $config_file");
   foreach (<CONFIG>) {
     chomp;
     if (!/^#/ && /\S/) {
