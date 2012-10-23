@@ -91,6 +91,7 @@ pod2usage(-verbose => 1, -exitstatus => 1)
     not defined
     ($FEYR);
 
+my $ensemble_period = "$METYR - $FEYR";
 # Derived variables
 $PROJECT_UC = $PROJECT;
 $PROJECT    =~ tr/A-Z/a-z/;
@@ -204,14 +205,7 @@ while ($METYR <= $FEYR) {  # forecast year loop
   $METYR = $METYR + 1;
 }
 $ESP_END_TIME = localtime;
-$subject =
-  "\"$PROJECT $MODEL: " .
+my $message = "$PROJECT $MODEL: " .
   "Forecast Runs for DATE $datestr started at $ESP_START_TIME and ended " .
-  "at $ESP_END_TIME Ensembles $METYR -  $FEYR\"";
-if (exists $var_info_project{"EMAIL_LIST"} and $var_info_project{"EMAIL_LIST"})
-{
-  ($addresses = $var_info_project{"EMAIL_LIST"}) =~ s/,/ /g;
-  $cmd = "echo Completed | /bin/mail -s $subject $addresses";
-  DEBUG($cmd);
-  (system($cmd) == 0) or LOGDIE("$cmd failed: $?");
-}
+  "at $ESP_END_TIME Ensembles $ensemble_period";
+INFO($message);

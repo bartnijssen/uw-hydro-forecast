@@ -501,9 +501,9 @@ if ($post_process == 1) {
   #### extracts variable for spatial plots. Note that the awkward command syntax
   #### is needed to make the csh script run properly in the background
   $cmd =
-    "($TOOLS_DIR/xtr_monthly_ts.scr $start_year " .
+    "$TOOLS_DIR/xtr_monthly_ts.scr $start_year " .
     "$PROJECT $TOOLS_DIR $STORDIR $results_dir_asc " .
-    "$STORDIR/MON.$start_year $Flist >& $LOGFILE)&";
+    "$STORDIR/MON.$start_year $Flist >& $LOGFILE";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
     LOGDIE("$cmd failed: $status");
 

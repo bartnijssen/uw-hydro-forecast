@@ -410,7 +410,7 @@ $results_dir     = $ResultsModelRawDir;
 $results_dir_asc = $ResultsModelAscDir;
 $control_dir     = $ControlModelDir;
 $logs_dir        = $LogsModelDir;
-DENUG("LOG Dir is $logs_dir and control dir is $control_dir");
+DEBUG("LOG Dir is $logs_dir and control dir is $control_dir");
 $LOGFILE     = "$logs_dir/log.rout.$PROJECT.$MODEL_NAME.$FCST_DATE.$ENS_YR";
 $controlfile = "$control_dir/inp.rout.$MODEL_NAME.$FCST_DATE.$ENS_YR";
 

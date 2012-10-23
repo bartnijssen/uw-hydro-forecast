@@ -5,8 +5,8 @@ SYSTEM_ROOT /raid2
 SYSTEM_BASEDIR	<SYSTEM_ROOT>/nijssen/forecast/uw-hydro-forecast
 SYSTEM_INSTALLDIR <SYSTEM_ROOT>/nijssen/forecast/hydra_test
 SYSTEM_COMMONDIR /raid8/forecast/common
-SYSTEM_PERL_EXE /usr/bin/perl
-SYSTEM_PERL_LIBS /usr/lib/perl5/site_perl/5.6.1
+SYSTEM_PERL_EXE /opt/perl/bin/perl
+SYSTEM_PERL_LIBS /home/nijssen/perl5/lib/perl5/x86_64-linux-thread-multi /home/nijssen/perl5/lib/perl5 /home/nijssen/apps/share/perl5 /opt/perl/lib/siteperl /opt/perl/lib/5.14.2 /home/nijssen/apps/perllib
 SYSTEM_NETCDF_INC /home/nijssen/apps/include
 SYSTEM_NETCDF_LIB  /home/nijssen/apps/lib
 SYSTEM_LOCAL_STORAGE true
@@ -15,8 +15,8 @@ SYSTEM_NCO_DIR /home/nijssen/apps/bin
 SYSTEM_LOG_SOCKET_CONFIG <SYSTEM_INSTALLDIR>/config/config.log.listener
 SYSTEM_LOG_CONFIG <SYSTEM_INSTALLDIR>/config/config.log.socket
 SYSTEM_LOG_FILE <SYSTEM_INSTALLDIR>/<SYSTEM_NAME>.log
-SYSTEM_LOG_LEVEL WARN
+SYSTEM_LOG_LEVEL INFO
 SYSTEM_LOG_PID_FILE <SYSTEM_INSTALLDIR>/.<SYSTEM_NAME>_logserver.pid
 SYSTEM_LOG_SERVER_HOST hydra
-SYSTEM_LOG_SERVER_PORT 12345
+SYSTEM_LOG_SERVER_PORT 17654
 SYSTEM_LOG_SERVER_MAX_CONN 100
