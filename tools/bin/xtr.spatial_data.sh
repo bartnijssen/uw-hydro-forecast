@@ -1,4 +1,4 @@
-#!/bin/csh
+#!/bin/bash
 # A. Wood
 # script extract variables from the flux files & mon_flux files:
 #
@@ -18,38 +18,52 @@
 # 2. also, from the monthly summary flux files, extract components, unsorted,
 #    for months current + 12 forecast months
 
-if ( ${#argv} < 5 ) then
-  echo "USAGE: $0 BASIN TMPDIR FLIST RESULTS_DIR MON_DIR"
-  exit(1)
-endif
+MINPARAMS=5
+
+if [ $# -lt "$MINPARAMS" ] 
+then
+    echo "USAGE: $0 BASIN TMPDIR FLIST RESULTS_DIR MON_DIR"
+    exit 1
+fi
 
 ## Basin name
-set BAS = "$1" 
+BAS="$1" 
 ## Temp directory inside ESP Store dir
-set TMPDIR = "$2" 
+TMPDIR="$2" 
 ## List of flux file names
-set FLIST = "$3" 
+FLIST="$3" 
 
 ### Results directory where daily flux output of the given ensemble are stored 
-set RESULTS_DIR = "$4"
+RESULTS_DIR="$4"
 ### Directory where monthly flux output are---- aggregated by the script before this one.
-set MON_DIR = "$5" 
+MON_DIR="$5" 
 
 #### Shrad -- Remove old files.
-if ( -e $TMPDIR/$BAS.dy1_swe) then
-  \rm $TMPDIR/$BAS.dy1_swe 
-endif
-if ( -e $TMPDIR/$BAS.all_monvars ) then
-  \rm $TMPDIR/$BAS.all_monvars
-endif
+if [ -e $TMPDIR/$BAS.dy1_swe ] 
+then
+    \rm $TMPDIR/$BAS.dy1_swe 
+fi
+if [ -e $TMPDIR/$BAS.all_monvars ] 
+then
+    \rm $TMPDIR/$BAS.all_monvars
+fi
 
-set h = 1
-foreach F (`cat $FLIST`)
-  set FDLY =  $RESULTS_DIR/$F
-  set FMON =  $MON_DIR/$F
-  awk '{if($3==1)printf("%.1f ",$12)}END{printf("\n")}' $FDLY >> $TMPDIR/$BAS.dy1_swe
+h=1
+while read line
+do
+    FDLY=$RESULTS_DIR/"$line"
+    FMON=$MON_DIR/"$line"
+    awk '{if($3==1)printf("%.1f ",$12)}END{printf("\n")}' $FDLY >> $TMPDIR/$BAS.dy1_swe
   # all fcst vars (print only months where sm3 > 0 (shows valid avg. mon)
-  awk '{for(s=0;s<12;s++){f=s*9+2;if($(f+7)+$(f+6)+$(f+5)>0)printf("%.1f %.1f %.1f %.1f %.1f   ", $f,$(f+4),$(f+2)+$(f+3),$(f+5)+$(f+6)+$(f+7),$(f+8))}}END{printf("\n")}' $FMON >> $TMPDIR/$BAS.all_monvars
-@ h ++
-end
+    awk '{ \
+          for (s=0; s<12; s++) { \
+              f=s*9+2; \
+              if ($(f+7)+$(f+6)+$(f+5)>0) \
+                  printf("%.1f %.1f %.1f %.1f %.1f   ", \
+                         $f, $(f+4), $(f+2)+$(f+3), $(f+5)+$(f+6)+$(f+7), $(f+8)) \
+          } \
+         } \
+         END {printf("\n")}' $FMON >> $TMPDIR/$BAS.all_monvars
+    let h=h+1
+done < "$FLIST"
 echo "Done with $0"

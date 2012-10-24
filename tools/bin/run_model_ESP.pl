@@ -498,10 +498,9 @@ if (!-e "$STORDIR/monthly_flux") ### Creating Storage directory for monthly flux
 if ($post_process == 1) {
 
   #### The script which converts daily ESP flux output into monthly and also
-  #### extracts variable for spatial plots. Note that the awkward command syntax
-  #### is needed to make the csh script run properly in the background
+  #### extracts variable for spatial plots.
   $cmd =
-    "$TOOLS_DIR/xtr_monthly_ts.scr $start_year " .
+    "$TOOLS_DIR/xtr_monthly_ts.sh $start_year " .
     "$PROJECT $TOOLS_DIR $STORDIR $results_dir_asc " .
     "$STORDIR/MON.$start_year $Flist >& $LOGFILE";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
@@ -510,7 +509,7 @@ if ($post_process == 1) {
   #### Now archive monthly flux output generated in last step Directory
   #### $STORDIR/MON.$start_year where the monthly flux output for each ensemble
   #### (i.e. $start_year) gets stored. This directory is created in the script
-  #### xtr_monthly_ts.scr
+  #### xtr_monthly_ts.sh
   ### Moving $STORDIR/MON.$start_year to current directory
   $cmd = "mv  $STORDIR/MON.$start_year ./MON.$PROJECT.$start_year";
   (($status = &shell_cmd($cmd, $LOGFILE)) == 0) or
