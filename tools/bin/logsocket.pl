@@ -136,15 +136,14 @@ my $log;
 
   # listen carefully
   my $readable_handles = new IO::Select($listen_socket);
-  while (1) {  #Infinite loop
-               # select() scans sockets and moves to next after 0.01 s idle
-    my ($new_readable) =
-      IO::Select->select($readable_handles, undef, undef, 0.01);
+  while (1) {  # Infinite loop
+               # can_read() scans sockets and moves to next after 1s idle
+    my @new_readables = $readable_handles->can_read(1);
 
     # If it comes here, there is at least one handle
     # to read from or write to. For the moment, worry only about
     # the read side.
-    foreach my $sock (@$new_readable) {
+    foreach my $sock (@new_readables) {
       if ($sock == $listen_socket) {
         my $new_sock = $sock->accept();
 
