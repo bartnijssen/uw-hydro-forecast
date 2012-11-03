@@ -53,7 +53,6 @@ sub run_rout {
     LOGDIE("Cannot open current controlfile $controlfile");
   DEBUG("OPENING current controlfile $controlfile");
   foreach (@MyParamsInfo) {
-    print "$_\n";
     print CONTROLFILE;
   }
   close(CONTROLFILE);
