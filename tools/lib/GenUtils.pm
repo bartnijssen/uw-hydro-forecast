@@ -22,6 +22,8 @@ package GenUtils;
 use strict;
 use Date::Calc qw(check_date
                   leap_year);
+use File::Copy qw(copy);
+use Log::Log4perl qw(:easy);
                   
 use vars qw(@ISA @EXPORT $VERSION);
 
@@ -30,7 +32,8 @@ $VERSION = 0.99;
 @ISA = qw(Exporter);
 
 # symbols to autoexport (:DEFAULT tag)
-@EXPORT = qw(equal
+@EXPORT = qw(copydir
+             equal
              integer
              isdate
              isleapyear
@@ -40,6 +43,22 @@ $VERSION = 0.99;
              system_call
              testpath
              trim);
+
+################################### copydir ####################################
+# copy all files in dir a to dir b. Note that recursive copy is not supported
+sub copydir {
+  my ($srcdir, $destdir) = @_;
+  my $file;
+  
+  opendir(DIR, $srcdir) or LOGDIE("Cannot open $srcdir: $!");
+  while (defined ($file = readdir DIR) ) {
+    next if $file =~ /^\.\.?$/;     # skip . and ..
+    copy("$srcdir/$file", "$destdir/$file") or 
+      (LOGWARN("Cannot copy $srcdir/$file to $destdir/$file: $!") and return 0);
+  }
+  closedir(DIR);
+  return 1;
+}
 
 ##################################### equal ####################################
 # equal(NUM1, NUM2, ACCURACY) : returns true if NUM1 and NUM2 are
