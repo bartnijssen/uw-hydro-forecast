@@ -11,27 +11,33 @@ WEB_PUB_DIR		<SYSTEM_ROOT>/nijssen/forecast/proj/uswide/www
 # Subdirectories
 # Locations relative to PROJECT_DIR must be listed after PROJECT_DIR in this file
 # (occurrences of <PROJECT_DIR> in the path will be replaced by PROJECT_DIR or LOCAL_PROJECT_DIR in the scripts)
+
 FORCING_PROXY_DIR       /raid8/forecast/proj/uswide/data/cali
 PARAMS_DIR		<PROJECT_DIR>/params
 ROUT_DIR                <PROJECT_DIR>/rout
 #FORCING_DIR		<PROJECT_DIR>/forcing
 FORCING_DIR		<FORCING_PROXY_DIR>/forcing
+FORCING_FCST_DIR  /raid8/forecast/proj/uswide/data/feather/forcing
 RESULTS_DIR		<PROJECT_DIR>/results
 STATE_DIR		<PROJECT_DIR>/state
 CONTROL_DIR		<PROJECT_DIR>/control
 LOGS_DIR		<PROJECT_DIR>/logs
 SPATIAL_DIR		<PROJECT_DIR>/spatial
-FCST_DIR                <PROJECT_DIR>/fcst
+FCST_DIR        <PROJECT_DIR>/fcst
+
 
 # Run-specific subdirectories
 RETRO_SUBDIR	retro
 NEAR_RT_SUBDIR	spinup_nearRT
-CURR_SUBDIR	curr_spinup
+CURR_SUBDIR	    curr_spinup
+GFS_SUBDIR      gfs
 
 # Parameters subdirectories
 # For PARAMS_MODEL_DIR, MODEL_SUBDIR will be supplied by model config file
 PARAMS_MODEL_DIR	<PARAMS_DIR>/<MODEL_SUBDIR>
 PARAMS_ROUT_DIR		<PARAMS_DIR>/rout
+GFS_PARAMS_TEMPLATE input.gfs.template
+GFS_FCST_HORIZON 14
 
 # Forcing subdirectories
 FORCING_STN_INFO_DIR	<FORCING_DIR>/acis/stn_info
