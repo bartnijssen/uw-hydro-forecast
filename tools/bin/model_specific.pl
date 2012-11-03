@@ -4,9 +4,11 @@
 #                     NOTE: these routines assume that several variables
 #                     have been defined globally in the parent script.
 #-------------------------------------------------------------------------------
+use lib qw(<SYSTEM_INSTALLDIR>/lib <SYSTEM_PERL_LIBS>);
+use GenUtils;
 use Log::Log4perl qw(:easy);
 use File::Temp qw(tempfile tempdir);
-$cleanup = 1;
+$cleanup = 0;
 
 #-------------------------------------------------------------------------------
 # VIC routines
@@ -572,16 +574,6 @@ sub read_rescale_file {
     my @fields = split /\s+/, $line;
     $href->{ $fields[1] . "_" . $fields[0] } = $fields[2];
   }
-}
-
-##################################### trim #####################################
-sub trim {
-  my @out = @_;
-  foreach (@out) {
-    s/^\s+//;
-    s/\s+$//;
-  }
-  return wantarray ? @out : $out[0];
 }
 
 #-------------------------------------------------------------------------------

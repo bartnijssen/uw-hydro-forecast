@@ -22,6 +22,7 @@ run_model.pl
     -x <varnames>               extract variables from netcdf
     -mspc <model-specific parameters>
                                 model-specific parameters
+    -t <model template>         input template        
 
  Required
     -m <model>                  model
@@ -128,6 +129,12 @@ Arguments:
    (\").  Example: for SAC model, need to specify the directory where pe files
    are located, as: run_model.pl (blah blah) -mspc "-pe path_to_pe_files"
 
+-t <input template>
+
+   (optional) Possible override for the input template that is used for the
+   model simulation. This file must be stored in PARAMS_MODEL_DIR, but will be
+   read instaed of the default input.template
+
 =cut
 
 #-------------------------------------------------------------------------------
@@ -192,6 +199,7 @@ my $result = GetOptions(
                         "uncmp"    => \$UNCOMP_OUTPUT,
                         "x=s"      => \$extract_vars,
                         "mspc=s"   => \$model_specific,
+                        "t=s"      => \$input_template
                        );
 
 #-------------------------------------------------------------------------------
@@ -310,6 +318,7 @@ $ResultsModelAscDir = $var_info_project{"RESULTS_MODEL_ASC_DIR"};
 $StateModelDir      = $var_info_project{"STATE_MODEL_DIR"};
 $ControlModelDir    = $var_info_project{"CONTROL_MODEL_DIR"};
 $LogsModelDir       = $var_info_project{"LOGS_MODEL_DIR"};
+$forcing_format     = $var_info_project{"FORCING_FORMAT_DIR"};
 
 # The final processed model results will be stored in the ascii dir
 $ResultsModelFinalDir = $ResultsModelAscDir;
@@ -367,7 +376,11 @@ if ("<SYSTEM_LOCAL_STORAGE>" =~ /true/i) {
 
 #---------------------------------------------------
 # Model parameters
-$ParamsTemplate = "$ParamsModelDir/input.template";
+if (defined $input_template) {
+  $ParamsTemplate = "$ParamsModelDir/$input_template";
+} else {
+  $ParamsTemplate = "$ParamsModelDir/input.template";
+}
 open(PARAMS_TEMPLATE, $ParamsTemplate) or
   LOGDIE("Cannot open parameter template file $ParamsTemplate");
 @ParamsInfo = <PARAMS_TEMPLATE>;
