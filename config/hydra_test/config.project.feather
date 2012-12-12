@@ -121,7 +121,6 @@ NDXES_DIR       <SPATIAL_DIR>/ndxes.all
 PLOT_DIR	<SPATIAL_DIR>/plots
 PLOT_DEPOT_DIR	<SPATIAL_DIR>/plots/depot
 PLOT_VARS       none
-
 ### Route FCST
 
 ROUT_XYZZ_DIR   <ROUT>/xyzz.all/<MODEL_SUBDIR>
